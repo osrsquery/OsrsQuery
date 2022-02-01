@@ -25,6 +25,7 @@ hs_err_pid*
 /.idea
 /out
 /.gradle
+/repository/*
 /data/logs
 /saved/*
 .gradle
@@ -34,3 +35,5 @@ isvps
 *.gz
 
 */out
+
+*.properties
