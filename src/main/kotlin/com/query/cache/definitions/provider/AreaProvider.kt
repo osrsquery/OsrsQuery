@@ -33,11 +33,11 @@ data class AreaDefinition(
 class AreaProvider : Loader {
 
     override fun load(writeTypes : Boolean): Serializable {
-        val archive = library.index(IndexType.CONFIGS).archive(ConfigType.OBJECT.id)!!
+        val archive = library.index(IndexType.CONFIGS).archive(ConfigType.AREA.id)!!
         val definitions = archive.fileIds().map {
            decode(ByteBuffer.wrap(archive.file(it)?.data), AreaDefinition(it))
         }
-        return Serializable(CacheType.OBJECTS,this, definitions,writeTypes)
+        return Serializable(CacheType.AREAS,this, definitions,writeTypes)
     }
 
     fun decode(buffer: ByteBuffer, definition: AreaDefinition): Definition {

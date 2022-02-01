@@ -1,20 +1,12 @@
 package com.query.dump.impl
 
 import com.query.Application.areas
-import com.query.Application.objects
 import com.query.Application.sprites
-import com.query.Application.textures
 import com.query.cache.definitions.loader.AreaLoader
-import com.query.cache.definitions.loader.ObjectLoader
 import com.query.cache.definitions.loader.SpriteLoader
-import com.query.cache.definitions.loader.TextureLoader
-import com.query.cache.definitions.provider.AreaProvider
 import com.query.dump.TypeManager
-import com.query.utils.FileUtils
-import com.query.utils.FileUtils.getDir
-import com.query.utils.Sprite
+import com.query.utils.FileUtils.getFile
 import com.query.utils.progress
-import java.nio.file.CopyOption
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 
@@ -27,7 +19,7 @@ class MapFunctions : TypeManager() {
 
     override fun onTest() {
         if(areas() == null) {
-            AreaLoader(null,true).run()
+            AreaLoader(null,false).run()
         }
         if(sprites() == null) {
             SpriteLoader(null,false).run()
@@ -35,11 +27,15 @@ class MapFunctions : TypeManager() {
         writeImage()
     }
 
+
     private fun writeImage() {
 
-        val progress = progress("Writing Area Sprites", textures()!!.size.toLong())
-        areas()!!.forEachIndexed { index, area ->
-            sprites()!![area.spriteId].sprite.writePink(getDir("MapFunctions"))
+        val progress = progress("Writing Area Sprites",  areas()!!.filter { it.spriteId != -1 }.size.toLong())
+        areas()!!.filter { it.spriteId != -1 }.forEachIndexed { index, area ->
+            val pink = getFile("sprites/pink/", "${area.spriteId}.png")
+            Files.copy(pink.toPath(), getFile("mapFunctions/", "${index}.png").toPath(),
+                StandardCopyOption.REPLACE_EXISTING
+            )
             progress.step()
         }
         progress.close()
