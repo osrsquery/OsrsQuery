@@ -7,7 +7,9 @@ import com.query.cache.definitions.loader.TextureLoader
 import com.query.dump.TypeManager
 import com.query.utils.FileUtils
 import com.query.utils.progress
+import java.nio.file.CopyOption
 import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 
 
 class Textures : TypeManager() {
@@ -17,10 +19,10 @@ class Textures : TypeManager() {
     }
 
     override fun onTest() {
-        if(sprites() ==  null) {
-            SpriteLoader(null).run()
+        if(sprites() == null) {
+            SpriteLoader(null,false).run()
         }
-        TextureLoader(null).run()
+        TextureLoader(null,true).run()
         writeTexures()
     }
 
@@ -31,8 +33,12 @@ class Textures : TypeManager() {
             val trans = FileUtils.getFile("sprites/transparent/", "${it.fileIds[0]}.png")
             val pink = FileUtils.getFile("sprites/pink/", "${it.fileIds[0]}.png")
 
-            Files.copy(trans.toPath(), FileUtils.getFile("textures/transparent/", "${it.id}.png").toPath())
-            Files.copy(pink.toPath(), FileUtils.getFile("textures/pink/", "${it.id}.png").toPath())
+            Files.copy(trans.toPath(), FileUtils.getFile("textures/transparent/", "${it.id}.png").toPath(),
+                StandardCopyOption.REPLACE_EXISTING
+            )
+            Files.copy(pink.toPath(), FileUtils.getFile("textures/pink/", "${it.id}.png").toPath(),
+                StandardCopyOption.REPLACE_EXISTING
+            )
 
             progress.step()
         }

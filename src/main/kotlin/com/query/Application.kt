@@ -1,7 +1,10 @@
 package com.query
 
+import com.google.gson.GsonBuilder
 import com.query.Constants.properties
 import com.query.cache.definitions.Definition
+import com.query.cache.definitions.provider.AreaDefinition
+import com.query.cache.definitions.provider.ObjectDefinition
 import com.query.cache.definitions.provider.SpriteDefinition
 import com.query.cache.definitions.provider.TextureDefinition
 import com.query.cache.download.UpdateCache
@@ -14,12 +17,14 @@ import java.util.concurrent.ConcurrentHashMap
 
 object Application {
 
+    var gson = GsonBuilder().setPrettyPrinting().create()
+
     /**
      * Cached definitions provided from the cache library.
      */
     val definitions: ConcurrentHashMap<Class<out Definition>, List<Definition>> = ConcurrentHashMap()
 
-    private val logger = KotlinLogging.logger {}
+    val logger = KotlinLogging.logger {}
 
     fun initialize() {
         UpdateCache.initialize()
@@ -56,11 +61,26 @@ object Application {
     }
 
     /**
-     * Gets the textures definitions.
+     * Gets the sprites definitions.
      */
     fun sprites(): List<SpriteDefinition>? {
         return definitions[SpriteDefinition::class.java]?.filterIsInstance<SpriteDefinition>()
     }
+
+    /**
+     * Gets the objects definitions.
+     */
+    fun objects(): List<ObjectDefinition>? {
+        return definitions[ObjectDefinition::class.java]?.filterIsInstance<ObjectDefinition>()
+    }
+
+    /**
+     * Gets the areas definitions.
+     */
+    fun areas(): List<AreaDefinition>? {
+        return definitions[AreaDefinition::class.java]?.filterIsInstance<AreaDefinition>()
+    }
+
 
     /**
      * Stores a provided list of definitions.

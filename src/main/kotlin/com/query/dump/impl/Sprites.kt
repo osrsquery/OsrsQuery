@@ -14,6 +14,7 @@ class Sprites : TypeManager() {
     }
 
     override fun onTest() {
+        SpriteLoader(null,false).run()
         writeSprites()
     }
 
@@ -30,7 +31,6 @@ class Sprites : TypeManager() {
     companion object {
         @JvmStatic
         fun main(args : Array<String>) {
-            SpriteLoader(null).run()
             Sprites().test()
         }
 

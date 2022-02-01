@@ -8,6 +8,7 @@ import com.query.Constants
 import com.query.cache.Loader
 import com.query.cache.Serializable
 import com.query.cache.definitions.Definition
+import com.query.dump.CacheType
 import com.query.utils.IndexType
 import com.query.utils.Sprite
 import com.query.utils.index
@@ -15,13 +16,13 @@ import io.netty.buffer.Unpooled
 import java.nio.ByteBuffer
 
 data class SpriteDefinition(
-    var id: Int,
+    override var id: Int,
     var sprite: Sprite
 ) : Definition
 
 class SpriteProvider : Loader {
 
-    override fun load(): Serializable {
+    override fun load(writeTypes : Boolean): Serializable {
         val table = Constants.library.index(IndexType.SPRITES)
         val sprites : MutableList<SpriteDefinition> = emptyList<SpriteDefinition>().toMutableList()
         for (i in 0 until table.archives().size) {
@@ -31,7 +32,7 @@ class SpriteProvider : Loader {
                 sprites.add(SpriteDefinition(i,sprite))
             }
         }
-        return Serializable(this, sprites, "/sprites")
+        return Serializable(CacheType.SPRITES,this, sprites,writeTypes)
     }
 
 

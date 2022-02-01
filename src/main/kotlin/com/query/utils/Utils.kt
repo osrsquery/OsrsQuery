@@ -1,5 +1,6 @@
 package com.query.utils
 
+import com.beust.klaxon.Klaxon
 import com.displee.cache.CacheLibrary
 import me.tongfei.progressbar.ProgressBar
 import me.tongfei.progressbar.ProgressBarStyle
@@ -13,6 +14,8 @@ fun CacheLibrary.index(type : IndexType) = index(type.number)
 fun CacheLibrary.data(type : IndexType,archive: String, xtea: IntArray? = null) = this.data(type.number, archive, 0, xtea)
 
 fun CacheLibrary.data(index: IndexType, archive: Int, file: Int = 0, xtea: IntArray? = null) = this.index(index).archive(archive, xtea)?.file(file)?.data
+
+fun String.capitalizeWords(): String = split(" ").map { it.capitalize() }.joinToString(" ")
 
 fun progress(task : String, amt : Long) : ProgressBar {
     return ProgressBar(

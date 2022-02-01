@@ -1,3 +1,5 @@
 package com.query.cache.definitions
 
-interface Definition {}
+interface Definition {
+    val id : Int
+}
