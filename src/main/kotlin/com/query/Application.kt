@@ -1,14 +1,23 @@
 package com.query
 
 import com.query.Constants.properties
+import com.query.cache.definitions.Definition
+import com.query.cache.definitions.provider.SpriteDefinition
+import com.query.cache.definitions.provider.TextureDefinition
 import com.query.cache.download.UpdateCache
 import mu.KotlinLogging
 import java.io.File
 import java.io.FileOutputStream
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 
 
 object Application {
+
+    /**
+     * Cached definitions provided from the cache library.
+     */
+    val definitions: ConcurrentHashMap<Class<out Definition>, List<Definition>> = ConcurrentHashMap()
 
     private val logger = KotlinLogging.logger {}
 
@@ -30,6 +39,34 @@ object Application {
         val fr = FileOutputStream(path)
         p.store(fr, "Properties")
         fr.close()
+    }
+
+    /**
+     * Prompts the application console with performance numbers.
+     */
+    fun prompt(command: Class<out Runnable>, start: Long) {
+        logger.debug { String.format("%s took %sms to cache.", command.simpleName, System.currentTimeMillis() - start) }
+    }
+
+    /**
+     * Gets the textures definitions.
+     */
+    fun textures(): List<TextureDefinition>? {
+        return definitions[TextureDefinition::class.java]?.filterIsInstance<TextureDefinition>()
+    }
+
+    /**
+     * Gets the textures definitions.
+     */
+    fun sprites(): List<SpriteDefinition>? {
+        return definitions[SpriteDefinition::class.java]?.filterIsInstance<SpriteDefinition>()
+    }
+
+    /**
+     * Stores a provided list of definitions.
+     */
+    fun store(clazz: Class<out Definition>, list: List<Definition>) {
+        definitions[clazz] = list
     }
 
 

@@ -1,9 +1,12 @@
 package com.query.cache.download
 
+import com.displee.cache.CacheLibrary
+import com.displee.cache.ProgressListener
 import com.google.gson.Gson
 import com.query.Application.loadProperties
 import com.query.Application.saveProperties
 import com.query.Constants.CACHE_DOWNLOAD_LOCATION
+import com.query.Constants.library
 import com.query.Constants.properties
 import com.query.utils.FileUtils
 import com.query.utils.TimeUtils
@@ -72,7 +75,25 @@ object UpdateCache {
         val message = if(!latestCache) "Cache Downloaded in ${TimeUtils.millsToFormat(time)}" else "Cache is Latest"
         logger.info { message }
 
-
+        val pb = ProgressBar(
+            "Loading Cache",
+            19L,
+            1,
+            System.err,
+            ProgressBarStyle.ASCII,
+            "",
+            1,
+            false,
+            null,
+            ChronoUnit.SECONDS,
+            0L,
+            Duration.ZERO
+        )
+        library = CacheLibrary(FileUtils.getDir("cache/osrs/cache/").toString(), false, object : ProgressListener {
+            override fun notify(progress: Double, message: String?) {
+                pb.step()
+            }
+        })
     }
 
     private fun unZip() {

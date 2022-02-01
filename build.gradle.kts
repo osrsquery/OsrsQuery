@@ -20,7 +20,8 @@ dependencies {
     implementation("com.beust:klaxon:5.5")
     implementation("com.google.code.gson:gson:2.8.9")
     implementation("net.lingala.zip4j:zip4j:2.9.1")
-
+    implementation("com.displee:rs-cache-library:6.8")
+    implementation("io.netty:netty-all:5.0.0.Alpha2")
 
 }
 
