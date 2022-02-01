@@ -11,6 +11,7 @@ import com.query.Constants.properties
 import com.query.utils.FileUtils
 import com.query.utils.TimeUtils
 import com.query.utils.jsonToString
+import com.query.utils.progress
 import me.tongfei.progressbar.ProgressBar
 import me.tongfei.progressbar.ProgressBarStyle
 import mu.KotlinLogging
@@ -75,20 +76,9 @@ object UpdateCache {
         val message = if(!latestCache) "Cache Downloaded in ${TimeUtils.millsToFormat(time)}" else "Cache is Latest"
         logger.info { message }
 
-        val pb = ProgressBar(
-            "Loading Cache",
-            19L,
-            1,
-            System.err,
-            ProgressBarStyle.ASCII,
-            "",
-            1,
-            false,
-            null,
-            ChronoUnit.SECONDS,
-            0L,
-            Duration.ZERO
-        )
+
+        val pb = progress("Loading Cache",19L)
+
         library = CacheLibrary(FileUtils.getDir("cache/osrs/cache/").toString(), false, object : ProgressListener {
             override fun notify(progress: Double, message: String?) {
                 pb.step()
@@ -120,20 +110,7 @@ object UpdateCache {
             var downloadedFileSize: Long = 0
             var count: Int
 
-            val pb = ProgressBar(
-                "Downloading Cache",
-                completeFileSize,
-                1,
-                System.err,
-                ProgressBarStyle.ASCII,
-                "",
-                1,
-                false,
-                null,
-                ChronoUnit.SECONDS,
-                0L,
-                Duration.ZERO
-            )
+            val pb = progress("Downloading Cache",completeFileSize)
 
             while (input.read(data, 0, 1024).also { count = it } != -1) {
                 downloadedFileSize += count.toLong()
