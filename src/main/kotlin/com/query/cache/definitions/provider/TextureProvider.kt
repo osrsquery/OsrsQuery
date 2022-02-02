@@ -19,7 +19,7 @@ import kotlin.experimental.and
 data class TextureDefinition(
     override var id: Int,
     var fileIds: IntArray = IntArray(0),
-    var sprite: Sprite? = null
+    var sprite: Int = -1
 ) : Definition
 
 class TextureProvider : Loader {
@@ -39,7 +39,7 @@ class TextureProvider : Loader {
         buffer.get()
         definition.fileIds = IntArray((buffer.get() and 0xff.toByte()).toInt())
         Arrays.setAll(definition.fileIds) { id -> (buffer.short and 0xffff.toShort()).toInt() }
-        definition.sprite = sprites()!![definition.fileIds[0]].sprite
+        definition.sprite = definition.fileIds[0]
         return definition
     }
 

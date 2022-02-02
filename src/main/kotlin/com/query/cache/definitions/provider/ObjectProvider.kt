@@ -242,7 +242,7 @@ class ObjectProvider : Loader {
                 }
             }
             0 -> break
-            else -> logger.warn { "Unhandled definition opcode with id: ${opcode}." }
+            else -> logger.warn { "Unhandled object definition opcode with id: ${opcode}." }
         }
         while (true)
         post(definition)

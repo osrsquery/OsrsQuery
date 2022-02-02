@@ -5,7 +5,7 @@ import com.query.cache.definitions.provider.ObjectDefinition
 import com.query.cache.definitions.provider.ObjectProvider
 import java.util.concurrent.CountDownLatch
 
-class ObjectLoader(val latch: CountDownLatch?, val writeTypes : Boolean = false) : Runnable {
+class ObjectLoader(val latch: CountDownLatch?, val writeTypes : Boolean = true) : Runnable {
 
     override fun run() {
         val start: Long = System.currentTimeMillis()

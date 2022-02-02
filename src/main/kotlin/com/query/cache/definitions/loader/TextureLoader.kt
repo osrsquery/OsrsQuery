@@ -5,7 +5,7 @@ import com.query.cache.definitions.provider.TextureDefinition
 import com.query.cache.definitions.provider.TextureProvider
 import java.util.concurrent.CountDownLatch
 
-class TextureLoader(val latch: CountDownLatch?, val writeTypes : Boolean = false) : Runnable {
+class TextureLoader(val latch: CountDownLatch?, val writeTypes : Boolean = true) : Runnable {
 
     override fun run() {
         val start: Long = System.currentTimeMillis()

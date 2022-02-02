@@ -7,7 +7,6 @@ import com.query.cache.definitions.loader.TextureLoader
 import com.query.dump.TypeManager
 import com.query.utils.FileUtils
 import com.query.utils.progress
-import java.nio.file.CopyOption
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 

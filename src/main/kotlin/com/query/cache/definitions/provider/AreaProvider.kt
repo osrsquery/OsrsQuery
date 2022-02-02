@@ -81,7 +81,7 @@ class AreaProvider : Loader {
             29 -> buffer.get().toInt() and 0xff
             30 -> buffer.get().toInt() and 0xff
             0 -> break
-            else -> logger.warn { "Unhandled definition opcode with id: ${opcode}." }
+            else -> logger.warn { "Unhandled area definition opcode with id: ${opcode}." }
         } while (true)
         return definition
     }

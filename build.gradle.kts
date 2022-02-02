@@ -10,6 +10,7 @@ version = "1.0"
 repositories {
     mavenCentral()
     maven("https://oss.sonatype.org/content/repositories/snapshots")
+    maven("https://maven.google.com/")
 }
 dependencies {
     implementation(kotlin("stdlib"))
@@ -22,6 +23,8 @@ dependencies {
     implementation("net.lingala.zip4j:zip4j:2.9.1")
     implementation("com.displee:rs-cache-library:6.8")
     implementation("io.netty:netty-all:5.0.0.Alpha2")
+
+
 
 }
 

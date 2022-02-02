@@ -14,6 +14,18 @@ enum class CacheType {
     OBJECTS,
     AREAS,
     SPRITES,
+    KIT,
+    NPCS,
+    ENUMS,
+    HEALTH,
+    INVS,
+    ITEMS,
+    OVERLAYS,
+    PARAMS,
+    SEQUENCES,
+    SPOTANIMS,
+    UNDERLAYS,
+    VARBITS,
     TEXTURES;
 
     val typeName = this.name.lowercase()

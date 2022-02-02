@@ -5,7 +5,7 @@ import com.query.cache.definitions.provider.SpriteDefinition
 import com.query.cache.definitions.provider.SpriteProvider
 import java.util.concurrent.CountDownLatch
 
-class SpriteLoader(val latch: CountDownLatch?, val writeTypes : Boolean = false) : Runnable {
+class SpriteLoader(val latch: CountDownLatch?, val writeTypes : Boolean = true) : Runnable {
 
     override fun run() {
         val start: Long = System.currentTimeMillis()
