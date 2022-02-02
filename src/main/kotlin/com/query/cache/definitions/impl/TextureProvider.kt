@@ -1,19 +1,17 @@
-package com.query.cache.definitions.provider
+package com.query.cache.definitions.impl
 
 import com.displee.cache.index.archive.Archive
 import com.query.Application
-import com.query.Application.sprites
-import com.query.Application.textures
 import com.query.Constants
 import com.query.cache.Loader
 import com.query.cache.Serializable
 import com.query.cache.definitions.Definition
 import com.query.dump.CacheType
 import com.query.utils.IndexType
-import com.query.utils.Sprite
 import com.query.utils.index
 import java.nio.ByteBuffer
 import java.util.*
+import java.util.concurrent.CountDownLatch
 import kotlin.experimental.and
 
 data class TextureDefinition(
@@ -22,9 +20,18 @@ data class TextureDefinition(
     var sprite: Int = -1
 ) : Definition
 
-class TextureProvider : Loader {
+class TextureProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true) : Loader, Runnable {
 
-    override fun load(writeTypes : Boolean): Serializable {
+    override val revisionMin = 1
+
+    override fun run() {
+        val start: Long = System.currentTimeMillis()
+        Application.store(TextureDefinition::class.java, load().definition)
+        Application.prompt(this::class.java, start)
+        latch?.countDown()
+    }
+
+    override fun load(): Serializable {
         val archive: Archive = Constants.library.index(IndexType.TEXTURES).first()!!
 
         val definitions = archive.fileIds().map {

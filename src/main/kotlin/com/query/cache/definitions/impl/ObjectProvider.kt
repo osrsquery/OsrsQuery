@@ -1,17 +1,15 @@
-package com.query.cache.definitions.provider
+package com.query.cache.definitions.impl
 
+import com.query.Application
 import com.query.Application.logger
-import com.query.Application.objects
 import com.query.Constants.library
 import com.query.cache.Loader
 import com.query.cache.Serializable
 import com.query.cache.definitions.Definition
 import com.query.dump.CacheType
-import com.query.utils.ByteBufferExt
-import com.query.utils.ConfigType
-import com.query.utils.IndexType
-import com.query.utils.index
+import com.query.utils.*
 import java.nio.ByteBuffer
+import java.util.concurrent.CountDownLatch
 import java.util.stream.IntStream
 
 
@@ -64,9 +62,18 @@ data class ObjectDefinition(
     var params : MutableMap<Int,String> = mutableMapOf<Int, String>()
 ): Definition
 
-class ObjectProvider : Loader {
+class ObjectProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true) : Loader, Runnable {
 
-    override fun load(writeTypes : Boolean): Serializable {
+    override val revisionMin = 1
+
+    override fun run() {
+        val start: Long = System.currentTimeMillis()
+        Application.store(ObjectDefinition::class.java, load().definition)
+        Application.prompt(this::class.java, start)
+        latch?.countDown()
+    }
+
+    override fun load(): Serializable {
         val archive = library.index(IndexType.CONFIGS).archive(ConfigType.OBJECT.id)!!
         val definitions = archive.fileIds().map {
            decode(ByteBuffer.wrap(archive.file(it)?.data), ObjectDefinition(it))
@@ -198,7 +205,7 @@ class ObjectProvider : Loader {
                 }.toArray()
             }
             81 -> definition.contouredGround = (buffer.get().toInt() and 0xff) * 256
-            82 -> definition.mapAreaId = buffer.short.toInt() and 0xffff
+            60,82 -> definition.mapAreaId = buffer.short.toInt() and 0xffff
             89 -> definition.randomizeAnimStart = true
             92 -> {
                 var varbitId: Int = buffer.short.toInt() and 0xffff

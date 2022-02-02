@@ -1,17 +1,12 @@
 package com.query.dump.impl
 
 import com.query.Application.overlays
-import com.query.Application.sprites
-import com.query.cache.definitions.loader.OverlayLoader
-import com.query.cache.definitions.loader.SpriteLoader
-import com.query.cache.definitions.provider.OverlayDefinition
+import com.query.cache.definitions.impl.OverlayDefinition
 import com.query.dump.TypeManager
 import com.query.utils.FileUtils.getFile
 import com.query.utils.progress
 import java.awt.Color
 import java.awt.image.BufferedImage
-import java.io.ByteArrayOutputStream
-import java.util.*
 import javax.imageio.ImageIO
 
 
@@ -22,7 +17,7 @@ class Overlay : TypeManager() {
     }
 
     override fun onTest() {
-        OverlayLoader(null,false).run()
+        //OverlayLoader(null,false).run()
         writeOverlays()
     }
 

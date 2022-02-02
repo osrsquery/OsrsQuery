@@ -1,8 +1,8 @@
-package com.query.cache.definitions.provider
+package com.query.cache.definitions.impl
 
 import com.displee.cache.index.archive.Archive
+import com.query.Application
 import com.query.Application.logger
-import com.query.Application.objects
 import com.query.Constants.library
 import com.query.cache.Loader
 import com.query.cache.Serializable
@@ -13,7 +13,7 @@ import com.query.utils.ConfigType
 import com.query.utils.IndexType
 import com.query.utils.index
 import java.nio.ByteBuffer
-import java.util.stream.IntStream
+import java.util.concurrent.CountDownLatch
 
 
 data class EnumDefinition(
@@ -25,9 +25,18 @@ data class EnumDefinition(
     var params : MutableMap<Long,String> = mutableMapOf()
 ): Definition
 
-class EnumProvider : Loader {
+class EnumProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true) : Loader, Runnable {
 
-    override fun load(writeTypes : Boolean): Serializable {
+    override val revisionMin = 1
+
+    override fun run() {
+        val start: Long = System.currentTimeMillis()
+        Application.store(EnumDefinition::class.java,load().definition)
+        Application.prompt(this::class.java, start)
+        latch?.countDown()
+    }
+
+    override fun load(): Serializable {
         val archive: Archive = library.index(IndexType.CONFIGS).archive(ConfigType.ENUM.id)!!
         val definitions = archive.fileIds().map {
             decode(ByteBuffer.wrap(archive.file(it)?.data), EnumDefinition(it))

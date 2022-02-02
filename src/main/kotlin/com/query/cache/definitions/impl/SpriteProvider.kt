@@ -1,9 +1,7 @@
-package com.query.cache.definitions.provider
+package com.query.cache.definitions.impl
 
-import com.displee.cache.index.archive.Archive
 import com.displee.compress.decompress
 import com.query.Application
-import com.query.Application.definitions
 import com.query.Constants
 import com.query.cache.Loader
 import com.query.cache.Serializable
@@ -13,16 +11,25 @@ import com.query.utils.IndexType
 import com.query.utils.Sprite
 import com.query.utils.index
 import io.netty.buffer.Unpooled
-import java.nio.ByteBuffer
+import java.util.concurrent.CountDownLatch
 
 data class SpriteDefinition(
     override var id: Int,
     var sprite: Sprite
 ) : Definition
 
-class SpriteProvider : Loader {
+class SpriteProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true) : Loader, Runnable {
 
-    override fun load(writeTypes : Boolean): Serializable {
+    override val revisionMin = 1
+
+    override fun run() {
+        val start: Long = System.currentTimeMillis()
+        Application.store(SpriteDefinition::class.java, load().definition)
+        Application.prompt(this::class.java, start)
+        latch?.countDown()
+    }
+
+    override fun load(): Serializable {
         val table = Constants.library.index(IndexType.SPRITES)
         val sprites : MutableList<SpriteDefinition> = emptyList<SpriteDefinition>().toMutableList()
         for (i in 0 until table.archives().size) {

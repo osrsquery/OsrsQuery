@@ -1,16 +1,17 @@
-package com.query.cache.definitions.provider
+package com.query.cache.definitions.impl
 
+import com.query.Application
 import com.query.Application.logger
 import com.query.Constants.library
 import com.query.cache.Loader
 import com.query.cache.Serializable
 import com.query.cache.definitions.Definition
 import com.query.dump.CacheType
-import com.query.utils.ByteBufferExt
 import com.query.utils.ConfigType
 import com.query.utils.IndexType
 import com.query.utils.index
 import java.nio.ByteBuffer
+import java.util.concurrent.CountDownLatch
 
 
 data class KitDefinition(
@@ -25,9 +26,18 @@ data class KitDefinition(
     var nonSelectable : Boolean = false
 ): Definition
 
-class KitProvider : Loader {
+class KitProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true) : Loader, Runnable {
 
-    override fun load(writeTypes : Boolean): Serializable {
+    override val revisionMin = 1
+
+    override fun run() {
+        val start: Long = System.currentTimeMillis()
+        Application.store(KitDefinition::class.java, load().definition)
+        Application.prompt(this::class.java, start)
+        latch?.countDown()
+    }
+
+    override fun load(): Serializable {
         val archive = library.index(IndexType.CONFIGS).archive(ConfigType.IDENTKIT.id)!!
         val definitions = archive.fileIds().map {
            decode(ByteBuffer.wrap(archive.file(it)?.data), KitDefinition(it))

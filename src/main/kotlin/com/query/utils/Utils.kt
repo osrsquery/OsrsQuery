@@ -1,13 +1,15 @@
 package com.query.utils
 
-import com.beust.klaxon.Klaxon
 import com.displee.cache.CacheLibrary
+import com.query.Application
+import com.query.cache.download.UpdateCache
 import me.tongfei.progressbar.ProgressBar
 import me.tongfei.progressbar.ProgressBarStyle
-import java.nio.ByteBuffer
 import java.time.Duration
+import java.time.LocalDateTime
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
-import kotlin.experimental.and
 
 fun CacheLibrary.index(type : IndexType) = index(type.number)
 
@@ -15,7 +17,29 @@ fun CacheLibrary.data(type : IndexType,archive: String, xtea: IntArray? = null) 
 
 fun CacheLibrary.data(index: IndexType, archive: Int, file: Int = 0, xtea: IntArray? = null) = this.index(index).archive(archive, xtea)?.file(file)?.data
 
-fun String.capitalizeWords(): String = split(" ").map { it.capitalize() }.joinToString(" ")
+fun String.capitalizeWords(): String = split(" ").joinToString(" ") { it.replaceFirstChar { char -> char.uppercase() } }
+
+fun String.stringToTimestamp() : LocalDateTime {
+    val formatter = DateTimeFormatter.ofPattern("uuuu-MM-dd HH:mm:ss")
+    val time = this.replace("T"," ").replaceAfterLast(".","")
+    val dateTime = LocalDateTime.parse(time.replaceLastLetter(""), formatter)
+    return dateTime
+}
+
+fun LocalDateTime.toEchochUTC() : Long {
+    return this.toEpochSecond(ZoneOffset.UTC)
+}
+
+fun revisionID() = Application.cacheInfo.builds[0].major
+
+fun revisionAfter(rev : Int) = rev <= revisionID()
+fun revisionBefore(rev : Int) = rev >= revisionID()
+
+fun String.replaceLastLetter(newLetter: String): String {
+    val substring = this.substring(0, this.length - 1)
+    return substring + newLetter
+}
+
 
 fun progress(task : String, amt : Long) : ProgressBar {
     return ProgressBar(

@@ -2,8 +2,6 @@ package com.query.dump.impl
 
 import com.query.Application.sprites
 import com.query.Application.textures
-import com.query.cache.definitions.loader.SpriteLoader
-import com.query.cache.definitions.loader.TextureLoader
 import com.query.dump.TypeManager
 import com.query.utils.FileUtils
 import com.query.utils.progress
@@ -19,9 +17,8 @@ class Textures : TypeManager() {
 
     override fun onTest() {
         if(sprites() == null) {
-            SpriteLoader(null,false).run()
+            //SpriteLoader(null,false).run()
         }
-        TextureLoader(null,true).run()
         writeTexures()
     }
 

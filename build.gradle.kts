@@ -23,7 +23,8 @@ dependencies {
     implementation("net.lingala.zip4j:zip4j:2.9.1")
     implementation("com.displee:rs-cache-library:6.8")
     implementation("io.netty:netty-all:5.0.0.Alpha2")
-
+    implementation("com.xenomachina:kotlin-argparser:2.0.7")
+    implementation("org.jetbrains.kotlinx:kotlinx-cli-jvm:0.3.4")
 
 
 }

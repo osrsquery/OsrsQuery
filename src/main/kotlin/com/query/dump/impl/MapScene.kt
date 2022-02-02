@@ -1,12 +1,9 @@
 package com.query.dump.impl
 
 import SpriteData
-import com.displee.cache.index.Index
 import com.query.Application
 import com.query.Application.objects
 import com.query.Constants.library
-import com.query.cache.definitions.loader.ObjectLoader
-import com.query.cache.definitions.loader.SpriteLoader
 import com.query.dump.TypeManager
 import com.query.utils.FileUtils.getFile
 import com.query.utils.IndexType
@@ -26,10 +23,10 @@ class MapScene : TypeManager() {
 
     override fun onTest() {
         if(objects() == null) {
-            ObjectLoader(null,false).run()
+            //ObjectLoader(null,false).run()
         }
         if(Application.sprites() == null) {
-            SpriteLoader(null,false).run()
+            //SpriteLoader(null,false).run()
         }
         writeImage()
     }

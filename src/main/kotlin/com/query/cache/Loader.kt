@@ -1,8 +1,10 @@
 package com.query.cache
 
+import com.query.Application
 import com.query.cache.definitions.Definition
 import com.query.dump.CacheType
 import com.query.dump.PrintTypes
+import com.query.utils.revisionID
 
 data class Serializable(
     val type : CacheType,
@@ -18,5 +20,10 @@ data class Serializable(
 }
 
 interface Loader {
-    fun load(writeTypes : Boolean): Serializable
+    fun load(): Serializable
+
+    val revisionMin : Int
+
+    fun ignore() = revisionMin > revisionID()
+
 }

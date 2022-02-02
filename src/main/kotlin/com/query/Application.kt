@@ -3,11 +3,13 @@ package com.query
 import com.google.gson.GsonBuilder
 import com.query.Constants.properties
 import com.query.cache.definitions.Definition
-import com.query.cache.definitions.loader.*
-import com.query.cache.definitions.provider.*
+import com.query.cache.definitions.impl.*
+import com.query.cache.download.CacheInfo
 import com.query.cache.download.UpdateCache
-import com.query.dump.impl.*
 import com.query.utils.TimeUtils
+import kotlinx.cli.ArgParser
+import kotlinx.cli.ArgType
+import kotlinx.cli.default
 import mu.KotlinLogging
 import java.io.File
 import java.io.FileOutputStream
@@ -15,44 +17,59 @@ import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
 import kotlin.system.measureTimeMillis
 
 
 object Application {
 
-    var gson = GsonBuilder().setPrettyPrinting().create()
+    /**
+     * What Revision the user wants to dump.
+     */
+    var revision : Int = 0
 
     /**
-     * Cached definitions provided from the cache library.
+     * Main Logger for the Application.
      */
-    val definitions: ConcurrentHashMap<Class<out Definition>, List<Definition>> = ConcurrentHashMap()
-
     val logger = KotlinLogging.logger {}
 
-    fun initialize() {
+    /**
+     * Cache Revision data for the Revision that user requests.
+     */
+
+    lateinit var cacheInfo : CacheInfo
+
+    var gson = GsonBuilder().setPrettyPrinting().create()
+
+    fun initialize(args : Array<String>) {
         val time = measureTimeMillis {
+
+            val parser = ArgParser("app")
+            val rev by parser.option(ArgType.Int, description = "The revision you wish to dump").default(0)
+            parser.parse(args)
+            revision = rev
+
             UpdateCache.initialize()
 
             //Latch is necessary.
-            val latch = CountDownLatch(15)
+            val latch = CountDownLatch(1)
+
             val commands = listOf(
-                SpriteLoader(latch),
-                AreaLoader(latch),
-                EnumLoader(latch),
-                HealthBarLoader(latch),
-                InvLoader(latch),
-                ItemLoader(latch),
-                KitLoader(latch),
-                NpcLoader(latch),
-                ObjectLoader(latch),
-                OverlayLoader(latch),
-                ParamLoader(latch),
-                SequenceLoader(latch),
-                SpotAnimationLoader(latch),
-                TextureLoader(latch),
-                UnderlayLoader(latch),
-                VarbitLoader(latch),
+                SpriteProvider(latch),
+                AreaProvider(latch),
+                EnumProvider(latch),
+                HealthBarProvider(latch),
+                InvProvider(latch),
+                ItemProvider(latch),
+                KitProvider(latch),
+                NpcProvider(latch),
+                ObjectProvider(latch),
+                OverlayProvider(latch),
+                ParamProvider(latch),
+                SequenceProvider(latch),
+                SpotAnimationProvider(latch),
+                TextureProvider(latch),
+                UnderlayProvider(latch),
+                VarbitProvider(latch),
             )
             val cores = Runtime.getRuntime().availableProcessors()
             if (cores > 4) {
@@ -62,15 +79,16 @@ object Application {
             } else {
                 commands.forEach(Runnable::run)
             }
+            latch.await()
 
-            MapFunctions().load()
-            MapScene().load()
-            Overlay().load()
-            Sprites().load()
-            Textures().load()
+            //Sprites().load()
+            //MapFunctions().load()
+            //MapScene().load()
+            //Overlay().load()
+            //Textures().load()
         }
 
-        logger.info { "Dump completed in ${TimeUtils.millsToFormat(time)}" }
+        logger.info { "Dump Completed in ${TimeUtils.millsToFormat(time)}" }
 
     }
 
@@ -89,6 +107,12 @@ object Application {
         p.store(fr, "Properties")
         fr.close()
     }
+
+    /**
+     * Cached definitions provided from the cache library.
+     */
+    val definitions: ConcurrentHashMap<Class<out Definition>, List<Definition>> = ConcurrentHashMap()
+
 
     /**
      * Prompts the application console with performance numbers.
@@ -219,6 +243,6 @@ object Application {
 
 }
 
-fun main() {
-    Application.initialize()
+fun main(args : Array<String>) {
+    Application.initialize(args)
 }

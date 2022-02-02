@@ -1,7 +1,6 @@
 package com.query.dump.impl
 
 import com.query.Application.sprites
-import com.query.cache.definitions.loader.SpriteLoader
 import com.query.dump.TypeManager
 import com.query.utils.FileUtils.getFile
 import com.query.utils.progress
@@ -14,7 +13,7 @@ class Sprites : TypeManager() {
     }
 
     override fun onTest() {
-        SpriteLoader(null,false).run()
+        //SpriteLoader(null,false).run()
         writeSprites()
     }
 
