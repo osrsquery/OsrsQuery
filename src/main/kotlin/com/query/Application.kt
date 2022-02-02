@@ -6,6 +6,7 @@ import com.query.cache.definitions.Definition
 import com.query.cache.definitions.impl.*
 import com.query.cache.download.CacheInfo
 import com.query.cache.download.UpdateCache
+import com.query.dump.impl.*
 import com.query.utils.TimeUtils
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
@@ -40,12 +41,9 @@ object Application {
 
     var gson = GsonBuilder().setPrettyPrinting().create()
 
-    fun initialize(args : Array<String>) {
+    fun initialize(rev : Int) {
         val time = measureTimeMillis {
 
-            val parser = ArgParser("app")
-            val rev by parser.option(ArgType.Int, description = "The revision you wish to dump").default(0)
-            parser.parse(args)
             revision = rev
 
             UpdateCache.initialize()
@@ -81,11 +79,11 @@ object Application {
             }
             latch.await()
 
-            //Sprites().load()
-            //MapFunctions().load()
-            //MapScene().load()
-            //Overlay().load()
-            //Textures().load()
+            Sprites().load()
+            MapFunctions().load()
+            MapScene().load()
+            Overlay().load()
+            Textures().load()
         }
 
         logger.info { "Dump Completed in ${TimeUtils.millsToFormat(time)}" }
@@ -244,5 +242,10 @@ object Application {
 }
 
 fun main(args : Array<String>) {
-    Application.initialize(args)
+
+    val parser = ArgParser("app")
+    val rev by parser.option(ArgType.Int, description = "The revision you wish to dump").default(0)
+    parser.parse(args)
+
+    Application.initialize(rev)
 }
