@@ -6,7 +6,7 @@ import com.query.Constants
 import com.query.cache.Loader
 import com.query.cache.Serializable
 import com.query.cache.definitions.Definition
-import com.query.dump.CacheType
+import com.query.dump.DefinitionsTypes
 import com.query.utils.IndexType
 import com.query.utils.Sprite
 import com.query.utils.index
@@ -39,7 +39,7 @@ class SpriteProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true
                 sprites.add(SpriteDefinition(i,sprite))
             }
         }
-        return Serializable(CacheType.SPRITES,this, sprites,writeTypes)
+        return Serializable(DefinitionsTypes.SPRITES,this, sprites,writeTypes)
     }
 
 

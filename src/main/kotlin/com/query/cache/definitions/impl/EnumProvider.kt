@@ -7,7 +7,7 @@ import com.query.Constants.library
 import com.query.cache.Loader
 import com.query.cache.Serializable
 import com.query.cache.definitions.Definition
-import com.query.dump.CacheType
+import com.query.dump.DefinitionsTypes
 import com.query.utils.ByteBufferExt
 import com.query.utils.ConfigType
 import com.query.utils.IndexType
@@ -41,7 +41,7 @@ class EnumProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true) 
         val definitions = archive.fileIds().map {
             decode(ByteBuffer.wrap(archive.file(it)?.data), EnumDefinition(it))
         }
-        return Serializable(CacheType.ENUMS,this, definitions,writeTypes)
+        return Serializable(DefinitionsTypes.ENUMS,this, definitions,writeTypes)
     }
 
     fun decode(buffer: ByteBuffer, definition: EnumDefinition): Definition {

@@ -1,6 +1,5 @@
 package com.query.dump
 
-import com.query.Application
 import com.query.Application.gson
 import com.query.cache.definitions.Definition
 import com.query.utils.FileUtils
@@ -10,7 +9,7 @@ import java.io.BufferedWriter
 import java.io.File
 import java.io.FileWriter
 
-enum class CacheType {
+enum class DefinitionsTypes {
     OBJECTS,
     AREAS,
     SPRITES,
@@ -32,7 +31,7 @@ enum class CacheType {
 
 }
 
-class PrintTypes(type : CacheType, def : List<Definition>) {
+class PrintTypes(type : DefinitionsTypes, def : List<Definition>) {
 
     private val name = type.typeName
     private val completeLocation = FileUtils.getFile("/types/","$name-complete.json")

@@ -131,113 +131,113 @@ object Application {
     /**
      * Gets the textures definitions.
      */
-    fun textures(): List<TextureDefinition>? {
-        return definitions[TextureDefinition::class.java]?.filterIsInstance<TextureDefinition>()
+    fun textures(): List<TextureDefinition> {
+        return definitions[TextureDefinition::class.java]?.filterIsInstance<TextureDefinition>()?: error("Texture Definitions not loaded.")
     }
 
     /**
      * Gets the sprites definitions.
      */
-    fun sprites(): List<SpriteDefinition>? {
-        return definitions[SpriteDefinition::class.java]?.filterIsInstance<SpriteDefinition>()
+    fun sprites(): List<SpriteDefinition> {
+        return definitions[SpriteDefinition::class.java]?.filterIsInstance<SpriteDefinition>()?: error("Sprite Definitions not loaded.")
     }
 
     /**
      * Gets the objects definitions.
      */
-    fun objects(): List<ObjectDefinition>? {
-        return definitions[ObjectDefinition::class.java]?.filterIsInstance<ObjectDefinition>()
+    fun objects(): List<ObjectDefinition> {
+        return definitions[ObjectDefinition::class.java]?.filterIsInstance<ObjectDefinition>()?: error("Object Definitions not loaded.")
     }
 
     /**
      * Gets the areas definitions.
      */
-    fun areas(): List<AreaDefinition>? {
-        return definitions[AreaDefinition::class.java]?.filterIsInstance<AreaDefinition>()
+    fun areas(): List<AreaDefinition> {
+        return definitions[AreaDefinition::class.java]?.filterIsInstance<AreaDefinition>()?: error("Area Definitions not loaded.")
     }
 
     /**
      * Gets the enum definitions.
      */
-    fun enums(): List<EnumDefinition>? {
-        return definitions[EnumDefinition::class.java]?.filterIsInstance<EnumDefinition>()
+    fun enums(): List<EnumDefinition> {
+        return definitions[EnumDefinition::class.java]?.filterIsInstance<EnumDefinition>()?: error("Enum Definitions not loaded.")
     }
 
     /**
      * Gets the health definitions.
      */
     fun healths(): List<HealthBarDefinition>? {
-        return definitions[HealthBarDefinition::class.java]?.filterIsInstance<HealthBarDefinition>()
+        return definitions[HealthBarDefinition::class.java]?.filterIsInstance<HealthBarDefinition>()?: error("Health Bar Definitions not loaded.")
     }
 
     /**
      * Gets the inventory definitions.
      */
     fun invs(): List<InvDefinition>? {
-        return definitions[InvDefinition::class.java]?.filterIsInstance<InvDefinition>()
+        return definitions[InvDefinition::class.java]?.filterIsInstance<InvDefinition>()?: error("Inv Definitions not loaded.")
     }
 
     /**
      * Gets the item definitions.
      */
-    fun items(): List<ItemDefinition>? {
-        return definitions[ItemDefinition::class.java]?.filterIsInstance<ItemDefinition>()
+    fun items(): List<ItemDefinition> {
+        return definitions[ItemDefinition::class.java]?.filterIsInstance<ItemDefinition>()?: error("Item Definitions not loaded.")
     }
 
     /**
      * Gets the kits definitions.
      */
-    fun kits(): List<KitDefinition>? {
-        return definitions[KitDefinition::class.java]?.filterIsInstance<KitDefinition>()
+    fun kits(): List<KitDefinition> {
+        return definitions[KitDefinition::class.java]?.filterIsInstance<KitDefinition>()?: error("Kit Definitions not loaded.")
     }
 
     /**
      * Gets the npc definitions.
      */
-    fun npcs(): List<NpcDefinition>? {
-        return definitions[NpcDefinition::class.java]?.filterIsInstance<NpcDefinition>()
+    fun npcs(): List<NpcDefinition> {
+        return definitions[NpcDefinition::class.java]?.filterIsInstance<NpcDefinition>()?: error("Npc Definitions not loaded.")
     }
 
     /**
      * Gets the param definitions.
      */
-    fun params(): List<ParamDefinition>? {
-        return definitions[ParamDefinition::class.java]?.filterIsInstance<ParamDefinition>()
+    fun params(): List<ParamDefinition> {
+        return definitions[ParamDefinition::class.java]?.filterIsInstance<ParamDefinition>()?: error("Param Definitions not loaded.")
     }
 
     /**
      * Gets the overlay definitions.
      */
-    fun overlays(): List<OverlayDefinition>? {
-        return definitions[OverlayDefinition::class.java]?.filterIsInstance<OverlayDefinition>()
+    fun overlays(): List<OverlayDefinition> {
+        return definitions[OverlayDefinition::class.java]?.filterIsInstance<OverlayDefinition>()?: error("Overlay Definitions not loaded.")
     }
 
     /**
      * Gets the sequences definitions.
      */
-    fun sequences(): List<SequenceDefinition>? {
-        return definitions[SequenceDefinition::class.java]?.filterIsInstance<SequenceDefinition>()
+    fun sequences(): List<SequenceDefinition> {
+        return definitions[SequenceDefinition::class.java]?.filterIsInstance<SequenceDefinition>()?: error("Sequence Definitions not loaded.")
     }
 
     /**
      * Gets the spotAnim definitions.
      */
-    fun spotanimations(): List<SpotAnimationDefinition>? {
-        return definitions[SpotAnimationDefinition::class.java]?.filterIsInstance<SpotAnimationDefinition>()
+    fun spotanimations(): List<SpotAnimationDefinition> {
+        return definitions[SpotAnimationDefinition::class.java]?.filterIsInstance<SpotAnimationDefinition>()?: error("Spot Animation Definitions not loaded.")
     }
 
     /**
      * Gets the underlay definitions.
      */
-    fun underlays(): List<UnderlayDefinition>? {
-        return definitions[UnderlayDefinition::class.java]?.filterIsInstance<UnderlayDefinition>()
+    fun underlays(): List<UnderlayDefinition> {
+        return definitions[UnderlayDefinition::class.java]?.filterIsInstance<UnderlayDefinition>()?: error("Underlay Definitions not loaded.")
     }
 
     /**
      * Gets the varbit definitions.
      */
-    fun varbits(): List<VarbitDefinition>? {
-        return definitions[VarbitDefinition::class.java]?.filterIsInstance<VarbitDefinition>()
+    fun varbits(): List<VarbitDefinition> {
+        return definitions[VarbitDefinition::class.java]?.filterIsInstance<VarbitDefinition>()?: error("Varbit Definitions not loaded.")
     }
 
 

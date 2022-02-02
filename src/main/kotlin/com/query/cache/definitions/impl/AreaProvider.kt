@@ -6,7 +6,7 @@ import com.query.Constants.library
 import com.query.cache.Loader
 import com.query.cache.Serializable
 import com.query.cache.definitions.Definition
-import com.query.dump.CacheType
+import com.query.dump.DefinitionsTypes
 import com.query.utils.ByteBufferExt
 import com.query.utils.ConfigType
 import com.query.utils.IndexType
@@ -32,7 +32,7 @@ data class AreaDefinition(
 
 class AreaProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true) : Loader, Runnable {
 
-    override val revisionMin = 140
+    override val revisionMin = 142
 
     override fun run() {
         if(ignore()) {
@@ -50,7 +50,7 @@ class AreaProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true) 
         val definitions = archive.fileIds().map {
            decode(ByteBuffer.wrap(archive.file(it)?.data), AreaDefinition(it))
         }
-        return Serializable(CacheType.AREAS,this, definitions,writeTypes)
+        return Serializable(DefinitionsTypes.AREAS,this, definitions,writeTypes)
     }
 
     fun decode(buffer: ByteBuffer, definition: AreaDefinition): Definition {

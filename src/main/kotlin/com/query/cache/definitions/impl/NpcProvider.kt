@@ -6,7 +6,7 @@ import com.query.Constants.library
 import com.query.cache.Loader
 import com.query.cache.Serializable
 import com.query.cache.definitions.Definition
-import com.query.dump.CacheType
+import com.query.dump.DefinitionsTypes
 import com.query.utils.ByteBufferExt
 import com.query.utils.ConfigType
 import com.query.utils.IndexType
@@ -69,7 +69,7 @@ class NpcProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true) :
         val definitions = archive.fileIds().map {
            decode(ByteBuffer.wrap(archive.file(it)?.data), NpcDefinition(it))
         }
-        return Serializable(CacheType.NPCS,this, definitions,writeTypes)
+        return Serializable(DefinitionsTypes.NPCS,this, definitions,writeTypes)
     }
 
     fun decode(buffer: ByteBuffer, definition: NpcDefinition): Definition {

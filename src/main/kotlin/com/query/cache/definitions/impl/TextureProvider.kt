@@ -6,7 +6,7 @@ import com.query.Constants
 import com.query.cache.Loader
 import com.query.cache.Serializable
 import com.query.cache.definitions.Definition
-import com.query.dump.CacheType
+import com.query.dump.DefinitionsTypes
 import com.query.utils.IndexType
 import com.query.utils.index
 import java.nio.ByteBuffer
@@ -38,7 +38,7 @@ class TextureProvider(val latch: CountDownLatch?, val writeTypes : Boolean = tru
             decode(ByteBuffer.wrap(archive.file(it)?.data), TextureDefinition(it))
         }
 
-        return Serializable(CacheType.TEXTURES,this, definitions,writeTypes)
+        return Serializable(DefinitionsTypes.TEXTURES,this, definitions,writeTypes)
     }
 
     private fun decode(buffer: ByteBuffer, definition: TextureDefinition): Definition {

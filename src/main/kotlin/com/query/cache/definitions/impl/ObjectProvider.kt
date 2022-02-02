@@ -6,7 +6,7 @@ import com.query.Constants.library
 import com.query.cache.Loader
 import com.query.cache.Serializable
 import com.query.cache.definitions.Definition
-import com.query.dump.CacheType
+import com.query.dump.DefinitionsTypes
 import com.query.utils.*
 import java.nio.ByteBuffer
 import java.util.concurrent.CountDownLatch
@@ -78,7 +78,7 @@ class ObjectProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true
         val definitions = archive.fileIds().map {
            decode(ByteBuffer.wrap(archive.file(it)?.data), ObjectDefinition(it))
         }
-        return Serializable(CacheType.OBJECTS,this, definitions,writeTypes)
+        return Serializable(DefinitionsTypes.OBJECTS,this, definitions,writeTypes)
     }
 
     private fun decode(buffer: ByteBuffer, definition: ObjectDefinition): Definition {

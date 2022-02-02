@@ -1,29 +1,35 @@
 package com.query.dump.impl
 
+import com.query.Application
 import com.query.Application.overlays
 import com.query.cache.definitions.impl.OverlayDefinition
+import com.query.dump.DefinitionsTypes
 import com.query.dump.TypeManager
 import com.query.utils.FileUtils.getFile
 import com.query.utils.progress
+import kotlinx.cli.ArgParser
+import kotlinx.cli.ArgType
+import kotlinx.cli.default
 import java.awt.Color
 import java.awt.image.BufferedImage
 import javax.imageio.ImageIO
 
 
-class Overlay : TypeManager() {
+class Overlay : TypeManager {
+
+    override val requiredDefs = listOf(DefinitionsTypes.OVERLAYS)
 
     override fun load() {
         writeOverlays()
     }
 
     override fun onTest() {
-        //OverlayLoader(null,false).run()
         writeOverlays()
     }
 
     private fun writeOverlays() {
-        val progress = progress("Writing Overlays Images", overlays()!!.size.toLong())
-        overlays()!!.forEach {
+        val progress = progress("Writing Overlays Images", overlays().size.toLong())
+        overlays().forEach {
             ImageIO.write(getOverlayPNG(it), "png", getFile("overlays","${it.id}.png"))
             progress.step()
         }
@@ -59,6 +65,12 @@ class Overlay : TypeManager() {
     companion object {
         @JvmStatic
         fun main(args : Array<String>) {
+            val parser = ArgParser("app")
+            val rev by parser.option(ArgType.Int, description = "The revision you wish to dump").default(0)
+            parser.parse(args)
+            Application.revision = rev
+
+
             Overlay().test()
         }
 

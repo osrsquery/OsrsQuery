@@ -7,7 +7,7 @@ import com.query.Constants.library
 import com.query.cache.Loader
 import com.query.cache.Serializable
 import com.query.cache.definitions.Definition
-import com.query.dump.CacheType
+import com.query.dump.DefinitionsTypes
 import com.query.utils.ByteBufferExt
 import com.query.utils.ConfigType
 import com.query.utils.IndexType
@@ -83,7 +83,7 @@ class ItemProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true) 
         val definitions = archive.fileIds().map {
             decode(ByteBuffer.wrap(archive.file(it)?.data), ItemDefinition(it))
         }
-        return Serializable(CacheType.ITEMS,this, definitions,writeTypes)
+        return Serializable(DefinitionsTypes.ITEMS,this, definitions,writeTypes)
     }
 
     fun decode(buffer: ByteBuffer, definition: ItemDefinition): Definition {

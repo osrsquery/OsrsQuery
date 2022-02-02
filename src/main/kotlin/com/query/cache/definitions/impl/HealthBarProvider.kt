@@ -6,7 +6,7 @@ import com.query.Constants.library
 import com.query.cache.Loader
 import com.query.cache.Serializable
 import com.query.cache.definitions.Definition
-import com.query.dump.CacheType
+import com.query.dump.DefinitionsTypes
 import com.query.utils.ConfigType
 import com.query.utils.IndexType
 import com.query.utils.index
@@ -48,7 +48,7 @@ class HealthBarProvider(val latch: CountDownLatch?, val writeTypes : Boolean = t
         val definitions = archive.fileIds().map {
            decode(ByteBuffer.wrap(archive.file(it)?.data), HealthBarDefinition(it))
         }
-        return Serializable(CacheType.HEALTH,this, definitions,writeTypes)
+        return Serializable(DefinitionsTypes.HEALTH,this, definitions,writeTypes)
     }
 
     fun decode(buffer: ByteBuffer, definition: HealthBarDefinition): Definition {

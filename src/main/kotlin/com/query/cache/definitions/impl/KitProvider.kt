@@ -6,7 +6,7 @@ import com.query.Constants.library
 import com.query.cache.Loader
 import com.query.cache.Serializable
 import com.query.cache.definitions.Definition
-import com.query.dump.CacheType
+import com.query.dump.DefinitionsTypes
 import com.query.utils.ConfigType
 import com.query.utils.IndexType
 import com.query.utils.index
@@ -42,7 +42,7 @@ class KitProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true) :
         val definitions = archive.fileIds().map {
            decode(ByteBuffer.wrap(archive.file(it)?.data), KitDefinition(it))
         }
-        return Serializable(CacheType.KIT,this, definitions,writeTypes)
+        return Serializable(DefinitionsTypes.KIT,this, definitions,writeTypes)
     }
 
     fun decode(buffer: ByteBuffer, definition: KitDefinition): Definition {
