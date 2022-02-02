@@ -54,7 +54,7 @@ object Application {
             val latch = CountDownLatch(1)
 
             val commands = listOf(
-                SpriteProvider(latch),
+                SpriteProvider(latch,false),
                 AreaProvider(latch),
                 EnumProvider(latch),
                 HealthBarProvider(latch),
