@@ -2,9 +2,12 @@ package com.query.utils
 
 import com.displee.cache.CacheLibrary
 import com.query.Application
-import com.query.cache.download.UpdateCache
 import me.tongfei.progressbar.ProgressBar
 import me.tongfei.progressbar.ProgressBarStyle
+import org.apache.commons.lang.StringUtils
+import java.io.BufferedWriter
+import java.io.File
+import java.io.FileWriter
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.ZoneOffset
@@ -56,4 +59,10 @@ fun progress(task : String, amt : Long) : ProgressBar {
         0L,
         Duration.ZERO
     )
+}
+
+fun writeJson(file : File, data : Any, prettyPrint : Boolean = true) {
+    var output = BufferedWriter(FileWriter(file))
+    output.write(data.jsonToString(prettyPrint))
+    output.close()
 }

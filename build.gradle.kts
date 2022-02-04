@@ -25,7 +25,9 @@ dependencies {
     implementation("io.netty:netty-all:5.0.0.Alpha2")
     implementation("com.xenomachina:kotlin-argparser:2.0.7")
     implementation("org.jetbrains.kotlinx:kotlinx-cli-jvm:0.3.4")
-
+    implementation("com.google.guava:guava:31.0.1-jre")
+    implementation("com.squareup.okhttp:okhttp:2.7.5")
+    implementation("commons-lang:commons-lang:2.6")
 
 }
 

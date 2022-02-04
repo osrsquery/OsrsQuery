@@ -1,6 +1,5 @@
 package com.query.dump
 
-import com.query.cache.definitions.Definition
 import com.query.cache.definitions.impl.*
 import com.query.cache.download.UpdateCache
 
@@ -22,6 +21,8 @@ interface TypeManager {
             DefinitionsTypes.ITEMS -> ItemProvider(null,false).run()
             DefinitionsTypes.TEXTURES -> TextureProvider(null,false).run()
             DefinitionsTypes.OVERLAYS -> OverlayProvider(null,false).run()
+            DefinitionsTypes.MUSIC -> MusicProvider(null,false).run()
+            DefinitionsTypes.JINGLE -> JingleProvider(null,false).run()
         }
     }
 

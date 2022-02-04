@@ -25,7 +25,9 @@ enum class DefinitionsTypes {
     SPOTANIMS,
     UNDERLAYS,
     VARBITS,
-    TEXTURES;
+    TEXTURES,
+    MUSIC,
+    JINGLE;
 
     val typeName = this.name.lowercase()
 

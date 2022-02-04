@@ -49,7 +49,7 @@ object Application {
             UpdateCache.initialize()
 
             //Latch is necessary.
-            val latch = CountDownLatch(1)
+            val latch = CountDownLatch(17)
 
             val commands = listOf(
                 SpriteProvider(latch,false),
@@ -57,6 +57,8 @@ object Application {
                 EnumProvider(latch),
                 HealthBarProvider(latch),
                 InvProvider(latch),
+                MusicProvider(latch,false),
+                JingleProvider(latch,false),
                 ItemProvider(latch),
                 KitProvider(latch),
                 NpcProvider(latch),
@@ -84,6 +86,8 @@ object Application {
             MapScene().load()
             Overlay().load()
             Textures().load()
+            Music().load()
+            Jingle().load()
         }
 
         logger.info { "Dump Completed in ${TimeUtils.millsToFormat(time)}" }
@@ -236,6 +240,20 @@ object Application {
      */
     fun varbits(): List<VarbitDefinition> {
         return definitions[VarbitDefinition::class.java]?.filterIsInstance<VarbitDefinition>()?: error("Varbit Definitions not loaded.")
+    }
+
+    /**
+     * Gets Music tracks.
+     */
+    fun music(): List<MusicDefinition> {
+        return definitions[MusicDefinition::class.java]?.filterIsInstance<MusicDefinition>()?: error("Music Definitions not loaded.")
+    }
+
+    /**
+     * Gets Jingle tracks.
+     */
+    fun jingle(): List<JingleDefinition> {
+        return definitions[JingleDefinition::class.java]?.filterIsInstance<JingleDefinition>()?: error("Jingle Definitions not loaded.")
     }
 
 
