@@ -1,6 +1,6 @@
 
-<p align="center"><img width=12.5% src="https://i.imgur.com/wnBQsOy.png"></p>
-<p align="center"><img width=60% src="https://i.imgur.com/0iHhklb.png"></p>
+<p align="center"><img width=60% src="https://i.imgur.com/8dG94S0.png"></p>
+
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 
