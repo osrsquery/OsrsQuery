@@ -6,6 +6,7 @@ import com.query.cache.definitions.Definition
 import com.query.cache.definitions.impl.*
 import com.query.cache.download.CacheInfo
 import com.query.cache.download.UpdateCache
+import com.query.dump.dumper317.ModelDumper
 import com.query.dump.impl.*
 import com.query.utils.TimeUtils
 import kotlinx.cli.ArgParser
@@ -79,13 +80,14 @@ object Application {
             }
             latch.await()
 
-            Sprites().load()
-            MapFunctions().load()
-            MapScene().load()
-            Overlay().load()
-            Textures().load()
-            Music().load()
-            Jingle().load()
+            //Sprites().load()
+            //MapFunctions().load()
+            //MapScene().load()
+            //Overlay().load()
+            //Textures().load()
+            //Music().load()
+            //Jingle().load()
+            ModelDumper.init()
         }
 
         logger.info { "Dump Completed in ${TimeUtils.millsToFormat(time)}" }
