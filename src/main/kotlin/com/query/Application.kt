@@ -40,6 +40,8 @@ object Application {
 
     lateinit var cacheInfo : CacheInfo
 
+    var gson = GsonBuilder().setPrettyPrinting().create()
+
     fun initialize(rev : Int) {
         val time = measureTimeMillis {
 
@@ -48,7 +50,7 @@ object Application {
             UpdateCache.initialize()
 
             //Latch is necessary.
-            val latch = CountDownLatch(18)
+            val latch = CountDownLatch(17)
 
             val commands = listOf(
                 SpriteProvider(latch,false),

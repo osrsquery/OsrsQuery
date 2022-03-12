@@ -9,7 +9,12 @@ object Constants {
     const val BASE_DIR = "./repository/"
     var properties : Properties = Properties()
     lateinit var library : CacheLibrary
+
+    /**
+     * The client for OkHttp.
+     */
     val client = OkHttpClient()
 
+    const val OSRS_WIKI = "https://oldschool.runescape.wiki/w/"
 
 }

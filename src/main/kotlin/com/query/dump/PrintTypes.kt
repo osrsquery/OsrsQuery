@@ -1,10 +1,10 @@
 package com.query.dump
 
+import com.query.Application.gson
 import com.query.cache.definitions.Definition
 import com.query.utils.FileUtils
 import com.query.utils.capitalizeWords
 import com.query.utils.progress
-import com.query.utils.writeJson
 import java.io.BufferedWriter
 import java.io.File
 import java.io.FileWriter
@@ -40,12 +40,16 @@ class PrintTypes(type : DefinitionsTypes, def : List<Definition>) {
     private val location = FileUtils.getDir("/types/${name}/")
 
     init {
+        val output = BufferedWriter(FileWriter(completeLocation))
 
-        writeJson(completeLocation,def)
+        output.write(gson.toJson(def))
+        output.close()
 
         val progress = progress("Writing ${type.typeName.capitalizeWords()} Types", def.size.toLong())
         def.forEach {
-            writeJson(File(location,"${it.id}.json"),it)
+            val file = BufferedWriter(FileWriter(File(location,"${it.id}.json")))
+            file.write(gson.toJson(it))
+            file.close()
             progress.step()
         }
         progress.close()
