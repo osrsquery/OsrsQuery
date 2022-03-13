@@ -1,49 +1,24 @@
 package com.query.dump.dumper317
 
-import com.displee.cache.index.ReferenceTable
 import com.displee.compress.decompress
 import com.query.Constants
-import com.query.cache.definitions.impl.SpriteDefinition
-import com.query.utils.IndexType
-import com.query.utils.index
-import java.io.DataOutputStream
-import java.io.FileOutputStream
-import java.nio.file.FileStore
-
+import com.query.utils.*
+import com.query.utils.FileUtils.getFile
 
 object ModelDumper {
 
 
     fun init() {
-
-
-
-
 		val table = Constants.library.index(IndexType.MODELS)
-		println("Model Size : ${table.archives().size}")
-		for (i in 0 until table.archives().size) {
-			val sector = table.readArchiveSector(i) ?: continue
+		val progress = progress("Dumping Models", table.archives().size.toLong())
+		for (index in 0 until table.archives().size) {
+			val sector = table.readArchiveSector(index) ?: continue
 			val data = sector.decompress()
-
+			gzip(getFile("cache317/index1/","$index.gz"),data)
+			progress.step()
 		}
+		progress.close()
 
-
-		//Cache(FileStore.open(Constants.CACHE_PATH)).use { cache ->
-		//	val table: ReferenceTable = cache.getReferenceTable(7)
-	//		for (i in 0 until table.capacity()) {
-	//			if (table.getEntry(i) == null) continue
-//				val container: Container = cache.read(7, i)
-//				val bytes = ByteArray(container.getData().limit())
-//				container.getData().get(bytes)
-//				DataOutputStream(FileOutputStream(File(directory, "$i.dat"))).use { dos ->
-//					dos.write(
-//						bytes
-//					)
-//				}
-//				val progress: Double = i.toDouble() / table.capacity() * 100
-//				System.out.printf("%.2f%s\n", progress, "%")
-//			}
-//		}
 	}
 
 }

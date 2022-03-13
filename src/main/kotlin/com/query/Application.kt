@@ -52,14 +52,15 @@ object Application {
             //Latch is necessary.
             val latch = CountDownLatch(17)
 
+            SpriteProvider(latch).run()
+
             val commands = listOf(
-                SpriteProvider(latch,false),
                 AreaProvider(latch),
                 EnumProvider(latch),
                 HealthBarProvider(latch),
                 InvProvider(latch),
-                MusicProvider(latch,false),
-                JingleProvider(latch,false),
+                MusicProvider(latch),
+                JingleProvider(latch),
                 ItemProvider(latch),
                 KitProvider(latch),
                 NpcProvider(latch),

@@ -4,15 +4,14 @@ import com.displee.cache.CacheLibrary
 import com.query.Application
 import me.tongfei.progressbar.ProgressBar
 import me.tongfei.progressbar.ProgressBarStyle
-import org.apache.commons.lang.StringUtils
-import java.io.BufferedWriter
-import java.io.File
-import java.io.FileWriter
+import java.io.*
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
+import java.util.zip.GZIPOutputStream
+
 
 fun CacheLibrary.index(type : IndexType) = index(type.number)
 
@@ -27,6 +26,26 @@ fun String.stringToTimestamp() : LocalDateTime {
     val time = this.replace("T"," ").replaceAfterLast(".","")
     val dateTime = LocalDateTime.parse(time.replaceLastLetter(""), formatter)
     return dateTime
+}
+
+
+fun gzip(output : File,uncompressedData: ByteArray) {
+    try {
+        ByteArrayOutputStream(uncompressedData.size).use { bos ->
+            GZIPOutputStream(output.outputStream()).use { gzipOS ->
+                gzipOS.write(uncompressedData)
+                gzipOS.close()
+            }
+        }
+    } catch (e: IOException) {
+        e.printStackTrace()
+    }
+}
+
+fun gzip(content: String): ByteArray {
+    val bos = ByteArrayOutputStream()
+    GZIPOutputStream(bos).bufferedWriter().use { it.write(content) }
+    return bos.toByteArray()
 }
 
 fun LocalDateTime.toEchochUTC() : Long {
