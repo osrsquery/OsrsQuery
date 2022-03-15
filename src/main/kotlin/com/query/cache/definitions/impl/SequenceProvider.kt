@@ -8,10 +8,7 @@ import com.query.cache.Loader
 import com.query.cache.Serializable
 import com.query.cache.definitions.Definition
 import com.query.dump.DefinitionsTypes
-import com.query.utils.ByteBufferExt
-import com.query.utils.ConfigType
-import com.query.utils.IndexType
-import com.query.utils.index
+import com.query.utils.*
 import java.nio.ByteBuffer
 import java.util.concurrent.CountDownLatch
 
@@ -54,53 +51,53 @@ class SequenceProvider(val latch: CountDownLatch?, val writeTypes : Boolean = tr
     }
 
     fun decode(buffer: ByteBuffer, definition: SequenceDefinition): Definition {
-        do when (val opcode: Int = buffer.get().toInt() and 0xff) {
+        do when (val opcode: Int = buffer.uByte) {
             1 -> {
-                val length: Int = buffer.short.toInt() and 0xffff
+                val length: Int = buffer.uShort
                 definition.frameLengths = IntArray(length)
                 (0 until length).forEach {
-                    definition.frameLengths!![it] = buffer.short.toInt() and 0xffff
+                    definition.frameLengths!![it] = buffer.uShort
                 }
                 definition.frameIDs = IntArray(length)
                 (0 until length).forEach {
-                    definition.frameIDs!![it] = buffer.short.toInt() and 0xffff
+                    definition.frameIDs!![it] = buffer.uShort
                 }
                 (0 until length).forEach {
-                    definition.frameIDs!![it] += (buffer.short.toInt() and 0xffff) shl 16
+                    definition.frameIDs!![it] += (buffer.uShort) shl 16
                 }
             }
-            2 -> definition.frameStep = buffer.short.toInt() and 0xffff
+            2 -> definition.frameStep = buffer.uShort
             3 -> {
-                val length: Int = buffer.get().toInt() and 0xff
+                val length: Int = buffer.uByte
                 definition.interleaveLeave = IntArray(length + 1)
                 (0 until length).forEach {
-                    definition.interleaveLeave!![it] = buffer.get().toInt() and 0xff
+                    definition.interleaveLeave!![it] = buffer.uByte
                 }
                 definition.interleaveLeave!![length] = 9_999_999
             }
             4 -> definition.stretches = true
-            5 -> definition.forcedPriority = buffer.get().toInt() and 0xff
-            6 -> definition.leftHandItem = buffer.short.toInt() and 0xffff
-            7 -> definition.rightHandItem = buffer.short.toInt() and 0xffff
-            8 -> definition.maxLoops = buffer.get().toInt() and 0xff
-            9 -> definition.precedenceAnimating = buffer.get().toInt() and 0xff
-            10 -> definition.priority = buffer.get().toInt() and 0xff
-            11 -> definition.replyMode = buffer.get().toInt() and 0xff
+            5 -> definition.forcedPriority = buffer.uByte
+            6 -> definition.leftHandItem = buffer.uShort
+            7 -> definition.rightHandItem = buffer.uShort
+            8 -> definition.maxLoops = buffer.uByte
+            9 -> definition.precedenceAnimating = buffer.uByte
+            10 -> definition.priority = buffer.uByte
+            11 -> definition.replyMode = buffer.uByte
             12 -> {
-                val length: Int = buffer.get().toInt() and 0xff
+                val length: Int = buffer.uByte
                 definition.chatFrameIds = IntArray(length)
                 (0 until length).forEach {
-                    definition.chatFrameIds!![it] = buffer.short.toInt() and 0xffff
+                    definition.chatFrameIds!![it] = buffer.uShort
                 }
                 (0 until length).forEach {
-                    definition.chatFrameIds!![it] += (buffer.short.toInt() and 0xffff) shl 16
+                    definition.chatFrameIds!![it] += (buffer.uShort) shl 16
                 }
             }
             13 -> {
-                val length: Int = buffer.get().toInt() and 0xff
+                val length: Int = buffer.uByte
                 definition.frameSounds = IntArray(length)
                 (0 until length).forEach {
-                    definition.frameSounds!![it] = ByteBufferExt.getMedium(buffer)
+                    definition.frameSounds!![it] = buffer.medium
                 }
             }
             0 -> break

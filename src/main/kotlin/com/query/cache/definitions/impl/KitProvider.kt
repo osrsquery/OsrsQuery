@@ -7,9 +7,7 @@ import com.query.cache.Loader
 import com.query.cache.Serializable
 import com.query.cache.definitions.Definition
 import com.query.dump.DefinitionsTypes
-import com.query.utils.ConfigType
-import com.query.utils.IndexType
-import com.query.utils.index
+import com.query.utils.*
 import java.nio.ByteBuffer
 import java.util.concurrent.CountDownLatch
 
@@ -46,22 +44,22 @@ class KitProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true) :
     }
 
     fun decode(buffer: ByteBuffer, definition: KitDefinition): Definition {
-        do when (val opcode: Int = buffer.get().toInt() and 0xff) {
-            1 -> definition.bodyPartId = buffer.get().toInt() and 0xff
+        do when (val opcode: Int = buffer.uByte) {
+            1 -> definition.bodyPartId = buffer.uByte
             2 -> {
-                val length: Int = buffer.get().toInt() and 0xff
+                val length: Int = buffer.uByte
                 when {
                     length > 0 -> {
                         definition.models = IntArray(length)
                         (0 until length).forEach {
-                            definition.models!![it] = buffer.short.toInt() and 0xffff
+                            definition.models!![it] = buffer.uShort
                         }
                     }
                 }
             }
             3 -> definition.nonSelectable = true
             40 -> {
-                val length: Int = buffer.get().toInt() and 0xff
+                val length: Int = buffer.uByte
                 when {
                     length > 0 -> {
                         definition.recolorToFind = ShortArray(length)
@@ -74,7 +72,7 @@ class KitProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true) :
                 }
             }
             41 -> {
-                val length: Int = buffer.get().toInt() and 0xff
+                val length: Int = buffer.uByte
                 when {
                     length > 0 -> {
                         definition.retextureToFind = ShortArray(length)
@@ -87,7 +85,7 @@ class KitProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true) :
                 }
             }
             in 60..70 -> {
-                definition.chatheadModels[opcode - 60] = buffer.short.toInt() and 0xffff
+                definition.chatheadModels[opcode - 60] = buffer.uShort
             }
             0 -> break
             else -> logger.warn { "Unhandled kit definition opcode with id: ${opcode}." }

@@ -8,10 +8,7 @@ import com.query.cache.Loader
 import com.query.cache.Serializable
 import com.query.cache.definitions.Definition
 import com.query.dump.DefinitionsTypes
-import com.query.utils.ByteBufferExt
-import com.query.utils.ConfigType
-import com.query.utils.IndexType
-import com.query.utils.index
+import com.query.utils.*
 import java.nio.ByteBuffer
 import java.util.concurrent.CountDownLatch
 
@@ -44,11 +41,11 @@ class ParamProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true)
     }
 
     fun decode(buffer: ByteBuffer, definition: ParamDefinition): Definition {
-        do when (val opcode: Int = buffer.get().toInt() and 0xff) {
-            1 -> definition.type = (buffer.get().toInt() and 0xff).toChar()
+        do when (val opcode: Int = buffer.uByte) {
+            1 -> definition.type = (buffer.uByte).toChar()
             2 -> definition.defaultInt = buffer.int
             4 -> definition.isMembers = false
-            5 -> definition.defaultString = ByteBufferExt.getString(buffer)
+            5 -> definition.defaultString = buffer.rsString
             0 -> break
             else -> logger.warn { "Unhandled param definition opcode with id: ${opcode}." }
         } while (true)

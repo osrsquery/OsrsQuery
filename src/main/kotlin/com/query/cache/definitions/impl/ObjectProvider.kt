@@ -82,61 +82,61 @@ class ObjectProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true
     }
 
     private fun decode(buffer: ByteBuffer, definition: ObjectDefinition): Definition {
-        do when (val opcode: Int = buffer.get().toInt() and 0xff) {
+        do when (val opcode: Int = buffer.uByte) {
             1 -> {
-                val length: Int = buffer.get().toInt() and 0xff
+                val length: Int = buffer.uByte
                 when {
                     length > 0 -> {
                         definition.objectTypes = IntArray(length)
                         definition.objectModels = IntArray(length)
                         (0 until length).forEach {
-                            definition.objectModels!![it] = buffer.short.toInt() and 0xffff
-                            definition.objectTypes!![it] = buffer.get().toInt() and 0xff
+                            definition.objectModels!![it] = buffer.uShort
+                            definition.objectTypes!![it] = buffer.uByte
                         }
                     }
                 }
             }
-            2 -> definition.name = ByteBufferExt.getString(buffer)
+            2 -> definition.name = buffer.rsString
             5 -> {
-                val length: Int = buffer.get().toInt() and 0xff
+                val length: Int = buffer.uByte
                 when {
                     length > 0 -> {
                         definition.objectTypes = null
                         definition.objectModels = IntStream.range(0, length).map {
-                            buffer.short.toInt() and 0xffff
+                            buffer.uShort
                         }.toArray()
                     }
                 }
             }
-            14 -> definition.sizeX = buffer.get().toInt() and 0xff
-            15 -> definition.sizeY = buffer.get().toInt() and 0xff
+            14 -> definition.sizeX = buffer.uByte
+            15 -> definition.sizeY = buffer.uByte
             17 -> {
                 definition.interactType = 0
                 definition.blocksProjectile = false
             }
             18 -> definition.blocksProjectile = false
-            19 -> definition.wallOrDoor = buffer.get().toInt() and 0xff
+            19 -> definition.wallOrDoor = buffer.uByte
             21 -> definition.contouredGround = 0
             22 -> definition.mergeNormals = true
             23 -> definition.aBool2111 = true
             24 -> {
-                definition.animationId = buffer.short.toInt() and 0xffff
+                definition.animationId = buffer.uShort
                 if (definition.animationId == 65535) {
                     definition.animationId = -1
                 }
             }
             27 -> definition.interactType = 1
-            28 -> definition.decorDisplacement = buffer.get().toInt() and 0xff
-            29 -> definition.ambient = buffer.get().toInt()
-            39 -> definition.contrast = buffer.get().toInt() * 25
+            28 -> definition.decorDisplacement = buffer.uByte
+            29 -> definition.ambient = buffer.byte.toInt()
+            39 -> definition.contrast = buffer.byte.toInt() * 25
             in 30..34 -> {
-                definition.actions[opcode - 30] = ByteBufferExt.getString(buffer)
+                definition.actions[opcode - 30] = buffer.rsString
                 if (definition.actions[opcode - 30].equals("Hidden", true)) {
                     definition.actions[opcode - 30] = null
                 }
             }
             40 -> {
-                val length: Int = buffer.get().toInt() and 0xff
+                val length: Int = buffer.uByte
                 definition.recolorToFind = ShortArray(length)
                 definition.recolorToReplace = ShortArray(length)
                 (0 until length).forEach {
@@ -145,7 +145,7 @@ class ObjectProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true
                 }
             }
             41 -> {
-                val length: Int = buffer.get().toInt() and 0xff
+                val length: Int = buffer.uByte
                 definition.retextureToFind = ShortArray(length)
                 definition.retextureToReplace = ShortArray(length)
                 (0 until length).forEach {
@@ -153,35 +153,35 @@ class ObjectProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true
                     definition.retextureToReplace!![it] = buffer.short
                 }
             }
-            61 -> definition.category = buffer.short.toInt() and 0xffff
+            61 -> definition.category = buffer.uShort
             62 -> definition.isRotated = true
             64 -> definition.shadow = false
-            65 -> definition.modelSizeX = buffer.short.toInt() and 0xffff
-            66 -> definition.modelSizeHeight = buffer.short.toInt() and 0xffff
-            67 -> definition.modelSizeY = buffer.short.toInt() and 0xffff
-            68 -> definition.mapSceneID = buffer.short.toInt() and 0xffff
-            69 -> definition.blockingMask = buffer.get().toInt()
-            70 -> definition.offsetX = buffer.short.toInt() and 0xffff
-            71 -> definition.offsetHeight = buffer.short.toInt() and 0xffff
-            72 -> definition.offsetY = buffer.short.toInt() and 0xffff
+            65 -> definition.modelSizeX = buffer.uShort
+            66 -> definition.modelSizeHeight = buffer.uShort
+            67 -> definition.modelSizeY = buffer.uShort
+            68 -> definition.mapSceneID = buffer.uShort
+            69 -> definition.blockingMask = buffer.byte.toInt()
+            70 -> definition.offsetX = buffer.uShort
+            71 -> definition.offsetHeight = buffer.uShort
+            72 -> definition.offsetY = buffer.uShort
             73 -> definition.obstructsGround = true
             74 -> definition.isHollow = true
-            75 -> definition.supportsItems = buffer.get().toInt() and 0xff
+            75 -> definition.supportsItems = buffer.uByte
             77 -> {
-                var varbitId: Int = buffer.short.toInt() and 0xffff
+                var varbitId: Int = buffer.uShort
                 if (varbitId == 65535) {
                     varbitId = -1
                 }
                 definition.varbitId = varbitId
-                var varpId: Int = buffer.short.toInt() and 0xffff
+                var varpId: Int = buffer.uShort
                 if (varpId == 65535) {
                     varpId = -1
                 }
                 definition.varpId = varpId
-                val length: Int = buffer.get().toInt() and 0xff
+                val length: Int = buffer.uByte
                 val configChangeDest = IntArray(length + 2)
                 IntStream.rangeClosed(0, length).forEach {
-                    configChangeDest[it] = buffer.short.toInt() and 0xffff
+                    configChangeDest[it] = buffer.uShort
                     when {
                         configChangeDest[it] == 65535 -> {
                             configChangeDest[it] = -1
@@ -192,40 +192,40 @@ class ObjectProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true
                 definition.configChangeDest = configChangeDest
             }
             78 -> {
-                definition.ambientSoundId = buffer.short.toInt() and 0xffff
-                definition.anInt2083 = buffer.get().toInt() and 0xff
+                definition.ambientSoundId = buffer.uShort
+                definition.anInt2083 = buffer.uByte
             }
             79 -> {
-                definition.anInt2112 = buffer.short.toInt() and 0xffff
-                definition.anInt2113 = buffer.short.toInt() and 0xffff
-                definition.anInt2083 = buffer.get().toInt() and 0xff
-                val length: Int = buffer.get().toInt() and 0xff
+                definition.anInt2112 = buffer.uShort
+                definition.anInt2113 = buffer.uShort
+                definition.anInt2083 = buffer.uByte
+                val length: Int = buffer.uByte
                 definition.anIntArray2084 = IntStream.range(0, length).map {
-                    buffer.short.toInt() and 0xffff
+                    buffer.uShort
                 }.toArray()
             }
-            81 -> definition.contouredGround = (buffer.get().toInt() and 0xff) * 256
-            60,82 -> definition.mapAreaId = buffer.short.toInt() and 0xffff
+            81 -> definition.contouredGround = (buffer.uByte) * 256
+            60,82 -> definition.mapAreaId = buffer.uShort
             89 -> definition.randomizeAnimStart = true
             92 -> {
-                var varbitId: Int = buffer.short.toInt() and 0xffff
+                var varbitId: Int = buffer.uShort
                 if (varbitId == 65535) {
                     varbitId = -1
                 }
                 definition.varbitId = varbitId
-                var varpId: Int = buffer.short.toInt() and 0xffff
+                var varpId: Int = buffer.uShort
                 if (varpId == 65535) {
                     varpId = -1
                 }
                 definition.varpId = varpId
-                var value: Int = buffer.short.toInt() and 0xffff
+                var value: Int = buffer.uShort
                 if (value == 65535) {
                     value = -1
                 }
-                val length: Int = buffer.get().toInt() and 0xff
+                val length: Int = buffer.uByte
                 val configChangeDest = IntArray(length + 2)
                 IntStream.rangeClosed(0, length).forEach {
-                    configChangeDest[it] = buffer.short.toInt() and 0xffff
+                    configChangeDest[it] = buffer.uShort
                     when {
                         configChangeDest[it] == 65535 -> {
                             configChangeDest[it] = -1
@@ -236,12 +236,12 @@ class ObjectProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true
                 definition.configChangeDest = configChangeDest
             }
             249 -> {
-                val length: Int = buffer.get().toInt() and 0xff
+                val length: Int = buffer.uByte
                 (0 until length).forEach { _ ->
-                    val string: Boolean = (buffer.get().toInt() and 0xff) == 1
-                    val key: Int = ByteBufferExt.getMedium(buffer)
+                    val string: Boolean = (buffer.uByte) == 1
+                    val key: Int = buffer.medium
                     val value: Any = if (string) {
-                        ByteBufferExt.getString(buffer)
+                        buffer.rsString
                     } else {
                         buffer.int
                     }

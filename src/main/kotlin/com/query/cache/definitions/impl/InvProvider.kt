@@ -7,9 +7,7 @@ import com.query.cache.Loader
 import com.query.cache.Serializable
 import com.query.cache.definitions.Definition
 import com.query.dump.DefinitionsTypes
-import com.query.utils.ConfigType
-import com.query.utils.IndexType
-import com.query.utils.index
+import com.query.utils.*
 import java.nio.ByteBuffer
 import java.util.concurrent.CountDownLatch
 
@@ -39,8 +37,8 @@ class InvProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true) :
     }
 
     fun decode(buffer: ByteBuffer, definition: InvDefinition): Definition {
-        do when (val opcode: Int = buffer.get().toInt() and 0xff) {
-            2 -> definition.size = buffer.short.toInt() and 0xffff
+        do when (val opcode: Int = buffer.uByte) {
+            2 -> definition.size = buffer.uShort
             0 -> break
             else -> logger.warn { "Unhandled inv definition opcode with id: ${opcode}." }
         } while (true)

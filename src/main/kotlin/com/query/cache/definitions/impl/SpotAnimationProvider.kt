@@ -7,9 +7,7 @@ import com.query.cache.Loader
 import com.query.cache.Serializable
 import com.query.cache.definitions.Definition
 import com.query.dump.DefinitionsTypes
-import com.query.utils.ConfigType
-import com.query.utils.IndexType
-import com.query.utils.index
+import com.query.utils.*
 import java.nio.ByteBuffer
 import java.util.concurrent.CountDownLatch
 
@@ -49,30 +47,30 @@ class SpotAnimationProvider(val latch: CountDownLatch?, val writeTypes : Boolean
     }
 
     fun decode(buffer: ByteBuffer, definition: SpotAnimationDefinition): Definition {
-        do when (val opcode: Int = buffer.get().toInt() and 0xff) {
-            1 -> definition.modelId = buffer.short.toInt() and 0xffff
-            2 -> definition.animationId = buffer.short.toInt() and 0xffff
-            4 -> definition.resizeX = buffer.short.toInt() and 0xffff
-            5 -> definition.resizeY = buffer.short.toInt() and 0xffff
-            6 -> definition.rotation = buffer.short.toInt() and 0xffff
-            7 -> definition.ambient = buffer.get().toInt() and 0xff
-            8 -> definition.contrast = buffer.get().toInt() and 0xff
+        do when (val opcode: Int = buffer.uByte) {
+            1 -> definition.modelId = buffer.uShort
+            2 -> definition.animationId = buffer.uShort
+            4 -> definition.resizeX = buffer.uShort
+            5 -> definition.resizeY = buffer.uShort
+            6 -> definition.rotation = buffer.uShort
+            7 -> definition.ambient = buffer.uByte
+            8 -> definition.contrast = buffer.uByte
             40 -> {
-                val length: Int = buffer.get().toInt() and 0xff
+                val length: Int = buffer.uByte
                 definition.recolorToFind = ShortArray(length)
                 definition.recolorToReplace = ShortArray(length)
                 (0 until length).forEach {
-                    definition.recolorToFind!![it] = (buffer.short.toInt() and 0xffff).toShort()
-                    definition.recolorToReplace!![it] = (buffer.short.toInt() and 0xffff).toShort()
+                    definition.recolorToFind!![it] = (buffer.uShort).toShort()
+                    definition.recolorToReplace!![it] = (buffer.uShort).toShort()
                 }
             }
             41 -> {
-                val length: Int = buffer.get().toInt() and 0xff
+                val length: Int = buffer.uByte
                 definition.textureToFind = ShortArray(length)
                 definition.textureToReplace = ShortArray(length)
                 (0 until length).forEach {
-                    definition.textureToFind!![it] = (buffer.short.toInt() and 0xffff).toShort()
-                    definition.textureToReplace!![it] = (buffer.short.toInt() and 0xffff).toShort()
+                    definition.textureToFind!![it] = (buffer.uShort).toShort()
+                    definition.textureToReplace!![it] = (buffer.uShort).toShort()
                 }
             }
             0 -> break

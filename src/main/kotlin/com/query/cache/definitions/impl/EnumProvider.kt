@@ -8,13 +8,12 @@ import com.query.cache.Loader
 import com.query.cache.Serializable
 import com.query.cache.definitions.Definition
 import com.query.dump.DefinitionsTypes
-import com.query.utils.ByteBufferExt
 import com.query.utils.ConfigType
 import com.query.utils.IndexType
 import com.query.utils.index
 import java.nio.ByteBuffer
 import java.util.concurrent.CountDownLatch
-
+import com.query.utils.*
 
 data class EnumDefinition(
     override val id: Int = 0,
@@ -45,21 +44,21 @@ class EnumProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true) 
     }
 
     fun decode(buffer: ByteBuffer, definition: EnumDefinition): Definition {
-        do when (val opcode: Int = buffer.get().toInt() and 0xff) {
-            1 -> definition.keyType = (buffer.get().toInt() and 0xff).toChar()
-            2 -> definition.valType = (buffer.get().toInt() and 0xff).toChar()
-            3 -> definition.defaultString = ByteBufferExt.getString(buffer)
+        do when (val opcode: Int = buffer.uByte) {
+            1 -> definition.keyType = (buffer.uByte).toChar()
+            2 -> definition.valType = (buffer.uByte).toChar()
+            3 -> definition.defaultString = buffer.rsString
             4 -> definition.defaultInt = buffer.int
             5 -> {
-                val length: Int = buffer.short.toInt() and 0xffff
+                val length: Int = buffer.uShort
                 (0 until length).forEach { _ ->
                     val key = buffer.int
-                    val value = ByteBufferExt.getString(buffer)
+                    val value = buffer.rsString
                     definition.params[key.toLong()] = value
                 }
             }
             6 -> {
-                val length: Int = buffer.short.toInt() and 0xffff
+                val length: Int = buffer.uShort
                 (0 until length).forEach { _ ->
                     val key = buffer.int
                     val value: Int = buffer.int

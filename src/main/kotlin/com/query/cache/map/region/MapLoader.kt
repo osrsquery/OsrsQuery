@@ -1,6 +1,8 @@
 package com.query.cache.map.region
 
 import com.query.cache.map.region.data.*
+import com.query.utils.byte
+import com.query.utils.uByte
 import java.nio.ByteBuffer
 
 
@@ -21,16 +23,16 @@ class MapLoader {
 					tiles[z][x][y] = Tile()
 					val tile = tiles[z][x][y]
 					while (true) {
-						val attribute: Int = buffer.get().toInt() and 0xff
+						val attribute: Int = buffer.uByte
 						if (attribute == 0) {
 							break
 						} else if (attribute == 1) {
-							val height: Int = buffer.get().toInt() and 0xff
+							val height: Int = buffer.uByte
 							tile!!.height = height
 							break
 						} else if (attribute <= 49) {
 							tile!!.attrOpcode = attribute
-							tile.overlayId = buffer.get()
+							tile.overlayId = buffer.byte
 							tile.overlayPath = ((attribute - 2) / 4).toByte()
 							tile.overlayRotation = (attribute - 2 and 3).toByte()
 						} else if (attribute <= 81) {

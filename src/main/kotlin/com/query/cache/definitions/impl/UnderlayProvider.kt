@@ -10,6 +10,7 @@ import com.query.dump.DefinitionsTypes
 import com.query.utils.ConfigType
 import com.query.utils.IndexType
 import com.query.utils.index
+import com.query.utils.uByte
 import java.nio.ByteBuffer
 import java.util.concurrent.CountDownLatch
 
@@ -106,8 +107,8 @@ class UnderlayProvider(val latch: CountDownLatch?, val writeTypes : Boolean = tr
     }
 
     fun decode(buffer: ByteBuffer, definition: UnderlayDefinition): Definition {
-        do when (val opcode: Int = buffer.get().toInt() and 0xff) {
-            1 -> definition.color = (((buffer.get().toInt() and 0xff) shl 16) + ((buffer.get().toInt() and 0xff) shl 8) + (buffer.get().toInt() and 0xff))
+        do when (val opcode: Int = buffer.uByte) {
+            1 -> definition.color = (((buffer.uByte) shl 16) + ((buffer.uByte) shl 8) + (buffer.uByte))
             0 -> break
             else -> logger.warn { "Unhandled underlay definition opcode with id: ${opcode}." }
         } while (true)

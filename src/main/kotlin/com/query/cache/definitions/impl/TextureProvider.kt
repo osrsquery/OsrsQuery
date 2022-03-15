@@ -12,7 +12,7 @@ import com.query.utils.index
 import java.nio.ByteBuffer
 import java.util.*
 import java.util.concurrent.CountDownLatch
-import kotlin.experimental.and
+import com.query.utils.*
 
 data class TextureDefinition(
     override var id: Int,
@@ -50,27 +50,27 @@ class TextureProvider(val latch: CountDownLatch?, val writeTypes : Boolean = tru
 
     private fun decode(buffer: ByteBuffer, definition: TextureDefinition): Definition {
 
-        definition.field1777 = buffer.short.toInt() and 0xffff
-        definition.field1778 = buffer.get().toInt() != 0
+        definition.field1777 = buffer.uShort
+        definition.field1778 = buffer.byte.toInt() != 0
 
-        val count: Int = buffer.get().toInt()
+        val count: Int = buffer.byte.toInt()
         val files = IntArray(count)
 
-        for (i in 0 until count) files[i] = buffer.short.toInt() and 0xffff
+        for (i in 0 until count) files[i] = buffer.uShort
 
         definition.fileIds = files
 
         if (count > 1) {
             definition.field1780 = IntArray(count - 1)
             for (var3 in 0 until count - 1) {
-                definition.field1780[var3] = buffer.get().toInt()
+                definition.field1780[var3] = buffer.byte.toInt()
             }
         }
 
         if (count > 1) {
             definition.field1781 = IntArray(count - 1)
             for (var3 in 0 until count - 1) {
-                definition.field1781[var3] = buffer.get().toInt()
+                definition.field1781[var3] = buffer.byte.toInt()
             }
         }
 
@@ -80,8 +80,8 @@ class TextureProvider(val latch: CountDownLatch?, val writeTypes : Boolean = tru
             definition.field1786[var3] = buffer.int
         }
 
-        definition.animationDirection = buffer.get().toInt()
-        definition.animationSpeed = buffer.get().toInt()
+        definition.animationDirection = buffer.byte.toInt()
+        definition.animationSpeed = buffer.byte.toInt()
         definition.sprite = definition.fileIds[0]
 
         return definition

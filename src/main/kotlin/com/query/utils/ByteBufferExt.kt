@@ -2,19 +2,19 @@ package com.query.utils
 
 import java.nio.ByteBuffer
 
-object ByteBufferExt {
+val ByteBuffer.uShort: Int get() = this.short.toInt() and 0xffff
+val ByteBuffer.uByte: Int get() = this.get().toInt() and 0xff
+val ByteBuffer.byte: Byte get() = this.get()
+val ByteBuffer.rsString: String get() = getString(this)
+val ByteBuffer.medium: Int get() = this.get().toInt() and 0xff shl 16 or (this.get().toInt() and 0xff shl 8) or (this.get().toInt() and 0xff)
 
-    fun getMedium(buffer: ByteBuffer): Int {
-        return buffer.get().toInt() and 0xff shl 16 or (buffer.get().toInt() and 0xff shl 8) or (buffer.get().toInt() and 0xff)
+
+
+fun getString(buffer: ByteBuffer): String {
+    val builder = StringBuilder()
+    var b: Int
+    while ((buffer.uByte).also { b = it } != 0) {
+        builder.append(b.toChar())
     }
-
-    fun getString(buffer: ByteBuffer): String {
-        val builder = StringBuilder()
-        var b: Int
-        while ((buffer.get().toInt() and 0xff).also { b = it } != 0) {
-            builder.append(b.toChar())
-        }
-        return builder.toString()
-    }
-
+    return builder.toString()
 }

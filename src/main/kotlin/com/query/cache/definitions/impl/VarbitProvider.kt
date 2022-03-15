@@ -12,7 +12,7 @@ import com.query.utils.IndexType
 import com.query.utils.index
 import java.nio.ByteBuffer
 import java.util.concurrent.CountDownLatch
-
+import com.query.utils.*
 
 data class VarbitDefinition(
     override val id: Int = 0,
@@ -41,11 +41,11 @@ class VarbitProvider(val latch: CountDownLatch?, val writeTypes : Boolean = fals
     }
 
     fun decode(buffer: ByteBuffer, definition: VarbitDefinition): Definition {
-        do when (val opcode: Int = buffer.get().toInt() and 0xff) {
+        do when (val opcode: Int = buffer.uByte) {
             1 -> {
-                definition.index = buffer.short.toInt() and 0xffff
-                definition.leastSignificantBit = buffer.get().toInt() and 0xff
-                definition.mostSignificantBit = buffer.get().toInt() and 0xff
+                definition.index = buffer.uShort
+                definition.leastSignificantBit = buffer.uByte
+                definition.mostSignificantBit = buffer.uByte
             }
             0 -> break
             else -> logger.warn { "Unhandled varbit definition opcode with id: ${opcode}." }
