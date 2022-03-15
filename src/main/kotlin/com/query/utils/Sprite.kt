@@ -1,8 +1,8 @@
 package com.query.utils
 
-import io.netty.buffer.Unpooled
 import java.awt.Color
 import java.awt.Graphics2D
+import java.awt.Image
 import java.awt.image.BufferedImage
 import java.io.File
 import javax.imageio.ImageIO
@@ -21,6 +21,28 @@ data class Sprite(
     var palette : IntArray= IntArray(0),
     var pixels : IntArray = IntArray(0)
 ) {
+
+
+    companion object {
+
+
+
+        fun resize(bufferedImage: BufferedImage,width: Int, height: Int): BufferedImage {
+            val tmp = bufferedImage.getScaledInstance(width, height, 0)
+            val dimg = BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
+            val g2d = dimg.createGraphics()
+            g2d.drawImage(tmp, 0, 0, null)
+            g2d.dispose()
+            return dimg
+        }
+
+    }
+
+    fun toBufferImage() : BufferedImage {
+        val imageTransparent = BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
+        imageTransparent.setRGB(0, 0, width, height, pixels, 0, width)
+        return imageTransparent
+    }
 
     fun writeTransparent(file : File) {
         val imageTransparent = BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)

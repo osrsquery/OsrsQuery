@@ -1,12 +1,12 @@
 package com.query.dump
 
 import com.query.cache.definitions.impl.*
-import com.query.cache.download.UpdateCache
+import com.query.cache.download.CacheLoader
 
 interface TypeManager {
 
     fun test() {
-        UpdateCache.initialize()
+        CacheLoader.initialize()
         requiredDefs.forEach {
             runType(it)
         }

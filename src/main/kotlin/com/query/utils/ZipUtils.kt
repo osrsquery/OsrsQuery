@@ -1,6 +1,5 @@
 package com.query.utils
 
-import com.query.cache.download.UpdateCache
 import mu.KotlinLogging
 import net.lingala.zip4j.ZipFile
 import net.lingala.zip4j.exception.ZipException

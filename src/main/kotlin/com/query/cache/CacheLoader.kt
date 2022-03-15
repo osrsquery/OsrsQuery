@@ -10,18 +10,14 @@ import com.query.Application.saveProperties
 import com.query.Constants.CACHE_DOWNLOAD_LOCATION
 import com.query.Constants.library
 import com.query.Constants.properties
+import com.query.cache.XteaLoader
 import com.query.utils.*
 import com.query.utils.DownloadUtils.downloadCache
-import com.query.utils.FileUtils.getBase
 import com.query.utils.FileUtils.getCacheLocation
-import com.query.utils.FileUtils.getDir
 import com.query.utils.ZipUtils.unZip
 import mu.KotlinLogging
 import java.io.*
 import java.net.URL
-import java.time.LocalDateTime
-import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
 import java.util.*
 import kotlin.system.measureTimeMillis
 
@@ -48,7 +44,7 @@ data class CacheInfoBuilds(
     val major : Int
 )
 
-object UpdateCache {
+object CacheLoader {
 
     private val logger = KotlinLogging.logger {}
 
@@ -69,10 +65,12 @@ object UpdateCache {
                 saveProperties(properties)
             }
         }
-        val message = if(!needsUpdate) "Cache Downloaded in ${TimeUtils.millsToFormat(time)}" else "Cache is Latest"
+        val message = if(needsUpdate) "Cache Downloaded in ${TimeUtils.millsToFormat(time)}" else "Cache is Latest"
         logger.info { message }
+        loadCache()
+    }
 
-
+    private fun loadCache() {
         val pb = progress("Loading Cache",getCacheLocation().listFiles().size.toLong())
 
         library = CacheLibrary(getCacheLocation().toString(), false, object : ProgressListener {
@@ -81,6 +79,7 @@ object UpdateCache {
             }
         })
         pb.close()
+        XteaLoader.load()
     }
 
     private fun needsUpdate() : Boolean {

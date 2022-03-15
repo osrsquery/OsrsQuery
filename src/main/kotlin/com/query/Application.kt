@@ -5,8 +5,8 @@ import com.query.Constants.properties
 import com.query.cache.definitions.Definition
 import com.query.cache.definitions.impl.*
 import com.query.cache.download.CacheInfo
-import com.query.cache.download.UpdateCache
-import com.query.dump.dumper317.ModelDumper
+import com.query.cache.download.CacheLoader
+import com.query.dump.HeightMapDumper
 import com.query.dump.impl.*
 import com.query.utils.TimeUtils
 import kotlinx.cli.ArgParser
@@ -47,7 +47,7 @@ object Application {
 
             revision = rev
 
-            UpdateCache.initialize()
+            CacheLoader.initialize()
 
             //Latch is necessary.
             val latch = CountDownLatch(17)
@@ -83,14 +83,13 @@ object Application {
             }
             latch.await()
 
-            //Sprites().load()
-            //MapFunctions().load()
-            //MapScene().load()
-            //Overlay().load()
-            //Textures().load()
-            //Music().load()
-            //Jingle().load()
-            ModelDumper.init()
+            Sprites().load()
+            MapFunctions().load()
+            MapScene().load()
+            Overlay().load()
+            Textures().load()
+            Music().load()
+            Jingle().load()
         }
 
         logger.info { "Dump Completed in ${TimeUtils.millsToFormat(time)}" }

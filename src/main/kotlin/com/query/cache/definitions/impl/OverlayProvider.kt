@@ -17,10 +17,10 @@ import java.util.concurrent.CountDownLatch
 data class OverlayDefinition(
     override val id: Int = 0,
     var rgbColor: Int = 0,
-    var secondaryRgbColor: Int = 0,
+    var secondaryRgbColor: Int = -1,
     var textureId: Int = -1,
     var hideUnderlay: Boolean = true,
-    var hue: Int? = null,
+    var hue: Int = 0,
     var saturation: Int = 0,
     var lightness: Int = 0,
     var otherHue: Int = 0,
@@ -31,12 +31,14 @@ data class OverlayDefinition(
     fun calculateHsl() {
         if (secondaryRgbColor != -1) {
             calculateHsl(secondaryRgbColor)
-            otherHue = hue!!
+            otherHue = hue
             otherSaturation = saturation
             otherLightness = lightness
         }
         calculateHsl(rgbColor)
     }
+
+
 
     private fun calculateHsl(var1: Int) {
         val var2 = (var1 shr 16 and 255).toDouble() / 256.0
@@ -120,6 +122,7 @@ class OverlayProvider(val latch: CountDownLatch?, val writeTypes : Boolean = tru
             0 -> break
             else -> logger.warn { "Unhandled overlay definition opcode with id: ${opcode}." }
         } while (true)
+        definition.calculateHsl()
         return definition
     }
 

@@ -1,7 +1,6 @@
 package com.query.utils
 
 import com.query.cache.download.CacheInfo
-import com.query.cache.download.UpdateCache
 import mu.KotlinLogging
 import java.io.FileOutputStream
 import java.io.InputStream
