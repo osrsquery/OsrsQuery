@@ -28,17 +28,17 @@ class MapLoader {
 							break
 						} else if (attribute == 1) {
 							val height: Int = buffer.uByte
-							tile!!.height = height
+							tile.height = height
 							break
 						} else if (attribute <= 49) {
-							tile!!.attrOpcode = attribute
+							tile.attrOpcode = attribute
 							tile.overlayId = buffer.byte
 							tile.overlayPath = ((attribute - 2) / 4).toByte()
 							tile.overlayRotation = (attribute - 2 and 3).toByte()
 						} else if (attribute <= 81) {
-							tile!!.settings = (attribute - 49).toByte()
+							tile.settings = (attribute - 49).toByte()
 						} else {
-							tile!!.underlayId = (attribute - 81).toByte()
+							tile.underlayId = (attribute - 81).toByte()
 						}
 					}
 				}

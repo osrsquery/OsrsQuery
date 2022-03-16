@@ -20,13 +20,7 @@ object HeightMapDumperTest {
         val imageFile = getFile("mapImages/","heightmap.png")
         ImageIO.write(image, "png", imageFile)
         logger.info("Heightmap Image Dumped {}", imageFile)
-        image = BufferedImage(1,1,1)
-        dumper = HeightMapGenerator(HeightMapImageBuilder().scale(4).viewable(true).build())
 
-        image = dumper.drawHeightMap(0)
-        val imageFileViewable = getFile("mapImages/","heightmap-viewable.png")
-        ImageIO.write(image, "png", imageFileViewable)
-        logger.info("Heightmap Viewable Image Dumped {}", imageFileViewable)
 
     }
 

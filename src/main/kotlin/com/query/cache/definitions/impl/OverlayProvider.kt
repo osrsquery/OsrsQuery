@@ -7,10 +7,7 @@ import com.query.cache.Loader
 import com.query.cache.Serializable
 import com.query.cache.definitions.Definition
 import com.query.dump.DefinitionsTypes
-import com.query.utils.ConfigType
-import com.query.utils.IndexType
-import com.query.utils.index
-import com.query.utils.uByte
+import com.query.utils.*
 import java.nio.ByteBuffer
 import java.util.concurrent.CountDownLatch
 
@@ -116,10 +113,10 @@ class OverlayProvider(val latch: CountDownLatch?, val writeTypes : Boolean = tru
 
     fun decode(buffer: ByteBuffer, definition: OverlayDefinition): Definition {
         do when (val opcode: Int = buffer.uByte) {
-            1 -> definition.rgbColor = (((buffer.uByte) shl 16) + ((buffer.uByte) shl 8) + (buffer.uByte))
+            1 -> definition.rgbColor = buffer.medium
             2 -> definition.textureId = buffer.uByte
             5 -> definition.hideUnderlay = false
-            7 -> definition.secondaryRgbColor = (((buffer.uByte) shl 16) + ((buffer.uByte) shl 8) + (buffer.uByte))
+            7 -> definition.secondaryRgbColor = buffer.medium
             0 -> break
             else -> logger.warn { "Unhandled overlay definition opcode with id: ${opcode}." }
         } while (true)

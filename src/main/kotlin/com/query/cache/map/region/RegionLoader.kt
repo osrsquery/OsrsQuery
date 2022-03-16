@@ -3,6 +3,7 @@ package com.query.cache.map.region
 import com.query.Constants.library
 import com.query.cache.XteaLoader.getKeys
 import java.io.IOException
+import java.nio.ByteBuffer
 
 
 val DEFAULT_REGION = Region(-1)

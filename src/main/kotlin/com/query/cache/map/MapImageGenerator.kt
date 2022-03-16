@@ -15,555 +15,268 @@ import java.awt.image.BufferedImage
 import java.nio.ByteBuffer
 import kotlin.experimental.and
 import com.query.cache.map.region.*
+import com.query.cache.map.region.data.Location
+import java.awt.RenderingHints
+import javax.imageio.ImageIO
 
 private val logger = KotlinLogging.logger {}
 
 class MapImageGenerator(private val builder : MapImageBuilder) {
 
-    private val wallColor = Color.WHITE.rgb
-    private val doorColor = Color.RED.rgb
 
-    private val scaledMapIcons: MutableMap<Int, Image> = HashMap()
+    private val flags: MutableList<Int> = ArrayList()
+
     var regionLoader: RegionLoader = RegionLoader()
-
     var objects: Map<Int, ObjectDefinition> = HashMap()
     var overlays: Map<Int, OverlayDefinition> = HashMap()
     var underlays: Map<Int, UnderlayDefinition> = HashMap()
     var areas: Map<Int, AreaDefinition> = HashMap()
     var textures: Map<Int, TextureDefinition> = HashMap()
     var sprites: Map<Int, SpriteDefinition> = HashMap()
+    private val scaledMapIcons: MutableMap<Int, Image> = HashMap()
 
     init {
         resizeMapScene()
     }
 
     /**
-     * Main Method to setup the Map drawing
-     * @param  z The plane of the region you wish to draw
+     * Main Method to start the Map drawing
      * @return The Full map Image
      */
-    fun drawMap(z: Int): BufferedImage {
+    fun draw() {
         val minX = regionLoader.lowestX.baseX
         val minY = regionLoader.lowestY.baseY
-        val maxX = regionLoader.highestX.baseX + regionSizeX
-        val maxY = regionLoader.highestY.baseY + regionSizeY
-        val dimX = maxX - minX
-        val dimY = maxY - minY
-        val pixelsX = dimX * builder.scale
-        val pixelsY = dimY * builder.scale
+        val maxX: Int = regionLoader.highestX.baseX + regionSizeX
+        val maxY: Int = regionLoader.highestY.baseY + regionSizeY
+        var dimX = maxX - minX
+        var dimY = maxY - minY
+        val boundX = dimX - 1
+        val boundY = dimY - 1
+        dimX *= builder.scale
+        dimY *= builder.scale
 
         logger.info {
             "====== Setting Drawing Map Image  =====\n" +
-            "Options: ${builder}\n" +
-            "Image Size: $pixelsX px x $pixelsY px\n" +
-            "Size: ${pixelsX * pixelsY * 3 / 1024 / 1024} MB\n" +
-            "Memory: ${Runtime.getRuntime().maxMemory() / 1024L / 1024L}mb\n" +
-            "North most region: ${regionLoader.lowestX.baseX}\n" +
-            "South most region: ${regionLoader.highestY.baseY}\n" +
-            "West most region: ${regionLoader.lowestX.baseX}\n" +
-            "East most region: ${regionLoader.highestY.baseY}\n" +
-            "====== Starting Drawing Map Image =====\n"
+                    "Options: ${builder}\n" +
+                    "Image Size: $dimX px x $dimY px\n" +
+                    "Size: ${dimX * dimY * 3 / 1024 / 1024} MB\n" +
+                    "Memory: ${Runtime.getRuntime().maxMemory() / 1024L / 1024L}mb\n" +
+                    "North most region: ${regionLoader.lowestX.baseX}\n" +
+                    "South most region: ${regionLoader.highestY.baseY}\n" +
+                    "West most region: ${regionLoader.lowestX.baseX}\n" +
+                    "East most region: ${regionLoader.highestY.baseY}\n" +
+                    "====== Starting Drawing Map Image =====\n"
         }
 
-        val image = BufferedImage(pixelsX, pixelsY, BufferedImage.TYPE_INT_RGB)
-        drawMap(image, z)
-        logger.info { "Adding Objects" }
-        drawObjects(image, z)
-        logger.info {"Adding Map Icons / Labels" }
-        drawMapIcons(image, z)
-        return image
-    }
 
-    /**
-     * Renders and draws a Bufferedimage of the region asked for
-     * @param  region  com.query.cache.map.region.Region of the world to draw
-     * @param  z The plane of the region you wish to draw
-     * @return      the image at the specified com.query.cache.map.region.Region
-     */
-    fun drawRegion(region: Region, z: Int): BufferedImage {
-        val pixelsX = regionSizeX * builder.scale
-        val pixelsY = regionSizeY * builder.scale
-        val image = BufferedImage(pixelsX, pixelsY, BufferedImage.TYPE_INT_RGB)
-        drawMap(image, 0, 0, z, region)
-        drawObjects(image, 0, 0, region, z)
-        renderMapIcons(image, 0, 0, region, z)
-        return image
-    }
-
-    /**
-     * Draw a Tile Object on the Image
-     * @param  image  BufferImage to write to
-     * @param  drawBaseX BaseX of the com.query.cache.map.region.Region
-     * @param  drawBaseY BaseY of the com.query.cache.map.region.Region
-     * @param  z Plane of the map
-     * @param  region World com.query.cache.map.region.Region
-     */
-    private fun drawMap(image: BufferedImage, drawBaseX: Int, drawBaseY: Int, z: Int, region: Region) {
-        val map = Array(regionSizeX * builder.scale) {
-            IntArray(regionSizeY * builder.scale)
-        }
-
-        drawMap(map, region, z)
-        var above: Array<IntArray>? = null
-        if (z < 3) {
-            above = Array(regionSizeX * builder.scale) {
-                IntArray(regionSizeY * builder.scale)
+        for (plane in PLANE_MIN..PLANE_MAX) {
+            logger.info { "Generating map images for plane = $plane" }
+            val baseImage: BufferedImage = BigBufferedImage.create(dimX, dimY, BufferedImage.TYPE_INT_RGB)
+            val fullImage: BufferedImage = BigBufferedImage.create(dimX, dimY, BufferedImage.TYPE_INT_RGB)
+            val graphics = fullImage.createGraphics()
+            graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC)
+            graphics.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY)
+            graphics.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE)
+            logger.info { "Adding Underlay" }
+            drawUnderlay(plane, baseImage)
+            logger.info { "Blending Underlay" }
+            blendUnderlay(baseImage, fullImage, boundX, boundY)
+            logger.info { "Drawing Overlay" }
+            drawOverlay(plane, fullImage)
+            logger.info { "Drawing Objects" }
+            drawLocations(plane, graphics)
+            if (builder.walls) {
+                logger.info { "Drawing Walls" }
+                drawWalls(plane, graphics)
             }
-            drawMap(above, region, z + 1)
-        }
-        for (x in 0 until regionSizeX) {
-            for (y in 0 until regionSizeY) {
-                val isBridge = (region.getTileSetting(1, x, regionSizeY - y - 1) and 2) > 0
-                val tileSetting = region.getTileSetting(z, x, regionSizeY - y - 1).toInt()
-                if (!isBridge && (tileSetting and 24) < 1) {
-                    drawTile(image, map, drawBaseX, drawBaseY, x, y)
-                }
-                if (z < 3 && isBridge) // client also has a check for &8 != 0 here
-                {
-                    drawTile(image, above?: error("Error Finding Above Pixels"), drawBaseX, drawBaseY, x, y)
-                }
+            if (builder.drawFunctions) {
+                logger.info {"Adding Map Icons / Labels" }
+                drawIcons(plane, graphics)
             }
+
+            drawRegions(graphics)
+            graphics.dispose()
+
+            ImageIO.write(fullImage, "png", FileUtils.getFile("mapImages/", "map-$plane.png"))
         }
     }
 
     /**
-     * Draw a Tile Object on the Image
-     * @param  to  BufferImage to write to
-     * @param  pixels Map Image Pixels
-     * @param  drawBaseX BaseX of the com.query.cache.map.region.Region
-     * @param  drawBaseY BaseY of the com.query.cache.map.region.Region
-     * @param  x Tile X Position
-     * @param  y Tile Y Position
+     * Draws the map Underlay
+     * @param plane Plane of the Overlay to be drawn
      */
-    private fun drawTile(to: BufferedImage, pixels: Array<IntArray>, drawBaseX: Int, drawBaseY: Int, x: Int, y: Int) {
-        for (i in 0 until builder.scale) {
-            for (j in 0 until builder.scale) {
-                to.setRGB(
-                    drawBaseX * builder.scale + x * builder.scale + i,
-                    drawBaseY * builder.scale + y * builder.scale + j,
-                    pixels[x * builder.scale + i][y * builder.scale + j]
-                )
-            }
-        }
-    }
-
-    /**
-     * Draw map Pixels on the Image
-     * @param  pixels  Pixels of the Image
-     * @param  region  com.query.cache.map.region.Region of the Map
-     * @param  z Plane to look for objects in
-     */
-    private fun drawMap(pixels: Array<IntArray>, region: Region, z: Int) {
-        val baseX = region.baseX
-        val baseY = region.baseY
-        val len = regionSizeX + BLEND * 2
-        val hues = IntArray(len)
-        val sats = IntArray(len)
-        val light = IntArray(len)
-        val mul = IntArray(len)
-        val num = IntArray(len)
-        val hasLeftRegion = regionLoader.findRegionForWorldCoordinates(baseX - 1, baseY) != null
-        val hasRightRegion = regionLoader.findRegionForWorldCoordinates(baseX + regionSizeX, baseY) != null
-        val hasUpRegion = regionLoader.findRegionForWorldCoordinates(baseX, baseY + regionSizeY) != null
-        val hasDownRegion = regionLoader.findRegionForWorldCoordinates(baseX, baseY - 1) != null
-        for (xi in (if (hasLeftRegion) -BLEND * 2 else -BLEND) until regionSizeX + if (hasRightRegion) BLEND * 2 else BLEND) {
-            for (yi in (if (hasDownRegion) -BLEND else 0) until regionSizeY + if (hasUpRegion) BLEND else 0) {
-                val xr = xi + BLEND
-                if (xr >= (if (hasLeftRegion) -BLEND else 0) && xr < regionSizeX + (if (hasRightRegion) BLEND else 0)) {
-                    val r = regionLoader.findRegionForWorldCoordinates(baseX + xr, baseY + yi)
-                    if (r != null) {
-                        val underlayId = r.getUnderlayId(z, convert(xr), convert(yi))
-                        if (underlayId > 0) {
-                            val underlay = findUnderlay(underlayId - 1)
-                            hues[yi + BLEND] += underlay.hue
-                            sats[yi + BLEND] += underlay.saturation
-                            light[yi + BLEND] += underlay.lightness
-                            mul[yi + BLEND] += underlay.hueMultiplier
-                            num[yi + BLEND]++
-                        }
-                    }
-                }
-                val xl = xi - BLEND
-                if (xl >= (if (hasLeftRegion) -BLEND else 0) && xl < regionSizeX + (if (hasRightRegion) BLEND else 0)) {
-                    val r = regionLoader.findRegionForWorldCoordinates(baseX + xl, baseY + yi)
-                    if (r != null) {
-                        val underlayId = r.getUnderlayId(z, convert(xl), convert(yi))
-                        if (underlayId > 0) {
-                            val underlay = findUnderlay(underlayId - 1)
-                            hues[yi + BLEND] -= underlay.hue
-                            sats[yi + BLEND] -= underlay.saturation
-                            light[yi + BLEND] -= underlay.lightness
-                            mul[yi + BLEND] -= underlay.hueMultiplier
-                            num[yi + BLEND]--
-                        }
-                    }
-                }
-            }
-            if (xi in 0 until regionSizeX) {
-                var runningHues = 0
-                var runningSat = 0
-                var runningLight = 0
-                var runningMultiplier = 0
-                var runningNumber = 0
-                for (yi in (if (hasDownRegion) -BLEND * 2 else -BLEND) until regionSizeY + if (hasUpRegion) BLEND * 2 else BLEND) {
-                    val yu = yi + BLEND
-                    if (yu >= (if (hasDownRegion) -BLEND else 0) && yu < regionSizeY + (if (hasUpRegion) BLEND else 0)) {
-                        runningHues += hues[yu + BLEND]
-                        runningSat += sats[yu + BLEND]
-                        runningLight += light[yu + BLEND]
-                        runningMultiplier += mul[yu + BLEND]
-                        runningNumber += num[yu + BLEND]
-                    }
-                    val yd = yi - BLEND
-                    if (yd >= (if (hasDownRegion) -BLEND else 0) && yd < regionSizeY + (if (hasUpRegion) BLEND else 0)) {
-                        runningHues -= hues[yd + BLEND]
-                        runningSat -= sats[yd + BLEND]
-                        runningLight -= light[yd + BLEND]
-                        runningMultiplier -= mul[yd + BLEND]
-                        runningNumber -= num[yd + BLEND]
-                    }
-                    if (yi in 0 until regionSizeY) {
-                        val r = regionLoader.findRegionForWorldCoordinates(baseX + xi, baseY + yi)
-                        if (r != null) {
-                            val underlayId = r.getUnderlayId(z, convert(xi), convert(yi))
-                            val overlayId = r.getOverlayId(z, convert(xi), convert(yi))
-                            if (underlayId > 0 || overlayId > 0) {
-                                var underlayHsl = -1
-                                if (underlayId > 0) {
-                                    val avgHue = runningHues * 256 / runningMultiplier
-                                    val avgSat = runningSat / runningNumber
-                                    var avgLight = runningLight / runningNumber
-                                    // randomness is added to avgHue here
-                                    if (avgLight < 0) {
-                                        avgLight = 0
-                                    } else if (avgLight > 255) {
-                                        avgLight = 255
-                                    }
-                                    underlayHsl = hsl24to16(avgHue, avgSat, avgLight)
-                                }
-                                var underlayRgb = 0
-                                if (underlayHsl != -1) {
-                                    val var0 = method1792(underlayHsl, 96)
-                                    underlayRgb = colorPalette[var0]
-                                }
-                                var shape: Int
-                                var rotation: Int
-                                var overlayRgb: Int = -1
-                                if (overlayId == 0) {
-                                    rotation = 0
-                                    shape = 0
-                                } else {
-                                    shape = r.getOverlayPath(z, convert(xi), convert(yi)) + 1
-                                    rotation = r.getOverlayRotation(z, convert(xi), convert(yi)).toInt()
-                                    val overlayDefinition = findOverlay(overlayId - 1)
-                                    val overlayTexture = overlayDefinition.textureId
-                                    var rgb: Int
-                                    rgb = if (overlayTexture >= 0) {
-                                        textures[overlayTexture]?.field1777 ?: error("Error getting Texure Color")
-                                    } else if (overlayDefinition.rgbColor == 0xFF00FF) {
-                                        -2
-                                    } else {
-                                        // randomness added here
-                                        val overlayHsl = hsl24to16(
-                                            overlayDefinition.hue,
-                                            overlayDefinition.saturation,
-                                            overlayDefinition.lightness
-                                        )
-                                        overlayHsl
-                                    }
-                                    overlayRgb = 0
-                                    if (rgb != -2) {
-                                        val var0 = adjustHSLListness0(rgb, 96)
-                                        overlayRgb = colorPalette[var0]
-                                    }
-                                    if (overlayDefinition.secondaryRgbColor != -1) {
-                                        val hue = overlayDefinition.otherHue
-                                        val sat = overlayDefinition.otherSaturation
-                                        val olight = overlayDefinition.otherLightness
-                                        rgb = hsl24to16(hue, sat, olight)
-                                        val var0 = adjustHSLListness0(rgb, 96)
-                                        overlayRgb = colorPalette[var0]
-                                    }
-                                }
-                                if (shape == 0) {
-                                    val drawY = regionSizeY - 1 - yi
-                                    if (underlayRgb != 0) {
-                                        drawMapSquare(pixels, xi, drawY, underlayRgb)
-                                    }
-                                } else if (shape == 1) {
-                                    val drawY = regionSizeY - 1 - yi
-                                    drawMapSquare(pixels, xi, drawY, overlayRgb)
-                                } else {
-                                    val drawX = xi * builder.scale
-                                    val drawY = (regionSizeY - 1 - yi) * builder.scale
-                                    val tileShapes = TILE_SHAPE_2D[shape]
-                                    val tileRotations = TILE_ROTATION_2D[rotation]
-                                    if (underlayRgb != 0) {
-                                        var rotIdx = 0
-                                        for (i in 0 until regionSizeZ) {
-                                            val p1 =
-                                                if (tileShapes[tileRotations[rotIdx++]] == 0) underlayRgb else overlayRgb
-                                            val p2 =
-                                                if (tileShapes[tileRotations[rotIdx++]] == 0) underlayRgb else overlayRgb
-                                            val p3 =
-                                                if (tileShapes[tileRotations[rotIdx++]] == 0) underlayRgb else overlayRgb
-                                            val p4 =
-                                                if (tileShapes[tileRotations[rotIdx++]] == 0) underlayRgb else overlayRgb
-                                            pixels[drawX + 0][drawY + i] = p1
-                                            pixels[drawX + 1][drawY + i] = p2
-                                            pixels[drawX + 2][drawY + i] = p3
-                                            pixels[drawX + 3][drawY + i] = p4
-                                        }
-                                    } else {
-                                        var rotIdx = 0
-                                        for (i in 0 until regionSizeZ) {
-                                            val p1 = tileShapes[tileRotations[rotIdx++]]
-                                            val p2 = tileShapes[tileRotations[rotIdx++]]
-                                            val p3 = tileShapes[tileRotations[rotIdx++]]
-                                            val p4 = tileShapes[tileRotations[rotIdx++]]
-                                            if (p1 != 0) {
-                                                pixels[drawX + 0][drawY + i] = overlayRgb
-                                            }
-                                            if (p2 != 0) {
-                                                pixels[drawX + 1][drawY + i] = overlayRgb
-                                            }
-                                            if (p3 != 0) {
-                                                pixels[drawX + 2][drawY + i] = overlayRgb
-                                            }
-                                            if (p4 != 0) {
-                                                pixels[drawX + 3][drawY + i] = overlayRgb
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    /**
-     * Draw a map on the Image
-     * @param  image  BufferImage to write to
-     * @param  z Plane to look for objects in
-     */
-    private fun drawMap(image: BufferedImage, z: Int) {
+    private fun drawUnderlay(plane: Int, image: BufferedImage) {
         regionLoader.getRegions().forEach {
-            val baseX = it.baseX
-            val baseY = it.baseY
-            val drawBaseX = baseX - regionLoader.lowestX.baseX
-            val drawBaseY = regionLoader.highestY.baseY - baseY
-            drawMap(image, drawBaseX, drawBaseY, z, it)
+            val drawBaseX = it.baseX - regionLoader.lowestX.baseX
+            val drawBaseY = regionLoader.highestY.baseY - it.baseY
+            for (x in 0 until regionSizeX) {
+                val drawX = drawBaseX + x
+                for (y in 0 until regionSizeY) {
+                    val drawY: Int = drawBaseY + (regionSizeY - 1 - y)
+                    val underlayId = it.getUnderlayId(plane, x, y) - 1
+                    var rgb = Color.CYAN.rgb
+                    if (underlayId > -1) {
+                        val underlay = findUnderlay(underlayId)
+                        rgb = underlay.color
+                    }
+                    drawMapSquare(image, drawX, drawY, rgb, -1, -1)
+                }
+            }
         }
+
     }
 
     /**
-     * Draw a game Object on the Image
-     * @param  image  BufferImage to write to
-     * @param  drawBaseX BaseX of the com.query.cache.map.region.Region
-     * @param  drawBaseY BaseY of the com.query.cache.map.region.Region
-     * @param  region region to look for objects in
-     * @param  z Plane to look for objects in
+     * Blends the Underlay
+     * @param baseImage Base Image Containing the Underlay
+     * @param fullImage Plane of the Overlay to be drawn
+     * @param boundX Top Left of the Image
+     * @param boundY Bottom Right of the Image
      */
-    private fun drawObjects(image: BufferedImage, drawBaseX: Int, drawBaseY: Int, region: Region, z: Int) {
-        val graphics = image.createGraphics()
-        for (location in region.getLocations()) {
-            val rotation = location.orientation
-            val type = location.type
-            val localX = location.position.x - region.baseX
-            val localY = location.position.y - region.baseY
-            val isBridge = (region.getTileSetting(1, localX, localY) and 2) > 0
-            if (location.position.z == z + 1) {
-                if (!isBridge) {
-                    continue
-                }
-            } else if (location.position.z == z) {
-                if (isBridge) {
-                    continue
-                }
-                if ((region.getTileSetting(z, localX, localY) and 24) > 0) {
-                    continue
-                }
-            } else {
-                continue
-            }
-            val obj = findObject(location.id)
-            val drawX = (drawBaseX + localX) * builder.scale
-            val drawY = (drawBaseY + (regionSizeY - 1 - localY)) * builder.scale
-            if (type in 0..3) {
-                // this is a wall
-                var hash = (localY shl 7) + localX + (location.id shl 14) + 0x40000000
-                if (obj.wallOrDoor == 0) {
-                    hash -= Int.MIN_VALUE
-                }
-                var rgb = wallColor
-                if (hash > 0) {
-                    rgb = doorColor
-                }
-                if (obj.mapSceneID != -1) {
-                    if(builder.drawMapScene) {
-                        val spriteImage = scaledMapIcons[obj.mapSceneID]
-                        graphics.drawImage(spriteImage, drawX * builder.scale, drawY * builder.scale, null)
+    private fun blendUnderlay(baseImage: BufferedImage, fullImage: BufferedImage, boundX: Int, boundY: Int) {
+        regionLoader.getRegions().forEach {
+            val drawBaseX = it.baseX - regionLoader.lowestX.baseX
+            val drawBaseY = regionLoader.highestY.baseY - it.baseY
+            for (x in 0 until regionSizeX) {
+                val drawX = drawBaseX + x
+                for (y in 0 until regionSizeY) {
+                    val drawY: Int = drawBaseY + (regionSizeY - 1 - y)
+                    var c = getMapSquare(baseImage, drawX, drawY)
+                    if (c == Color.CYAN) {
+                        continue
                     }
-                } else {
-                    if (type == 0 || type == 2) {
-                        when (rotation) {
-                            0 -> {
-                                image.setRGB(drawX + 0, drawY + 0, rgb)
-                                image.setRGB(drawX + 0, drawY + 1, rgb)
-                                image.setRGB(drawX + 0, drawY + 2, rgb)
-                                image.setRGB(drawX + 0, drawY + 3, rgb)
+                    var tRed = 0
+                    var tGreen = 0
+                    var tBlue = 0
+                    var count = 0
+                    val maxDY = boundY.coerceAtMost(drawY + 3)
+                    val maxDX = boundX.coerceAtMost(drawX + 3)
+                    val minDY = 0.coerceAtLeast(drawY - 3)
+                    val minDX = 0.coerceAtLeast(drawX - 3)
+                    for (dy in minDY until maxDY) {
+                        for (dx in minDX until maxDX) {
+                            c = getMapSquare(baseImage, dx, dy)
+                            if (c == Color.CYAN) {
+                                continue
                             }
-                            1 -> {
-                                image.setRGB(drawX + 0, drawY + 0, rgb)
-                                image.setRGB(drawX + 1, drawY + 0, rgb)
-                                image.setRGB(drawX + 2, drawY + 0, rgb)
-                                image.setRGB(drawX + 3, drawY + 0, rgb)
-                            }
-                            2 -> {
-                                image.setRGB(drawX + 3, drawY + 0, rgb)
-                                image.setRGB(drawX + 3, drawY + 1, rgb)
-                                image.setRGB(drawX + 3, drawY + 2, rgb)
-                                image.setRGB(drawX + 3, drawY + 3, rgb)
-                            }
-                            3 -> {
-                                image.setRGB(drawX + 0, drawY + 3, rgb)
-                                image.setRGB(drawX + 1, drawY + 3, rgb)
-                                image.setRGB(drawX + 2, drawY + 3, rgb)
-                                image.setRGB(drawX + 3, drawY + 3, rgb)
-                            }
+                            tRed += c.red
+                            tGreen += c.green
+                            tBlue += c.blue
+                            count++
                         }
                     }
-                    if (type == 3) {
-                        when (rotation) {
-                            0 -> image.setRGB(drawX + 0, drawY + 0, rgb)
-                            1 -> image.setRGB(drawX + 3, drawY + 0, rgb)
-                            2 -> image.setRGB(drawX + 3, drawY + 3, rgb)
-                            3 -> image.setRGB(drawX + 0, drawY + 3, rgb)
-                        }
-                    }
-                    if (type == 2) {
-                        when (rotation) {
-                            3 -> {
-                                image.setRGB(drawX + 0, drawY + 0, rgb)
-                                image.setRGB(drawX + 0, drawY + 1, rgb)
-                                image.setRGB(drawX + 0, drawY + 2, rgb)
-                                image.setRGB(drawX + 0, drawY + 3, rgb)
-                            }
-                            0 -> {
-                                image.setRGB(drawX + 0, drawY + 0, rgb)
-                                image.setRGB(drawX + 1, drawY + 0, rgb)
-                                image.setRGB(drawX + 2, drawY + 0, rgb)
-                                image.setRGB(drawX + 3, drawY + 0, rgb)
-                            }
-                            1 -> {
-                                image.setRGB(drawX + 3, drawY + 0, rgb)
-                                image.setRGB(drawX + 3, drawY + 1, rgb)
-                                image.setRGB(drawX + 3, drawY + 2, rgb)
-                                image.setRGB(drawX + 3, drawY + 3, rgb)
-                            }
-                            2 -> {
-                                image.setRGB(drawX + 0, drawY + 3, rgb)
-                                image.setRGB(drawX + 1, drawY + 3, rgb)
-                                image.setRGB(drawX + 2, drawY + 3, rgb)
-                                image.setRGB(drawX + 3, drawY + 3, rgb)
-                            }
-                        }
-                    }
-                }
-            } else if (type == 9) {
-                if (obj.mapSceneID != -1) {
-                    if(builder.drawMapScene) {
-                        val spriteImage = scaledMapIcons[obj.mapSceneID]
-                        graphics.drawImage(spriteImage, drawX, drawY, null)
-                    }
-                    continue
-                }
-                var hash = (localY shl 7) + localX + (location.id shl 14) + 0x40000000
-                if (obj.wallOrDoor == 0) {
-                    hash -= Int.MIN_VALUE
-                }
-                if (hash shr 29 and 3 != 2) {
-                    continue
-                }
-                var rgb = 0xEEEEEE
-                if (hash > 0) {
-                    rgb = 0xEE0000
-                }
-                if (rotation != 0 && rotation != 2) {
-                    image.setRGB(drawX + 0, drawY + 0, rgb)
-                    image.setRGB(drawX + 1, drawY + 1, rgb)
-                    image.setRGB(drawX + 2, drawY + 2, rgb)
-                    image.setRGB(drawX + 3, drawY + 3, rgb)
-                } else {
-                    image.setRGB(drawX + 0, drawY + 3, rgb)
-                    image.setRGB(drawX + 1, drawY + 2, rgb)
-                    image.setRGB(drawX + 2, drawY + 1, rgb)
-                    image.setRGB(drawX + 3, drawY + 0, rgb)
-                }
-            } else if (type == 22 || type in 9..11) {
-                // ground object
-                if (obj.mapSceneID != -1) {
-                    if (builder.drawMapScene) {
-                        val spriteImage = scaledMapIcons[obj.mapSceneID]
-                        graphics.drawImage(spriteImage, drawX, drawY, null)
+                    if (count > 0) {
+                        c = Color(tRed / count, tGreen / count, tBlue / count)
+                        drawMapSquare(fullImage, drawX, drawY, c.rgb, -1, -1)
                     }
                 }
             }
         }
-        graphics.dispose()
     }
 
     /**
-     * Draw a game Object on the Image
-     * @param  image  BufferImage to write to
-     * @param  z Plane to look for objects in
+     * Draws the map Overlay
+     * @param plane Plane of the Overlay to be drawn
+     * @param image Draws the Map Overlay onto the image
      */
-    private fun drawObjects(image: BufferedImage, z: Int) {
+    private fun drawOverlay(plane: Int, image: BufferedImage) {
         regionLoader.getRegions().forEach {
-            val baseX = it.baseX
-            val baseY = it.baseY
-
-            val drawBaseX = baseX - regionLoader.lowestX.baseX
-
-            val drawBaseY = regionLoader.highestY.baseY - baseY
-            drawObjects(image, drawBaseX, drawBaseY, it, z)
+            val drawBaseX = it.baseX - regionLoader.lowestX.baseX
+            val drawBaseY = regionLoader.highestY.baseY - it.baseY
+            for (x in 0 until regionSizeX) {
+                val drawX = drawBaseX + x
+                for (y in 0 until regionSizeY) {
+                    val drawY: Int = drawBaseY + (regionSizeY - 1 - y)
+                    if (plane == 0 || !it.isLinkedBelow(plane, x, y) && !it.isVisibleBelow(plane, x, y)) {
+                        val overlayId = it.getOverlayId(plane, x, y) - 1
+                        if (overlayId > -1) {
+                            val rgb = getOverlayColor(overlayId)
+                            drawMapSquare(
+                                image,
+                                drawX,
+                                drawY,
+                                rgb,
+                                it.getOverlayPath(plane, x, y).toInt(),
+                                it.getOverlayRotation(plane, x, y).toInt()
+                            )
+                        }
+                    }
+                    if (plane < 3 && (it.isLinkedBelow(plane + 1, x, y) || it.isVisibleBelow(plane + 1, x, y))) {
+                        val overlayAboveId = it.getOverlayId(plane + 1, x, y) - 1
+                        if (overlayAboveId > -1) {
+                            val rgb = getOverlayColor(overlayAboveId)
+                            drawMapSquare(
+                                image,
+                                drawX,
+                                drawY,
+                                rgb,
+                                it.getOverlayPath(plane + 1, x, y).toInt(),
+                                it.getOverlayRotation(plane + 1, x, y).toInt()
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 
-    private fun renderMapIcons(image: BufferedImage, drawBaseX: Int, drawBaseY: Int, region: Region, z: Int) {
-        val baseX = region.baseX
-        val baseY = region.baseY
-        val graphics = image.createGraphics()
-        if (builder.drawFunctions) {
-            drawMapFunctions(graphics, region, z, drawBaseX, drawBaseY)
+    /**
+     * Gets the Overlay tile c
+     * @param overlayID OverlayID of the tile
+     * @return rgb Tile Overlay Color
+     */
+    private fun getOverlayColor(overlayID: Int): Int {
+        val overlay = findOverlay(overlayID)
+        var rgb = if (overlay.textureId >= 0) {
+            textures[overlay.textureId]?.field1777 ?: error("Error getting Texure Color")
+        } else if (overlay.rgbColor == 0xFF00FF) {
+            -2
+        } else {
+            val overlayHsl = hsl24to16(
+                overlay.hue,
+                overlay.saturation,
+                overlay.lightness
+            )
+            overlayHsl
         }
-        if (builder.labelRegions) {
-            graphics.color = Color.WHITE
-            val str = baseX.toString() + "," + baseY + " (" + region.regionX + "," + region.regionY + ")"
-            graphics.drawString(str, drawBaseX * builder.scale, drawBaseY * builder.scale + graphics.fontMetrics.height)
+
+        var overlayRgb = 0
+        if (rgb != -2) {
+            val var0 = adjustHSLListness0(rgb, 96)
+            overlayRgb = colorPalette[var0]
         }
-        if (builder.outlineRegions) {
-            graphics.color = Color.WHITE
-            graphics.drawRect(drawBaseX * builder.scale, drawBaseY * builder.scale, regionSizeX * builder.scale, regionSizeY * builder.scale)
+        if (overlay.secondaryRgbColor != -1) {
+            val hue = overlay.otherHue
+            val sat = overlay.otherSaturation
+            val olight = overlay.otherLightness
+            rgb = hsl24to16(hue, sat, olight)
+            val var0 = adjustHSLListness0(rgb, 96)
+            overlayRgb = colorPalette[var0]
         }
-        graphics.dispose()
+
+        return overlayRgb
     }
 
-    private fun drawMapIcons(image: BufferedImage, z: Int) {
-        // map icons
-        regionLoader.getRegions().forEach {
-            val baseX = it.baseX
-            val baseY = it.baseY
-
-            val drawBaseX = baseX - regionLoader.lowestX.baseX
-
-            val drawBaseY = regionLoader.highestY.baseY - baseY
-            renderMapIcons(image, drawBaseX, drawBaseY, it, z)
+    fun adjustHSLListness0(var0: Int, var1: Int): Int {
+        var var1 = var1
+        return if (var0 == -2) {
+            12345678
+        } else if (var0 == -1) {
+            if (var1 < 2) {
+                var1 = 2
+            } else if (var1 > 126) {
+                var1 = 126
+            }
+            var1
+        } else {
+            var1 = (var0 and 127) * var1 / 128
+            if (var1 < 2) {
+                var1 = 2
+            } else if (var1 > 126) {
+                var1 = 126
+            }
+            (var0 and 65408) + var1
         }
-
     }
 
     private fun hsl24to16(hue: Int, saturation: Int, lightness: Int): Int {
@@ -583,34 +296,238 @@ class MapImageGenerator(private val builder : MapImageBuilder) {
         return (sat / 32 shl 7) + (hue / 4 shl 10) + lightness / 2
     }
 
-    private fun drawMapSquare(pixels: Array<IntArray>, x: Int, y: Int, rgb: Int) {
-        var height = x
-        var width = y
-        height *= builder.scale
-        width *= builder.scale
-        for (i in 0 until builder.scale) {
-            for (j in 0 until builder.scale) {
-                pixels[height + i][width + j] = rgb
+    /**
+     * Draw map Scene
+     * @param plane Plane of the Object Icon to be drawn
+     * @param graphics Graphics Object to draw to
+     */
+    private fun drawLocations(plane: Int, graphics: Graphics2D) {
+        regionLoader.getRegions().forEach {
+            val drawBaseX = it.baseX - regionLoader.lowestX.baseX
+            val drawBaseY = regionLoader.highestY.baseY - it.baseY
+            for (location in it.getLocations()) {
+                val localX = location.position.x - it.baseX
+                val localY = location.position.y - it.baseY
+                if (!canDrawLocation(it, location, plane, localX, localY)) {
+                    continue
+                }
+                val objType = findObject(location.id)
+                val drawX = drawBaseX + localX
+                val drawY: Int = drawBaseY + (regionSizeY - 1 - localY)
+                if (objType.mapSceneID != -1) {
+                    val spriteImage = scaledMapIcons[objType.mapSceneID]
+                    graphics.drawImage(spriteImage, drawX * builder.scale, drawY * builder.scale, null)
+                }
+            }
+        }
+
+    }
+
+    /**
+     * Draw Walls on the map image
+     * @param plane Plane of the Object Icon to be drawn
+     * @param graphics Graphics Object to draw to
+     */
+    private fun drawWalls(plane: Int, graphics: Graphics2D) {
+        regionLoader.getRegions().forEach {
+            val drawBaseX = it.baseX - regionLoader.lowestX.baseX
+            val drawBaseY = regionLoader.highestY.baseY - it.baseY
+            for (location in it.getLocations()) {
+                graphics.color = Color.WHITE
+                val localX = location.position.x - it.baseX
+                val localY = location.position.y - it.baseY
+                if (!canDrawLocation(it, location, plane, localX, localY)) {
+                    continue
+                }
+                val objType = findObject(location.id)
+
+                // Don't draw walls on water
+                if (objType.mapSceneID == 22) {
+                    continue
+                }
+                val objName: String = objType.name.lowercase()
+                if (objName.contains("door") || objName.contains("gate")) {
+                    graphics.color = Color.RED
+                }
+                var drawX = drawBaseX + localX
+                var drawY: Int = drawBaseY + (regionSizeY - 1 - localY)
+                drawX *= builder.scale
+                drawY *= builder.scale
+                if (location.type == 0) { // Straight walls
+                    when (location.orientation) {
+                        0 -> graphics.drawLine(drawX, drawY, drawX, drawY + builder.scale)
+                        1 -> graphics.drawLine(drawX, drawY, drawX + builder.scale, drawY)
+                        2 -> graphics.drawLine(drawX + builder.scale, drawY, drawX + builder.scale, drawY + builder.scale)
+                        3 -> graphics.drawLine(drawX, drawY + builder.scale, drawX + builder.scale, drawY + builder.scale)
+                    }
+                } else if (location.type == 2) { // Corner walls
+                    when (location.orientation) {
+                        0 -> { // West & South
+                            graphics.drawLine(drawX, drawY, drawX, drawY + builder.scale)
+                            graphics.drawLine(drawX, drawY, drawX + builder.scale, drawY)
+                        }
+                        1 -> { // South & East
+                            graphics.drawLine(drawX, drawY, drawX + builder.scale, drawY)
+                            graphics.drawLine(drawX + builder.scale, drawY, drawX + builder.scale, drawY + builder.scale)
+                        }
+                        2 -> { // East & North
+                            graphics.drawLine(drawX + builder.scale, drawY, drawX + builder.scale, drawY + builder.scale)
+                            graphics.drawLine(drawX, drawY + builder.scale, drawX + builder.scale, drawY + builder.scale)
+                        }
+                        3 -> { // North & West
+                            graphics.drawLine(drawX, drawY + builder.scale, drawX + builder.scale, drawY + builder.scale)
+                            graphics.drawLine(drawX, drawY, drawX, drawY + builder.scale)
+                        }
+                    }
+                } else if (location.type == 3) { // Single points
+                    when (location.orientation) {
+                        0 -> graphics.drawLine(drawX, drawY + 1, drawX, drawY + 1)
+                        1 -> graphics.drawLine(drawX + 3, drawY + 1, drawX + 3, drawY + 1)
+                        2 -> graphics.drawLine(drawX + 3, drawY + 4, drawX + 3, drawY + 4)
+                        3 -> graphics.drawLine(drawX, drawY + 3, drawX, drawY + 3)
+                    }
+                } else if (location.type == 9) { // Diagonal walls
+                    if (location.orientation == 0 || location.orientation == 2) { // West or East
+                        graphics.drawLine(drawX, drawY + builder.scale, drawX + builder.scale, drawY)
+                    } else if (location.orientation == 1 || location.orientation == 3) { // South or South
+                        graphics.drawLine(drawX, drawY, drawX + builder.scale, drawY + builder.scale)
+                    }
+                }
             }
         }
     }
 
-    private fun drawMapFunctions(graphics: Graphics2D, region: Region, z: Int, drawBaseX: Int, drawBaseY: Int) {
-        for (location in region.getLocations()) {
-            val localZ = location.position.z
-            if (localZ != z) {
-                // draw all icons on z=0
-                continue
-            }
-            val od = findObject(location.id)
-            val localX = location.position.x - region.baseX
-            val localY = location.position.y - region.baseY
-            val drawX = drawBaseX + localX
-            val drawY = drawBaseY + (regionSizeY - 1 - localY)
-            if (od.mapAreaId != -1) {
-                graphics.drawImage(findMapIcon(od.mapAreaId), drawX * builder.scale, drawY * builder.scale, null)
+
+
+    /**
+     * Draw Map Functions on the map image
+     * @param plane Plane of the Object Icon to be drawn
+     * @param graphics Graphics Object to draw to
+     */
+    private fun drawIcons(plane: Int, graphics: Graphics2D) {
+        regionLoader.getRegions().forEach {
+            val drawBaseX = it.baseX - regionLoader.lowestX.baseX
+            val drawBaseY = regionLoader.highestY.baseY - it.baseY
+            for (location in it.getLocations()) {
+                val localX = location.position.x - it.baseX
+                val localY = location.position.y - it.baseY
+                if (!canDrawLocation(it, location, plane, localX, localY)) {
+                    continue
+                }
+                val objType = findObject(location.id)
+                val drawX = drawBaseX + localX
+                val drawY = drawBaseY + (63 - localY)
+                if (objType.mapAreaId != -1) {
+                    graphics.drawImage(findMapIcon(objType.mapAreaId), (drawX - 1) * builder.scale, (drawY - 1) * builder.scale, null)
+                }
             }
         }
+    }
+
+    /**
+     * Check if the map can draw this location on the map
+     * @param region Region to look for Objects in
+     * @param location Locations to Check
+     * @param plane Planes that the check is valid on
+     * @param x X that the check is valid on
+     * @param y Y that the check is valid on
+     * @return Can Draw
+     */
+    private fun canDrawLocation(region: Region, location: Location, plane: Int, x: Int, y: Int): Boolean {
+        if (region.isLinkedBelow(plane, x, y) || region.isVisibleBelow(plane, x, y)) {
+            return false
+        }
+        return if (location.position.z == plane + 1
+            && (region.isLinkedBelow(plane + 1, x, y)
+                    || region.isVisibleBelow(plane + 1, x, y))
+        ) {
+            true
+        } else plane == location.position.z
+    }
+
+    /**
+     * Draw Region onto the map
+     * @param graphics Draw Region onto the Graphics Object
+     */
+    private fun drawRegions(graphics: Graphics2D) {
+        regionLoader.getRegions().forEach {
+            val baseX = it.baseX
+            val baseY = it.baseY
+            val drawBaseX = baseX - regionLoader.lowestX.baseX
+            val drawBaseY = regionLoader.highestY.baseY - baseY
+
+            if (builder.labelRegions) {
+                graphics.color = Color.WHITE
+                val str = baseX.toString() + "," + baseY + " (" + it.regionX + "," + it.regionY + ")"
+                graphics.drawString(str, drawBaseX * builder.scale + 1, drawBaseY * builder.scale + graphics.fontMetrics.height)
+            }
+            if (builder.outlineRegions) {
+                graphics.color = Color.WHITE
+                graphics.drawRect(drawBaseX * builder.scale, drawBaseY * builder.scale, regionSizeX * builder.scale, regionSizeY * builder.scale)
+            }
+
+            if (builder.fill) {
+                if (flags.contains(it.regionID)) {
+                    graphics.color = Color(255, 0, 0, 80)
+                    graphics.fillRect(
+                        drawBaseX * builder.scale,
+                        drawBaseY * builder.scale,
+                        64 * builder.scale,
+                        64 * builder.scale
+                    )
+                }
+            }
+        }
+
+    }
+
+    /**
+     * Draw Map Square onto the base Image
+     * @param image Base Image
+     * @param x X Location
+     * @param y Y Color
+     * @param overlayRGB Overlay Color for the map
+     * @param shape Shape of the Tile
+     * @param rotation Rotation of the Tile
+     */
+    private fun drawMapSquare(image: BufferedImage, x: Int, y: Int, overlayRGB: Int, shape: Int, rotation: Int) {
+        if (shape > -1) {
+            val shapeMatrix = TILE_SHAPES[shape]
+            val rotationMatrix = TILE_ROTATIONS[rotation and 0x3]
+            var shapeIndex = 0
+            for (tilePixelY in 0 until builder.scale) {
+                for (tilePixelX in 0 until builder.scale) {
+                    val drawx = x * builder.scale + tilePixelX
+                    val drawy = y * builder.scale + tilePixelY
+                    if (shapeMatrix[rotationMatrix[shapeIndex++]] != 0) {
+                        image.setRGB(drawx, drawy, overlayRGB)
+                    }
+                }
+            }
+        } else {
+            for (tilePixelY in 0 until builder.scale) {
+                for (tilePixelX in 0 until builder.scale) {
+                    val drawx = x * builder.scale + tilePixelX
+                    val drawy = y * builder.scale + tilePixelY
+                    image.setRGB(drawx, drawy, overlayRGB)
+                }
+            }
+        }
+    }
+
+    /**
+     * Get Map Square Color
+     * @param image Base Image
+     * @param x X Location
+     * @param y Y Location
+     * @return Returns Color of the Map Square
+     */
+    private fun getMapSquare(image: BufferedImage, x: Int, y: Int): Color {
+        var baseX = x
+        var baseY = y
+        baseX *= builder.scale
+        baseY *= builder.scale
+        return Color(image.getRGB(baseX, baseY))
     }
 
     private fun findObject(id: Int) = objects[id]?: error("Could not find Object")
@@ -634,81 +551,102 @@ class MapImageGenerator(private val builder : MapImageBuilder) {
     private fun resizeMapScene() {
         if (!builder.drawMapScene) return
         MapScene.collectSprites().forEach {
-            scaledMapIcons[it.key] = Sprite.resize(it.value, MAPICON_MAX_WIDTH, MAPICON_MAX_HEIGHT)
+            scaledMapIcons[it.key] = it.value
         }
     }
 
     companion object {
-        
-        private const val MAPICON_MAX_WIDTH = 5 // scale minimap icons down to this size so they fit..
-        private const val MAPICON_MAX_HEIGHT = 6
-        private const val BLEND = 5 // number of surrounding tiles for ground blending
         private val colorPalette = ColorPalette(0.9, 0, 512).colorPalette
-        private val TILE_SHAPE_2D = arrayOf(
-            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
-            intArrayOf(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
-            intArrayOf(1, 0, 0, 0, 1, 1, 0, 0, 1, 1, 1, 0, 1, 1, 1, 1),
-            intArrayOf(1, 1, 0, 0, 1, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0),
-            intArrayOf(0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1),
-            intArrayOf(0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1),
-            intArrayOf(1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1),
-            intArrayOf(1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0),
-            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 0),
-            intArrayOf(1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 0, 1, 1),
-            intArrayOf(1, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0),
-            intArrayOf(0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1),
-            intArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 1, 1, 1, 1)
+        private val TILE_SHAPES = arrayOf(
+            intArrayOf(
+                1, 1, 1, 1,
+                1, 1, 1, 1,
+                1, 1, 1, 1,
+                1, 1, 1, 1
+            ), intArrayOf(
+                1, 0, 0, 0,
+                1, 1, 0, 0,
+                1, 1, 1, 0,
+                1, 1, 1, 1
+            ), intArrayOf(
+                1, 1, 0, 0,
+                1, 1, 0, 0,
+                1, 0, 0, 0,
+                1, 0, 0, 0
+            ), intArrayOf(
+                0, 0, 1, 1,
+                0, 0, 1, 1,
+                0, 0, 0, 1,
+                0, 0, 0, 1
+            ), intArrayOf(
+                0, 1, 1, 1,
+                0, 1, 1, 1,
+                1, 1, 1, 1,
+                1, 1, 1, 1
+            ), intArrayOf(
+                1, 1, 1, 0,
+                1, 1, 1, 0,
+                1, 1, 1, 1,
+                1, 1, 1, 1
+            ), intArrayOf(
+                1, 1, 0, 0,
+                1, 1, 0, 0,
+                1, 1, 0, 0,
+                1, 1, 0, 0
+            ), intArrayOf(
+                0, 0, 0, 0,
+                0, 0, 0, 0,
+                1, 0, 0, 0,
+                1, 1, 0, 0
+            ), intArrayOf(
+                1, 1, 1, 1,
+                1, 1, 1, 1,
+                0, 1, 1, 1,
+                0, 0, 1, 1
+            ), intArrayOf(
+                1, 1, 1, 1,
+                1, 1, 0, 0,
+                1, 0, 0, 0,
+                1, 0, 0, 0
+            ), intArrayOf(
+                0, 0, 0, 0,
+                0, 0, 1, 1,
+                0, 1, 1, 1,
+                0, 1, 1, 1
+            ), intArrayOf(
+                0, 0, 0, 0,
+                0, 0, 0, 0,
+                0, 1, 1, 0,
+                1, 1, 1, 1
+            )
         )
-        private val TILE_ROTATION_2D = arrayOf(
-            intArrayOf(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15),
-            intArrayOf(12, 8, 4, 0, 13, 9, 5, 1, 14, 10, 6, 2, 15, 11, 7, 3),
-            intArrayOf(15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0),
-            intArrayOf(3, 7, 11, 15, 2, 6, 10, 14, 1, 5, 9, 13, 0, 4, 8, 12)
+        private val TILE_ROTATIONS = arrayOf(
+            intArrayOf(
+                0, 1, 2, 3,
+                4, 5, 6, 7,
+                8, 9, 10, 11,
+                12, 13, 14, 15
+            ), intArrayOf(
+                12, 8, 4, 0,
+                13, 9, 5, 1,
+                14, 10, 6, 2,
+                15, 11, 7, 3
+            ), intArrayOf(
+                15, 14, 13, 12,
+                11, 10, 9, 8,
+                7, 6, 5, 4,
+                3, 2, 1, 0
+            ), intArrayOf(
+                3, 7, 11, 15,
+                2, 6, 10, 14,
+                1, 5, 9, 13,
+                0, 4, 8, 12
+            )
         )
 
-        private fun convert(d: Int): Int {
-            return if (d >= 0) {
-                d % 64
-            } else {
-                64 - -(d % 64) - 1
-            }
-        }
+        private const val PLANE_MIN = 0
+        private const val PLANE_MAX = 3
 
-        fun method1792(var0: Int, var1: Int): Int {
-            var var1 = var1
-            return if (var0 == -1) {
-                12345678
-            } else {
-                var1 = (var0 and 127) * var1 / 128
-                if (var1 < 2) {
-                    var1 = 2
-                } else if (var1 > 126) {
-                    var1 = 126
-                }
-                (var0 and 65408) + var1
-            }
-        }
-
-        fun adjustHSLListness0(var0: Int, var1: Int): Int {
-            var var1 = var1
-            return if (var0 == -2) {
-                12345678
-            } else if (var0 == -1) {
-                if (var1 < 2) {
-                    var1 = 2
-                } else if (var1 > 126) {
-                    var1 = 126
-                }
-                var1
-            } else {
-                var1 = (var0 and 127) * var1 / 128
-                if (var1 < 2) {
-                    var1 = 2
-                } else if (var1 > 126) {
-                    var1 = 126
-                }
-                (var0 and 65408) + var1
-            }
-        }
     }
+
 }

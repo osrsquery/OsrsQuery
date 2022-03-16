@@ -8,6 +8,7 @@ object HeightCalculations {
     private const val JAGEX_CIRCULAR_ANGLE = 2048
     private const val ANGULAR_RATIO = 360.0 / JAGEX_CIRCULAR_ANGLE
     private val JAGEX_RADIAN = Math.toRadians(ANGULAR_RATIO)
+
     private val SIN = IntArray(JAGEX_CIRCULAR_ANGLE)
     private val COS = IntArray(JAGEX_CIRCULAR_ANGLE)
 
@@ -18,13 +19,22 @@ object HeightCalculations {
         }
     }
 
-    fun calculate(x: Int, y: Int): Int {
-        var n = (interpolateNoise(x + 45365, y + 91923, 4) - 128 + (interpolateNoise(10294 + x, y + 37821, 2) - 128 shr 1) + (interpolateNoise(x, y, 1) - 128 shr 2))
+    fun calculate(baseX: Int, baseY: Int, x: Int, y: Int): Int {
+        val xc = (baseX shr 3) + 932638 + x
+        val yc = (baseY shr 3) + 556190 + y
+        var n = (interpolateNoise(xc + '\ub135'.code, yc + 91923, 4) - 128 + (interpolateNoise(
+            10294 + xc,
+            yc + '\u93bd'.code,
+            2
+        ) - 128 shr 1)
+                + (interpolateNoise(xc, yc, 1) - 128 shr 2))
         n = 35 + (n.toDouble() * 0.3).toInt()
-        if (n < 10) {
+        if (n >= 10) {
+            if (n > 60) {
+                n = 60
+            }
+        } else {
             n = 10
-        } else if (n > 60) {
-            n = 60
         }
         return n
     }
@@ -60,4 +70,5 @@ object HeightCalculations {
         val f = 65536 - COS[1024 * x / y] shr 1
         return (f * b shr 16) + (a * (65536 - f) shr 16)
     }
+
 }

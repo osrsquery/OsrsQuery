@@ -5,6 +5,7 @@ import com.query.cache.map.region.data.Location
 import com.query.cache.map.region.data.LocationsDefinition
 import com.query.cache.map.region.data.MapDefinition
 import com.query.utils.Position
+import kotlin.experimental.and
 
 const val regionSizeX = 64
 const val regionSizeY = 64
@@ -12,7 +13,7 @@ const val regionSizeZ = 4
 
 class Region(id : Int) {
 
-    private val regionID: Int
+    val regionID: Int
     val baseX: Int
     val baseY: Int
 
@@ -38,7 +39,7 @@ class Region(id : Int) {
                     val tile = tiles[z][x][y]
                     if (tile!!.height == null) {
                         if (z == 0) {
-                            tileHeights[0][x][y] = -calculate(baseX + x + 0xe3b7b, baseY + y + 0x87cce) * 8
+                            tileHeights[0][x][y] = -calculate(baseX + x + 0xe3b7b, baseY + y + 0x87cce,x,y) * 8
                         } else {
                             tileHeights[z][x][y] = tileHeights[z - 1][x][y] - 240
                         }
@@ -79,6 +80,8 @@ class Region(id : Int) {
     fun getOverlayPath(z: Int, x: Int, y: Int) = overlayPaths[z][x][y]
     fun getOverlayRotation(z: Int, x: Int, y: Int) = overlayRotations[z][x][y]
     fun getUnderlayId(z: Int, x: Int, y: Int) = (underlayIds[z][x][y].toUByte()).toInt()
+    fun isLinkedBelow(z: Int, x: Int, y: Int) = (getTileSetting(z, x, y) and 0x2) > 0
+    fun isVisibleBelow(z: Int, x: Int, y: Int): Boolean = getTileSetting(z, x, y) and 0x8 > 0
 
     fun getLocations() = locations
 
