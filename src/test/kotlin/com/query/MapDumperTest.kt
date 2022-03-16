@@ -55,7 +55,7 @@ object MapDumperTest {
         val timer = measureTimeMillis {
             dumper.draw()
         }
-        logger.debug { "Map Images Written in ${TimeUtils.millsToFormat(timer)}" }
+        logger.info { "Map Images Written in ${TimeUtils.millsToFormat(timer)}" }
 
 
     }
