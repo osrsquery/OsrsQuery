@@ -4,9 +4,13 @@ import com.query.cache.map.builders.HeightMapImageBuilder
 import com.query.cache.map.region.RegionLoader
 import com.query.cache.map.region.regionSizeX
 import com.query.cache.map.region.regionSizeY
+import com.query.utils.BigBufferedImage
+import com.query.utils.FileUtils
 import mu.KotlinLogging
 import java.awt.Color
+import java.awt.RenderingHints
 import java.awt.image.BufferedImage
+import javax.imageio.ImageIO
 
 private val logger = KotlinLogging.logger {}
 
@@ -19,7 +23,7 @@ class HeightMapGenerator(private val builder : HeightMapImageBuilder) {
      * @param  z The plane of the region you wish to draw
      * @return The Full map Image
      */
-    fun drawHeightMap(z: Int): BufferedImage {
+    fun drawHeightMap() {
         val minX = regionLoader.lowestX.baseX
         val minY = regionLoader.lowestY.baseY
         val maxX: Int = regionLoader.highestX.baseX + regionSizeX
@@ -34,12 +38,34 @@ class HeightMapGenerator(private val builder : HeightMapImageBuilder) {
 
         val type = when(builder.viewable) {
             false -> BufferedImage.TYPE_USHORT_GRAY
-            true -> BufferedImage.TYPE_INT_ARGB
+            true -> BufferedImage.TYPE_INT_RGB
         }
 
-        val image = BufferedImage(dimX, dimY, type)
-        draw(image, z)
-        return image
+        logger.info {
+            "====== Setting Height Map Drawing Map Image  =====\n" +
+                    "Options: ${builder}\n" +
+                    "Image Size: $dimX px x $dimY px\n" +
+                    "Size: ${dimX * dimY * 3 / 1024 / 1024} MB\n" +
+                    "Memory: ${Runtime.getRuntime().maxMemory() / 1024L / 1024L}mb\n" +
+                    "North most region: ${regionLoader.lowestX.baseX}\n" +
+                    "South most region: ${regionLoader.highestY.baseY}\n" +
+                    "West most region: ${regionLoader.lowestX.baseX}\n" +
+                    "East most region: ${regionLoader.highestY.baseY}\n" +
+                    "====== Starting Height Map Drawing Map Image =====\n"
+        }
+
+        for (plane in 0..3) {
+            logger.info { "Generating map images for plane = $plane" }
+            val image: BufferedImage = BigBufferedImage.create(dimX, dimY, type)
+            val graphics = image.createGraphics()
+            graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC)
+            graphics.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY)
+            graphics.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE)
+            draw(image,plane)
+
+            ImageIO.write(image, "png", FileUtils.getFile("mapImages/", "height-map-$plane.png"))
+        }
+
     }
 
     /**
