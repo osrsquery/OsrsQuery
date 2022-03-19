@@ -18,13 +18,13 @@ data class AreaDefinition(
     var spriteId: Int = -1,
     var field3294: Int = -1,
     var name: String? = null,
-    var tileHash : Int = 0,
+    var fontColor : Int = 0,
     var field3297: Int = -1,
     var field3298: Array<String?> = arrayOfNulls(5),
     var field3300: IntArray? = null,
     var field3308: String? = null,
     var field3309: ByteArray? = null,
-    var field3310 : Int = 0
+    var fontSize : Int = 0
 ): Definition
 
 class AreaProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true) : Loader, Runnable {
@@ -55,9 +55,9 @@ class AreaProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true) 
             1 -> definition.spriteId = buffer.uShort
             2 -> definition.field3294 = buffer.uShort
             3 -> definition.name = buffer.rsString
-            4 -> definition.tileHash = buffer.medium
+            4 -> definition.fontColor = buffer.medium
             5 -> buffer.medium
-            6 -> definition.field3310 = buffer.uByte
+            6 -> definition.fontSize = buffer.uByte
             7 -> buffer.uByte
             8 -> buffer.uByte
             in 10..14 -> definition.field3298[opcode - 10] = buffer.rsString
@@ -95,6 +95,21 @@ class AreaProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true) 
         } while (true)
         return definition
     }
+
+    companion object {
+
+        fun fontSizeName(fontSize : Int) = when(fontSize) {
+            0 -> "Default"
+            1 -> "Medium"
+            2 -> "Large"
+            else -> "Default"
+        }
+
+        fun formatName(name : String) = name.replace("<br>"," ").replace("\\u003cbr","".replace("\\u003e"," "))
+
+
+    }
+
 
 
 }

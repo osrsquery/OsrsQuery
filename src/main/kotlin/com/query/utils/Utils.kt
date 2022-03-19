@@ -1,5 +1,8 @@
 package com.query.utils
 
+import com.beust.klaxon.JsonBase
+import com.beust.klaxon.Klaxon
+import com.beust.klaxon.Parser
 import com.displee.cache.CacheLibrary
 import com.query.Application
 import me.tongfei.progressbar.ProgressBar
@@ -12,6 +15,10 @@ import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.util.zip.GZIPOutputStream
 
+fun Klaxon.toPrettyJsonString(value: Any): String {
+    val builder = StringBuilder(Klaxon().toJsonString(value))
+    return (Parser().parse(builder) as JsonBase).toJsonString(true)
+}
 
 fun CacheLibrary.index(type : IndexType) = index(type.number)
 
