@@ -1,11 +1,8 @@
 package com.query.dump.impl
 
-import com.beust.klaxon.Klaxon
 import com.google.gson.Gson
 import com.query.Application.areas
-import com.query.Application.objects
 import com.query.cache.definitions.impl.AreaProvider
-import com.query.cache.map.region.RegionLoader
 import com.query.dump.DefinitionsTypes
 import com.query.dump.TypeManager
 import com.query.utils.FileUtils.getBase
