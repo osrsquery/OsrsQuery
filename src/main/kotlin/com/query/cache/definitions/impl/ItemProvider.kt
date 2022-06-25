@@ -41,18 +41,18 @@ data class ItemDefinition(
     var countObj: IntArray? = null,
     var options : MutableList<String?> = mutableListOf(null, null, "Take", null, "Drop"),
     var interfaceOptions  : MutableList<String?> = mutableListOf(null, null, null, null, "Drop"),
-    var maleModel0: Int = -1,
-    var maleModel1: Int = -1,
-    var maleModel2: Int = -1,
-    var maleOffset: Int = 0,
-    var maleHeadModel: Int = -1,
-    var maleHeadModel2: Int = -1,
-    var femaleModel0: Int = -1,
-    var femaleModel1: Int = -1,
-    var femaleModel2: Int = -1,
-    var femaleOffset: Int = -1,
-    var femaleHeadModel: Int = -1,
-    var femaleHeadModel2: Int = -1,
+    var male_equip_main: Int = -1,
+    var male_equip_attachment: Int = -1,
+    var male_equip_emblem: Int = -1,
+    var male_equip_translate_y: Int = 0,
+    var male_dialogue_head: Int = -1,
+    var equipped_model_male_dialogue_2: Int = -1,
+    var female_equip_main: Int = -1,
+    var equipped_model_female_2: Int = -1,
+    var female_equip_emblem: Int = -1,
+    var female_equip_attachment: Int = -1,
+    var female_dialogue_head: Int = -1,
+    var equipped_model_female_dialogue_2: Int = -1,
     var notedID: Int = -1,
     var notedTemplate: Int = -1,
     var team: Int = 0,
@@ -106,15 +106,15 @@ class ItemProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true) 
             12 -> definition.cost = buffer.int
             16 -> definition.members = true
             23 -> {
-                definition.maleModel0 = buffer.uShort
-                definition.maleOffset = buffer.uByte
+                definition.male_equip_main = buffer.uShort
+                definition.male_equip_translate_y = buffer.uByte
             }
-            24 -> definition.maleModel1 = buffer.uShort
+            24 -> definition.male_equip_attachment = buffer.uShort
             25 -> {
-                definition.femaleModel0 = buffer.uShort
-                definition.femaleOffset = buffer.uByte
+                definition.female_equip_main = buffer.uShort
+                definition.female_equip_attachment = buffer.uByte
             }
-            26 -> definition.femaleModel1 = buffer.uShort
+            26 -> definition.equipped_model_female_2 = buffer.uShort
             in 30..34 -> {
                 definition.options[opcode - 30] = buffer.rsString
                 if (definition.options[opcode - 30].equals("Hidden", true)) {
@@ -142,12 +142,12 @@ class ItemProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true) 
             }
             42 -> definition.shiftClickDropIndex = buffer.byte.toInt()
             65 -> definition.isTradeable = true
-            78 -> definition.maleModel2 = buffer.uShort
-            79 -> definition.femaleModel2 = buffer.uShort
-            90 -> definition.maleHeadModel = buffer.uShort
-            91 -> definition.femaleHeadModel = buffer.uShort
-            92 -> definition.maleHeadModel2 = buffer.uShort
-            93 -> definition.femaleHeadModel2 = buffer.uShort
+            78 -> definition.male_equip_emblem = buffer.uShort
+            79 -> definition.female_equip_emblem = buffer.uShort
+            90 -> definition.male_dialogue_head = buffer.uShort
+            91 -> definition.female_dialogue_head = buffer.uShort
+            92 -> definition.equipped_model_male_dialogue_2 = buffer.uShort
+            93 -> definition.equipped_model_female_dialogue_2 = buffer.uShort
             94 -> definition.category = buffer.uShort
             95 -> definition.zan2d = buffer.uShort
             97 -> definition.notedID = buffer.uShort

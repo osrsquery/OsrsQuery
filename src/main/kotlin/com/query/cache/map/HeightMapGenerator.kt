@@ -4,7 +4,7 @@ import com.query.cache.map.builders.HeightMapImageBuilder
 import com.query.cache.map.region.RegionLoader
 import com.query.cache.map.region.regionSizeX
 import com.query.cache.map.region.regionSizeY
-import com.query.utils.BigBufferedImage
+import com.query.utils.image.BigBufferedImage
 import com.query.utils.FileUtils
 import mu.KotlinLogging
 import java.awt.Color

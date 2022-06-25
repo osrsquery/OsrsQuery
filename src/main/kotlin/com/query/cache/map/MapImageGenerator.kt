@@ -13,9 +13,9 @@ import java.awt.Graphics2D
 import java.awt.Image
 import java.awt.image.BufferedImage
 import java.nio.ByteBuffer
-import kotlin.experimental.and
 import com.query.cache.map.region.*
 import com.query.cache.map.region.data.Location
+import com.query.utils.image.BigBufferedImage
 import java.awt.RenderingHints
 import javax.imageio.ImageIO
 
@@ -228,7 +228,7 @@ class MapImageGenerator(private val builder : MapImageBuilder) {
     private fun getOverlayColor(overlayID: Int): Int {
         val overlay = findOverlay(overlayID)
         var rgb = if (overlay.textureId >= 0) {
-            textures[overlay.textureId]?.field1777 ?: error("Error getting Texure Color")
+            textures[overlay.textureId]?.averageRGB ?: error("Error getting Texure Color")
         } else if (overlay.rgbColor == 0xFF00FF) {
             -2
         } else {

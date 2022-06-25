@@ -1,25 +1,15 @@
 package com.query.dump.impl
 
-import com.beust.klaxon.Klaxon
 import com.query.Application.music
 import com.query.dump.DefinitionsTypes
 import com.query.dump.TypeManager
 import com.query.utils.progress
 import com.query.Application
 import com.query.Application.jingle
-import com.query.Constants
-import com.query.cache.definitions.impl.MusicData
 import com.query.utils.FileUtils.getFile
-import com.query.utils.Position
-import com.query.utils.getInt
-import com.query.utils.writeJson
-import com.squareup.okhttp.Request
-import com.squareup.okhttp.Response
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
 import kotlinx.cli.default
-import org.apache.commons.lang.StringUtils
-import java.net.URL
 
 class Jingle : TypeManager {
 

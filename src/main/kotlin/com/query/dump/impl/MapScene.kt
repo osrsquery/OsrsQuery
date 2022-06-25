@@ -8,7 +8,6 @@ import com.query.dump.DefinitionsTypes
 import com.query.dump.TypeManager
 import com.query.utils.FileUtils.getFile
 import com.query.utils.IndexType
-import com.query.utils.Sprite
 import com.query.utils.progress
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType

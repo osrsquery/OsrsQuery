@@ -1,7 +1,6 @@
 package com.query.dump.impl
 
 import com.query.Application
-import com.query.Application.sprites
 import com.query.Application.textures
 import com.query.dump.DefinitionsTypes
 import com.query.dump.TypeManager
@@ -10,8 +9,6 @@ import com.query.utils.progress
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
 import kotlinx.cli.default
-import java.nio.file.Files
-import java.nio.file.StandardCopyOption
 
 
 class Textures : TypeManager {
@@ -33,12 +30,7 @@ class Textures : TypeManager {
             val trans = FileUtils.getFile("sprites/transparent/", "${it.fileIds[0]}.png")
             val pink = FileUtils.getFile("sprites/pink/", "${it.fileIds[0]}.png")
 
-            Files.copy(trans.toPath(), FileUtils.getFile("textures/transparent/", "${it.id}.png").toPath(),
-                StandardCopyOption.REPLACE_EXISTING
-            )
-            Files.copy(pink.toPath(), FileUtils.getFile("textures/pink/", "${it.id}.png").toPath(),
-                StandardCopyOption.REPLACE_EXISTING
-            )
+
 
             progress.step()
         }

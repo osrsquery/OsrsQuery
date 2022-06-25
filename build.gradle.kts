@@ -29,6 +29,9 @@ dependencies {
     implementation("com.google.guava:guava:31.0.1-jre")
     implementation("com.squareup.okhttp:okhttp:2.7.5")
     implementation("commons-lang:commons-lang:2.6")
+    // https://mvnrepository.com/artifact/org.jsoup/jsoup
+    implementation("org.jsoup:jsoup:1.14.3")
+
 
 }
 
