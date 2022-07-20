@@ -17,5 +17,7 @@ enum class IndexType(val number: Int) {
     FONTS(13),
     VORBIS(14),
     INSTRUMENTS(15),
-    WORLDMAP(16);
+    OBJECTS(16),
+    NPCS(18),
+    ITEMS(19);
 }

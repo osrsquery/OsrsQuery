@@ -18,6 +18,10 @@ enum class ConfigType(val id: Int) {
     VARPLAYER(16),
     HITSPLAT(32),
     HEALTHBAR(33),
-    STRUCT(34),
-    AREA(35);
+    MAP_SPRITES(34),
+    MAP_AREAS(36);
+}
+
+fun containerId(containerId: Int, bit : Int): Int {
+    return containerId ushr bit
 }

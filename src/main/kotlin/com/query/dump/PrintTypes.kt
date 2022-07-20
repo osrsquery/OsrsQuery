@@ -12,6 +12,7 @@ import java.io.FileWriter
 enum class DefinitionsTypes {
     OBJECTS,
     AREAS,
+    MAPSCENE,
     SPRITES,
     KIT,
     NPCS,

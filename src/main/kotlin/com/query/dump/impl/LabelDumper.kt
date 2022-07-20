@@ -28,9 +28,9 @@ class LabelDumper : TypeManager {
 
         val data: Labels? = Gson().fromJson(File(getBase(),"locations.json").readText(), Labels::class.java)
 
-        areas().filter { it.name != null }.forEach {
-            if (data!!.locations.count { data -> it.name!!.contains(data.name) } == 0) {
-                println(AreaProvider.formatName("${it.name} : ${AreaProvider.fontSizeName(it.fontSize)}"))
+        areas().filter { it.description != null }.forEach {
+            if (data!!.locations.count { data -> it.description!!.contains(data.name) } == 0) {
+                println(AreaProvider.formatName("${it.description} : ${AreaProvider.fontSizeName(it.fontSize)}"))
             }
         }
 

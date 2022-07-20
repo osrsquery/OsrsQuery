@@ -1,6 +1,7 @@
 package com.query
 
 import com.displee.cache.CacheLibrary
+import com.runetopic.cache.store.Js5Store
 import com.squareup.okhttp.OkHttpClient
 import java.util.*
 
@@ -9,7 +10,7 @@ object Constants {
     const val BASE_DIR = "./repository/"
     var properties : Properties = Properties()
     lateinit var library : CacheLibrary
-
+    var store : Js5Store? = null
     /**
      * The client for OkHttp.
      */

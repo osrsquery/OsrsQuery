@@ -21,8 +21,6 @@ interface TypeManager {
             DefinitionsTypes.ITEMS -> ItemProvider(null,false).run()
             DefinitionsTypes.TEXTURES -> TextureProvider(null,false).run()
             DefinitionsTypes.OVERLAYS -> OverlayProvider(null,false).run()
-            DefinitionsTypes.MUSIC -> MusicProvider(null,false).run()
-            DefinitionsTypes.JINGLE -> JingleProvider(null,false).run()
         }
     }
 

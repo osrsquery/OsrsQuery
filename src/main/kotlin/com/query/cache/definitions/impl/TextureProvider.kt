@@ -12,6 +12,7 @@ import com.query.utils.index
 import java.nio.ByteBuffer
 import java.util.concurrent.CountDownLatch
 import com.query.utils.*
+import com.runetopic.cache.extension.toByteBuffer
 
 data class TextureDefinition(
     override var id: Int,
@@ -38,10 +39,11 @@ class TextureProvider(val latch: CountDownLatch?, val writeTypes : Boolean = tru
     }
 
     override fun load(): Serializable {
-        val archive: Archive = Constants.library.index(IndexType.TEXTURES).first()!!
-
-        val definitions = archive.fileIds().map {
-            decode(ByteBuffer.wrap(archive.file(it)?.data), TextureDefinition(it))
+        val definitions : MutableList<Definition> = emptyList<Definition>().toMutableList()
+        Constants.store!!.index(9).use { index ->
+            (0 until index.expand()).forEach {
+                definitions.add(decode(index.group(it ushr 8).file(it and 0xFF).data.toByteBuffer(), TextureDefinition(it)))
+            }
         }
 
         return Serializable(DefinitionsTypes.TEXTURES,this, definitions,writeTypes)
@@ -49,10 +51,11 @@ class TextureProvider(val latch: CountDownLatch?, val writeTypes : Boolean = tru
 
     private fun decode(buffer: ByteBuffer, definition: TextureDefinition): Definition {
 
-        definition.averageRGB = buffer.uShort
-        definition.field2332 = buffer.byte.toInt() != 0
-
         val count: Int = buffer.byte.toInt()
+        println("Count: ${count}")
+        if(count == 0) {
+            return TextureDefinition(3);
+        }
         val files = IntArray(count)
 
         for (i in 0 until count) files[i] = buffer.uShort
@@ -79,8 +82,6 @@ class TextureProvider(val latch: CountDownLatch?, val writeTypes : Boolean = tru
             definition.field2329[var3] = buffer.int
         }
 
-        definition.animationDirection = buffer.byte.toInt()
-        definition.animationSpeed = buffer.byte.toInt()
         definition.sprite = definition.fileIds[0]
 
         return definition

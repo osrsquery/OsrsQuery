@@ -42,8 +42,15 @@ class MapFunctions : TypeManager {
         val functions = getMapFunctions()
         val progress = progress("Writing Area Sprites", functions.size.toLong())
         var index = 0
-        functions.forEach {
-            ImageIO.write(it.value, "png", getFile("mapFunctions/","${if(revisionBefore(142)) it.key else index}.png"))
+        areas().filter { it.spriteId != -1 }.forEach {
+            val pink = getFile("sprites/pink/", "${it.spriteId}.png")
+            var buffImg = BufferedImage(15, 15, BufferedImage.TYPE_INT_ARGB)
+            try {
+                buffImg = ImageIO.read(pink)
+            } catch (e: IOException) {
+                e.printStackTrace()
+            }
+            ImageIO.write(buffImg, "png", getFile("mapFunctions/","${it.spriteId}.png"))
             progress.step()
             index++
         }
@@ -55,24 +62,8 @@ class MapFunctions : TypeManager {
     companion object {
 
         fun getMapFunctions() : Map<Int,BufferedImage> {
-            val data : MutableMap<Int,BufferedImage> = emptyMap<Int, BufferedImage>().toMutableMap()
-            if (revisionBefore(142)) {
-                val functions = objects().filter { it.mapAreaId != -1 }
-                functions.filter { it.mapAreaId != -1 }.forEachIndexed { index, area ->
-                    val container: ByteArray = Constants.library.data(IndexType.SPRITES.number, 318)!!
-                    val sprite = SpriteData.decode(ByteBuffer.wrap(container))
-                    val img = sprite.getFrame(area.mapAreaId)
+                val data : MutableMap<Int,BufferedImage> = emptyMap<Int, BufferedImage>().toMutableMap()
 
-                    val background = BufferedImage(15, 15, BufferedImage.TYPE_INT_RGB)
-                    val g2d = background.createGraphics()
-                    g2d.color = Color.decode("#FF00FF")
-                    g2d.fillRect(0, 0, background.width, background.height)
-                    g2d.drawImage(img, 0, 0, null)
-                    g2d.dispose()
-
-                    data[area.mapAreaId] = background
-                }
-            } else {
                 val functions = areas().filter { it.spriteId != -1 }
                 functions.filter { it.spriteId != -1 }.forEachIndexed { index, area ->
                     val pink = getFile("sprites/pink/", "${area.spriteId}.png")
@@ -83,7 +74,6 @@ class MapFunctions : TypeManager {
                         e.printStackTrace()
                     }
                     data[index] = buffImg
-                }
             }
             return data
         }

@@ -22,6 +22,10 @@ fun Klaxon.toPrettyJsonString(value: Any): String {
 
 fun CacheLibrary.index(type : IndexType) = index(type.number)
 
+
+fun isObjectInteger(o: Any?) = o is Int
+
+
 fun CacheLibrary.data(type : IndexType,archive: String, xtea: IntArray? = null) = this.data(type.number, archive, 0, xtea)
 
 fun CacheLibrary.data(index: IndexType, archive: Int, file: Int = 0, xtea: IntArray? = null) = this.index(index).archive(archive, xtea)?.file(file)?.data

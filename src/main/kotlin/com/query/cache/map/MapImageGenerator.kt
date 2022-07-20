@@ -5,7 +5,7 @@ import SpriteData
 import com.query.Constants
 import com.query.cache.definitions.impl.*
 import com.query.cache.map.builders.MapImageBuilder
-import com.query.dump.impl.MapScene
+import com.query.dump.impl.MapSceneDumper
 import com.query.utils.*
 import mu.KotlinLogging
 import java.awt.Color
@@ -31,13 +31,11 @@ class MapImageGenerator(private val builder : MapImageBuilder) {
     var overlays: Map<Int, OverlayDefinition> = HashMap()
     var underlays: Map<Int, UnderlayDefinition> = HashMap()
     var areas: Map<Int, AreaDefinition> = HashMap()
-    var textures: Map<Int, TextureDefinition> = HashMap()
+    var mapScene: Map<Int, MapSceneDefinition> = HashMap()
+    var textures: MutableMap<Int, Int> = emptyMap<Int,Int>().toMutableMap()
     var sprites: Map<Int, SpriteDefinition> = HashMap()
-    private val scaledMapIcons: MutableMap<Int, Image> = HashMap()
 
-    init {
-        resizeMapScene()
-    }
+
 
     /**
      * Main Method to start the Map drawing
@@ -228,9 +226,9 @@ class MapImageGenerator(private val builder : MapImageBuilder) {
     private fun getOverlayColor(overlayID: Int): Int {
         val overlay = findOverlay(overlayID)
         var rgb = if (overlay.textureId >= 0) {
-            textures[overlay.textureId]?.averageRGB ?: error("Error getting Texure Color")
+            textures[overlay.textureId] ?: error("Error getting Texure Color")
         } else if (overlay.rgbColor == 0xFF00FF) {
-            -2
+            0
         } else {
             val overlayHsl = hsl24to16(
                 overlay.hue,
@@ -314,9 +312,11 @@ class MapImageGenerator(private val builder : MapImageBuilder) {
                 val objType = findObject(location.id)
                 val drawX = drawBaseX + localX
                 val drawY: Int = drawBaseY + (regionSizeY - 1 - localY)
-                if (objType.mapSceneID != -1) {
-                    val spriteImage = scaledMapIcons[objType.mapSceneID]
-                    graphics.drawImage(spriteImage, drawX * builder.scale, drawY * builder.scale, null)
+                if (objType.mapSpriteId != -1) {
+                    if(findMapScene(objType.mapSpriteId).spriteId != -1) {
+                        val spriteImage = findMapSceneIcon(objType.mapSpriteId)
+                        graphics.drawImage(spriteImage, drawX * builder.scale, drawY * builder.scale, null)
+                    }
                 }
             }
         }
@@ -342,7 +342,7 @@ class MapImageGenerator(private val builder : MapImageBuilder) {
                 val objType = findObject(location.id)
 
                 // Don't draw walls on water
-                if (objType.mapSceneID == 22) {
+                if (objType.mapSpriteId == 22) {
                     continue
                 }
                 val objName: String = objType.name.lowercase()
@@ -538,9 +538,17 @@ class MapImageGenerator(private val builder : MapImageBuilder) {
 
     private fun findArea(id: Int) = areas[id]?: error("Could not find Area")
 
+    private fun findMapScene(id: Int) = mapScene[id]?: error("Could not find Map Scene")
+
+
     private fun findSprite(id: Int) = sprites[id]?: error("Could not find Sprite")
 
-    private fun findMapIcon(id: Int) = if(revisionBefore(142)) pre142MapFunction(id) else findSprite(findArea(id).spriteId).sprite.toBufferImage()
+    private fun findMapIcon(id: Int) = findSprite(findArea(id).spriteId).sprite.toBufferImage()
+
+
+    private fun findMapSceneIcon(id: Int) : BufferedImage {
+        return findSprite(findMapScene(id).spriteId).sprite.toBufferImage()
+    }
 
     private fun pre142MapFunction(id : Int) : BufferedImage {
         val container: ByteArray = Constants.library.data(IndexType.SPRITES.number, 318)!!
@@ -548,12 +556,6 @@ class MapImageGenerator(private val builder : MapImageBuilder) {
         return sprite.getFrame(id)
     }
 
-    private fun resizeMapScene() {
-        if (!builder.drawMapScene) return
-        MapScene.collectSprites().forEach {
-            scaledMapIcons[it.key] = it.value
-        }
-    }
 
     companion object {
         private val colorPalette = ColorPalette(0.9, 0, 512).colorPalette
@@ -645,7 +647,7 @@ class MapImageGenerator(private val builder : MapImageBuilder) {
         )
 
         private const val PLANE_MIN = 0
-        private const val PLANE_MAX = 3
+        private const val PLANE_MAX = 0
 
     }
 

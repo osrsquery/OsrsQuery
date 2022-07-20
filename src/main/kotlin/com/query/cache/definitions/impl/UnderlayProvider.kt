@@ -8,6 +8,8 @@ import com.query.cache.Serializable
 import com.query.cache.definitions.Definition
 import com.query.dump.DefinitionsTypes
 import com.query.utils.*
+import java.io.DataOutputStream
+import java.io.IOException
 import java.nio.ByteBuffer
 import java.util.concurrent.CountDownLatch
 
@@ -15,11 +17,45 @@ import java.util.concurrent.CountDownLatch
 data class UnderlayDefinition(
     override val id: Int = 0,
     var color: Int = 0,
-    var hue: Int = 0,
-    var saturation: Int = 0,
-    var lightness: Int = -1,
-    var hueMultiplier: Int = 0
+    var texture: Int = -1,
+    var scale : Int = -1,
+    var hueMultiplier: Int = 0,
+    var blockShadow : Boolean = true,
+    var aBool5722 : Boolean = true
 ): Definition {
+
+    var hue: Int = 0
+    var saturation: Int = 0
+    var lightness: Int = -1
+
+    fun encode(dos: DataOutputStream) {
+        if (color != 0) {
+            dos.writeByte(1)
+            dos.writeByte(color shr 16)
+            dos.writeByte(color shr 8)
+            dos.writeByte(color)
+        }
+
+        if (texture != -1) {
+            dos.writeByte(2)
+            dos.writeShort(texture)
+        }
+
+        if (scale != -1) {
+            dos.writeByte(3)
+            dos.writeShort(scale)
+        }
+
+        if (!blockShadow) {
+            dos.writeByte(4)
+        }
+
+        if (!aBool5722) {
+            dos.writeByte(5)
+        }
+
+        dos.writeByte(0)
+    }
 
     fun calculateHsl() {
         val var1: Int = color
@@ -106,6 +142,12 @@ class UnderlayProvider(val latch: CountDownLatch?, val writeTypes : Boolean = tr
     fun decode(buffer: ByteBuffer, definition: UnderlayDefinition): Definition {
         do when (val opcode: Int = buffer.uByte) {
             1 -> definition.color = buffer.medium
+            2 -> buffer.uShort.let {
+                definition.texture = if (it > Short.MAX_VALUE) -1 else it
+            }
+            3 -> definition.scale = buffer.readUnsignedShort() shl 2
+            4 -> definition.blockShadow = false
+            5 -> definition.aBool5722 = false
             0 -> break
             else -> logger.warn { "Unhandled underlay definition opcode with id: ${opcode}." }
         } while (true)

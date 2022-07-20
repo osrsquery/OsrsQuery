@@ -7,6 +7,7 @@ import com.query.Application.cacheInfo
 import com.query.Application.loadProperties
 import com.query.Application.revision
 import com.query.Application.saveProperties
+import com.query.Constants
 import com.query.Constants.CACHE_DOWNLOAD_LOCATION
 import com.query.Constants.library
 import com.query.Constants.properties
@@ -15,6 +16,7 @@ import com.query.utils.*
 import com.query.utils.DownloadUtils.downloadCache
 import com.query.utils.FileUtils.getCacheLocation
 import com.query.utils.ZipUtils.unZip
+import com.runetopic.cache.store.Js5Store
 import mu.KotlinLogging
 import java.io.*
 import java.net.URL
@@ -72,7 +74,7 @@ object CacheLoader {
 
     private fun loadCache() {
         val pb = progress("Loading Cache",getCacheLocation().listFiles().size.toLong())
-
+        Constants.store = Js5Store(getCacheLocation().toPath(), parallel = true)
         library = CacheLibrary(getCacheLocation().toString(), false, object : ProgressListener {
             override fun notify(progress: Double, message: String?) {
                 pb.step()
@@ -107,14 +109,14 @@ object CacheLoader {
     }
 
     private fun getLatest(caches : Array<CacheInfo>) = caches.filter {
-        it.game.contains("oldschool")
+        it.game.contains("runescape")
         && it.timestamp != null
         && it.builds.isNotEmpty()
         && it.builds.first().major > 201
     }.maxByOrNull { it.timestamp.stringToTimestamp().toEchochUTC() }?: error("Unable to find Latest Revision")
 
     private fun findRevision(rev : Int, caches : Array<CacheInfo>) = caches.filter {
-        it.game.contains("oldschool")
+        it.game.contains("runescape")
         && it.timestamp != null && it.builds.isNotEmpty() && it.builds[0].major == rev
     }.maxByOrNull { it.timestamp.stringToTimestamp().toEchochUTC() }?: error("Unable to find Revision: $revision")
 

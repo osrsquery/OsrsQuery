@@ -1,14 +1,14 @@
 package com.query.cache.definitions.impl
 
-import com.displee.cache.index.archive.Archive
 import com.query.Application
 import com.query.Application.logger
-import com.query.Constants.library
+import com.query.Constants.store
 import com.query.cache.Loader
 import com.query.cache.Serializable
 import com.query.cache.definitions.Definition
 import com.query.dump.DefinitionsTypes
 import com.query.utils.*
+import com.runetopic.cache.extension.toByteBuffer
 import java.nio.ByteBuffer
 import java.util.concurrent.CountDownLatch
 
@@ -61,7 +61,35 @@ data class ItemDefinition(
     var boughtTemplateId: Int = -1,
     var placeholderId: Int = -1,
     var placeholderTemplateId: Int = -1,
-    var params : MutableMap<Int,String> = mutableMapOf<Int, String>()
+    var params: MutableMap<Int, Any> = mutableMapOf(),
+    var aByteArray1858: ByteArray? = null,
+    var tooltipColor : Int = -1,
+    var hasTooltipColor : Boolean = false,
+    var wearPos3 : Int = -1,
+    var multiStackSize : Int = -1,
+    var wearPos2 : Int = -1,
+    var wearPos : Int = -1,
+    var notedId: Int = -1,
+    var lendId: Int = -1,
+    var lendTemplateId: Int = -1,
+    var maleWearXOffset: Int = 0,
+    var maleWearYOffset: Int = 0,
+    var maleWearZOffset: Int = 0,
+    var femaleWearXOffset: Int = 0,
+    var femaleWearYOffset: Int = 0,
+    var femaleWearZOffset: Int = 0,
+    var anInt1899: Int = -1,
+    var anInt1897: Int = -1,
+    var anInt1850: Int = -1,
+    var anInt1863: Int = -1,
+    var customCursorOp1: Int = -1,
+    var customCursorId1: Int = -1,
+    var customCursorOp2: Int = -1,
+    var customCursorId2: Int = -1,
+    var quests: IntArray? = null,
+    var pickSizeShift: Int = 0,
+    var bindId: Int = -1,
+    var bindTemplateId: Int = -1,
 ): Definition
 
 class ItemProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true) : Loader, Runnable {
@@ -76,114 +104,144 @@ class ItemProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true) 
     }
 
     override fun load(): Serializable {
-        val archive: Archive = library.index(IndexType.CONFIGS).archive(ConfigType.ITEM.id)!!
-        val definitions = archive.fileIds().map {
-            decode(ByteBuffer.wrap(archive.file(it)?.data), ItemDefinition(it))
+        val definitions : MutableList<Definition> = emptyList<Definition>().toMutableList()
+
+        store!!.index(IndexType.ITEMS.number).use { index ->
+            (0 until index.expand()).forEach {
+                definitions.add(decode(index.group(it ushr 8).file(it and 0xFF).data.toByteBuffer(), ItemDefinition(it)))
+            }
         }
         return Serializable(DefinitionsTypes.ITEMS,this, definitions,writeTypes)
     }
 
     fun decode(buffer: ByteBuffer, definition: ItemDefinition): Definition {
-        do when (val opcode: Int = buffer.uByte) {
-            1 -> definition.inventoryModel = buffer.uShort
-            2 -> definition.name = buffer.rsString
+        do when (val opcode: Int = buffer.readUnsignedByte()) {
+            0 -> break
+            1 -> definition.inventoryModel = buffer.readBigSmart()
+            2 -> definition.name = buffer.readString()
             4 -> definition.zoom2d = buffer.uShort
             5 -> definition.xan2d = buffer.uShort
             6 -> definition.yan2d = buffer.uShort
-            7 -> {
-                definition.xOffset2d = buffer.uShort
-                if (definition.xOffset2d > Short.MAX_VALUE) {
-                    definition.xOffset2d -= 65536
-                }
+            7 -> buffer.uShort.let {
+                definition.xOffset2d = if (it > Short.MAX_VALUE) it - 65536 else it
             }
-            8 -> {
-                definition.yOffset2d = buffer.uShort
-                if (definition.yOffset2d > Short.MAX_VALUE) {
-                    definition.yOffset2d -= 65536
-                }
+            8 -> buffer.uShort.let {
+                definition.yOffset2d = if (it > Short.MAX_VALUE) it - 65536 else it
             }
             11 -> definition.stackable = 1
             12 -> definition.cost = buffer.int
+            13 -> definition.wearPos = buffer.uByte
+            14 -> definition.wearPos2 = buffer.uByte
             16 -> definition.members = true
-            23 -> {
-                definition.male_equip_main = buffer.uShort
-                definition.male_equip_translate_y = buffer.uByte
-            }
-            24 -> definition.male_equip_attachment = buffer.uShort
-            25 -> {
-                definition.female_equip_main = buffer.uShort
-                definition.female_equip_attachment = buffer.uByte
-            }
-            26 -> definition.equipped_model_female_2 = buffer.uShort
-            in 30..34 -> {
-                definition.options[opcode - 30] = buffer.rsString
-                if (definition.options[opcode - 30].equals("Hidden", true)) {
-                    definition.options[opcode - 30] = null
-                }
-            }
-            in 35..39 -> definition.interfaceOptions[opcode - 35] = buffer.rsString
+            18 -> definition.multiStackSize = buffer.uShort
+            23 -> definition.male_equip_main = buffer.readBigSmart()
+            24 -> definition.male_equip_attachment = buffer.readBigSmart()
+            25 -> definition.female_equip_main = buffer.readBigSmart()
+            26 -> definition.equipped_model_female_2 = buffer.readBigSmart()
+            27 -> definition.wearPos3 = buffer.uByte
+            in 30..34 -> buffer.readString().let { definition.options[opcode - 30] = it }
+            in 35..39 -> buffer.readString().let { definition.interfaceOptions[opcode - 35] = it }
             40 -> {
-                val length: Int = buffer.uByte
-                definition.colorFind = ShortArray(length)
-                definition.colorReplace = ShortArray(length)
-                (0 until length).forEach {
-                    definition.colorFind!![it] = (buffer.uShort).toShort()
-                    definition.colorReplace!![it] = (buffer.uShort).toShort()
+                val size = buffer.readUnsignedByte()
+                val colorToFind = ShortArray(size)
+                val colorToReplace = ShortArray(size)
+                (0 until size).forEach {
+                    colorToFind[it] = buffer.uShort.toShort()
+                    colorToReplace[it] = buffer.uShort.toShort()
                 }
+                definition.colorFind = colorToFind
+                definition.colorReplace = colorToReplace
             }
             41 -> {
-                val length: Int = buffer.uByte
-                definition.textureFind = ShortArray(length)
-                definition.textureReplace = ShortArray(length)
-                (0 until length).forEach {
-                    definition.textureFind!![it] = (buffer.uShort).toShort()
-                    definition.textureReplace!![it] = (buffer.uShort).toShort()
+                val size = buffer.readUnsignedByte()
+                val textureToFind = ShortArray(size)
+                val textureToReplace = ShortArray(size)
+                (0 until size).forEach {
+                    textureToFind[it] = buffer.uShort.toShort()
+                    textureToReplace[it] = buffer.uShort.toShort()
                 }
+                definition.textureFind = textureToFind
+                definition.textureReplace = textureToReplace
             }
-            42 -> definition.shiftClickDropIndex = buffer.byte.toInt()
+            42 -> {
+                val size = buffer.readUnsignedByte()
+                val aByteArray1858 = ByteArray(size)
+                (0 until size).forEach { aByteArray1858[it] = buffer.byte }
+                definition.aByteArray1858 = aByteArray1858
+            }
+            43 -> {
+                definition.tooltipColor = buffer.int
+                definition.hasTooltipColor = true
+            }
             65 -> definition.isTradeable = true
-            78 -> definition.male_equip_emblem = buffer.uShort
-            79 -> definition.female_equip_emblem = buffer.uShort
-            90 -> definition.male_dialogue_head = buffer.uShort
-            91 -> definition.female_dialogue_head = buffer.uShort
-            92 -> definition.equipped_model_male_dialogue_2 = buffer.uShort
-            93 -> definition.equipped_model_female_dialogue_2 = buffer.uShort
-            94 -> definition.category = buffer.uShort
+            78 -> definition.male_equip_emblem = buffer.readBigSmart()
+            79 -> definition.female_equip_emblem = buffer.readBigSmart()
+            90 -> definition.male_dialogue_head = buffer.readBigSmart()
+            91 -> definition.female_dialogue_head = buffer.readBigSmart()
+            92 -> definition.equipped_model_male_dialogue_2 = buffer.readBigSmart()
+            93 -> definition.equipped_model_female_dialogue_2 = buffer.readBigSmart()
             95 -> definition.zan2d = buffer.uShort
-            97 -> definition.notedID = buffer.uShort
+            96 -> definition.category = buffer.readUnsignedByte()
+            97 -> definition.notedId = buffer.uShort
             98 -> definition.notedTemplate = buffer.uShort
             in 100..109 -> {
-                if (definition.countObj == null) {
-                    definition.countObj = IntArray(10)
-                    definition.countCo = IntArray(10)
-                }
-                definition.countObj!![opcode - 100] = buffer.uShort
-                definition.countCo!![opcode - 100] = buffer.uShort
+                val countObj = IntArray(10)
+                val countCo = IntArray(10)
+                countObj[opcode - 100] = buffer.uShort
+                countCo[opcode - 100] = buffer.uShort
+                definition.countObj = countObj
+                definition.countCo = countCo
             }
             110 -> definition.resizeX = buffer.uShort
             111 -> definition.resizeY = buffer.uShort
             112 -> definition.resizeZ = buffer.uShort
             113 -> definition.ambient = buffer.byte.toInt()
             114 -> definition.contrast = buffer.byte.toInt()
-            115 -> definition.team = buffer.byte.toInt()
-            139 -> definition.boughtId = buffer.uShort
-            140 -> definition.boughtTemplateId = buffer.uShort
-            148 -> definition.placeholderId = buffer.uShort
-            149 -> definition.placeholderTemplateId = buffer.uShort
+            115 -> definition.team = buffer.readUnsignedByte()
+            121 -> definition.lendId = buffer.uShort
+            122 -> definition.lendTemplateId = buffer.uShort
+            125 -> {
+                definition.maleWearXOffset = buffer.get().toInt() shl 2
+                definition.maleWearYOffset = buffer.get().toInt() shl 2
+                definition.maleWearZOffset = buffer.get().toInt() shl 2
+            }
+            126 -> {
+                definition.femaleWearXOffset = buffer.get().toInt() shl 2
+                definition.femaleWearYOffset = buffer.get().toInt() shl 2
+                definition.femaleWearZOffset = buffer.get().toInt() shl 2
+            }
+            127 -> {
+                definition.anInt1899 = buffer.readUnsignedByte()
+                definition.anInt1897 = buffer.uShort
+            }
+            128 -> {
+                definition.anInt1850 = buffer.readUnsignedByte()
+                definition.anInt1863 = buffer.uShort
+            }
+            129 -> {
+                definition.customCursorOp1 = buffer.readUnsignedByte()
+                definition.customCursorId1 = buffer.uShort
+            }
+            130 -> {
+                definition.customCursorOp2 = buffer.readUnsignedByte()
+                definition.customCursorId2 = buffer.uShort
+            }
+            132 -> {
+                val size = buffer.readUnsignedByte()
+                val anIntArray1893 = IntArray(size)
+                (0 until size).forEach { anIntArray1893[it] = buffer.uShort }
+                definition.quests = anIntArray1893
+            }
+            134 -> definition.pickSizeShift = buffer.readUnsignedByte()
+            139 -> definition.bindId = buffer.uShort
+            140 -> definition.bindTemplateId = buffer.uShort
             249 -> {
-                val length: Int = buffer.uByte
-                (0 until length).forEach { _ ->
-                    val string: Boolean = (buffer.uByte) == 1
-                    val key: Int = buffer.medium
-                    val value: Any = if (string) {
-                        buffer.rsString
-                    } else {
-                        buffer.int
-                    }
-                    definition.params[key] = value.toString()
+                val size = buffer.readUnsignedByte()
+                (0 until size).forEach { _ ->
+                    val string = buffer.readUnsignedByte() == 1
+                    definition.params[buffer.uMedium] = if (string) buffer.readString() else buffer.int
                 }
             }
-            0 -> break
             else -> logger.warn { "Unhandled item definition opcode with id: ${opcode}." }
         } while (true)
         return definition

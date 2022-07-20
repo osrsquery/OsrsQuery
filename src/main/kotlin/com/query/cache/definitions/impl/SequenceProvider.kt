@@ -1,14 +1,17 @@
 package com.query.cache.definitions.impl
 
-import com.displee.cache.index.archive.Archive
+import ByteBufferUtils
 import com.query.Application
 import com.query.Application.logger
-import com.query.Constants.library
+import com.query.Constants
 import com.query.cache.Loader
 import com.query.cache.Serializable
 import com.query.cache.definitions.Definition
 import com.query.dump.DefinitionsTypes
 import com.query.utils.*
+import com.runetopic.cache.extension.toByteBuffer
+import java.io.DataOutputStream
+import java.io.IOException
 import java.nio.ByteBuffer
 import java.util.concurrent.CountDownLatch
 
@@ -29,7 +32,91 @@ data class SequenceDefinition(
     var precedenceAnimating: Int = -1,
     var priority: Int = -1,
     var replyMode: Int = 2
-): Definition
+): Definition {
+
+    @Throws(IOException::class)
+    fun encode(dos: DataOutputStream) {
+        if (frameLengths != null && frameIDs != null) {
+            dos.writeByte(1)
+            dos.writeShort(frameLengths!!.size)
+            for (i in 0 until frameLengths!!.size) {
+                dos.writeShort(frameLengths!![i])
+            }
+            for (i in 0 until frameIDs!!.size) {
+                dos.writeShort(frameIDs!![i])
+            }
+            for (i in 0 until frameIDs!!.size) {
+                dos.writeShort(frameIDs!![i] shr 16)
+            }
+        }
+
+        if (frameStep != -1) {
+            dos.writeByte(2)
+            dos.writeShort(frameStep)
+        }
+
+        if (interleaveLeave != null) {
+            dos.writeByte(3)
+            dos.writeByte(interleaveLeave!!.size - 1)
+            for (i in 0 until interleaveLeave!!.size) {
+                dos.writeByte(interleaveLeave!![i])
+            }
+        }
+        if (stretches) {
+            dos.writeByte(4)
+        }
+
+        if (forcedPriority != 5) {
+            dos.writeByte(5)
+            dos.writeByte(forcedPriority)
+        }
+        if (leftHandItem != -1) {
+            dos.writeByte(6)
+            dos.writeShort(leftHandItem)
+        }
+        if (rightHandItem != -1) {
+            dos.writeByte(7)
+            dos.writeShort(rightHandItem)
+        }
+        if (maxLoops != 99) {
+            dos.writeByte(8)
+            dos.writeByte(maxLoops)
+        }
+        if (precedenceAnimating != -1) {
+            dos.writeByte(9)
+            dos.writeByte(precedenceAnimating)
+        }
+        if (priority != -1) {
+            dos.writeByte(10)
+            dos.writeByte(priority)
+        }
+        if (replyMode != 2) {
+            dos.writeByte(11)
+            dos.writeByte(replyMode)
+        }
+        if (chatFrameIds != null && chatFrameIds!!.size > 0) {
+            dos.writeByte(12)
+            dos.writeByte(chatFrameIds!!.size)
+            for (i in 0 until chatFrameIds!!.size) {
+                dos.writeShort(chatFrameIds!![i])
+            }
+            for (i in 0 until chatFrameIds!!.size) {
+                dos.writeShort(chatFrameIds!![i] shr 16)
+            }
+        }
+        if (frameSounds != null && frameSounds!!.isNotEmpty()) {
+            dos.writeByte(13)
+            dos.writeByte(frameSounds!!.size)
+            for (i in 0 until frameSounds!!.size) {
+                dos.writeByte(frameSounds!![i] shr 16)
+                dos.writeByte(frameSounds!![i] shr 8)
+                dos.writeByte(frameSounds!![i])
+            }
+        }
+        dos.writeByte(0)
+    }
+
+}
 
 class SequenceProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true) : Loader , Runnable {
 
@@ -43,10 +130,13 @@ class SequenceProvider(val latch: CountDownLatch?, val writeTypes : Boolean = tr
     }
 
     override fun load(): Serializable {
-        val archive: Archive = library.index(IndexType.CONFIGS).archive(ConfigType.SEQUENCE.id)!!
-        val definitions = archive.fileIds().map {
-            decode(ByteBuffer.wrap(archive.file(it)?.data), SequenceDefinition(it))
+        val definitions : MutableList<Definition> = emptyList<Definition>().toMutableList()
+        Constants.store!!.index(2).use { index ->
+            (0 until index.expand()).forEach {
+                definitions.add(decode(index.group(12).file(it and 0xFF).data.toByteBuffer(), SequenceDefinition(it)))
+            }
         }
+
         return Serializable(DefinitionsTypes.SEQUENCES,this, definitions,writeTypes)
     }
 

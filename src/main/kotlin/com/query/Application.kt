@@ -4,10 +4,12 @@ import com.google.gson.GsonBuilder
 import com.query.Constants.properties
 import com.query.cache.definitions.Definition
 import com.query.cache.definitions.impl.*
+import com.query.cache.definitions.impl.MapSceneProvider
 import com.query.cache.download.CacheInfo
 import com.query.cache.download.CacheLoader
-import com.query.dump.HeightMapDumper
+import com.query.dump.dumper317.Dumper
 import com.query.dump.impl.*
+import com.query.utils.DumpAll
 import com.query.utils.TimeUtils
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
@@ -50,46 +52,16 @@ object Application {
             CacheLoader.initialize()
 
             //Latch is necessary.
-            val latch = CountDownLatch(17)
+            val latch = CountDownLatch(11)
 
-            SpriteProvider(latch).run()
+            SpriteProvider(latch,false).run()
 
-            val commands = listOf(
-                AreaProvider(latch),
-                EnumProvider(latch),
-                HealthBarProvider(latch),
-                InvProvider(latch),
-                MusicProvider(latch),
-                JingleProvider(latch),
-                ItemProvider(latch),
-                KitProvider(latch),
-                NpcProvider(latch),
-                ObjectProvider(latch),
-                OverlayProvider(latch),
-                ParamProvider(latch),
-                SequenceProvider(latch),
-                SpotAnimationProvider(latch),
-                TextureProvider(latch),
-                UnderlayProvider(latch),
-                VarbitProvider(latch),
-            )
-            val cores = Runtime.getRuntime().availableProcessors()
-            if (cores > 4) {
-                val pool = Executors.newFixedThreadPool(cores)
-                commands.forEach(pool::execute)
-                pool.shutdown()
-            } else {
-                commands.forEach(Runnable::run)
-            }
-            latch.await()
 
             Sprites().load()
-            MapFunctions().load()
-            MapScene().load()
-            Overlay().load()
-            Textures().load()
-            Music().load()
-            Jingle().load()
+            //MapFunctions().load()
+            //MapSceneDumper().load()
+            Dumper.dumpAll()
+
         }
 
         logger.info { "Dump Completed in ${TimeUtils.millsToFormat(time)}" }
@@ -138,6 +110,10 @@ object Application {
     fun textures(): List<TextureDefinition> {
         return definitions[TextureDefinition::class.java]?.filterIsInstance<TextureDefinition>()?: error("Texture Definitions not loaded.")
     }
+    fun mapScene(): List<MapSceneDefinition> {
+        return definitions[MapSceneDefinition::class.java]?.filterIsInstance<MapSceneDefinition>()?: error("Map Scenes not loaded.")
+    }
+
 
     /**
      * Gets the sprites definitions.
@@ -160,26 +136,6 @@ object Application {
         return definitions[AreaDefinition::class.java]?.filterIsInstance<AreaDefinition>()?: error("Area Definitions not loaded.")
     }
 
-    /**
-     * Gets the enum definitions.
-     */
-    fun enums(): List<EnumDefinition> {
-        return definitions[EnumDefinition::class.java]?.filterIsInstance<EnumDefinition>()?: error("Enum Definitions not loaded.")
-    }
-
-    /**
-     * Gets the health definitions.
-     */
-    fun healths(): List<HealthBarDefinition>? {
-        return definitions[HealthBarDefinition::class.java]?.filterIsInstance<HealthBarDefinition>()?: error("Health Bar Definitions not loaded.")
-    }
-
-    /**
-     * Gets the inventory definitions.
-     */
-    fun invs(): List<InvDefinition>? {
-        return definitions[InvDefinition::class.java]?.filterIsInstance<InvDefinition>()?: error("Inv Definitions not loaded.")
-    }
 
     /**
      * Gets the item definitions.
@@ -200,13 +156,6 @@ object Application {
      */
     fun npcs(): List<NpcDefinition> {
         return definitions[NpcDefinition::class.java]?.filterIsInstance<NpcDefinition>()?: error("Npc Definitions not loaded.")
-    }
-
-    /**
-     * Gets the param definitions.
-     */
-    fun params(): List<ParamDefinition> {
-        return definitions[ParamDefinition::class.java]?.filterIsInstance<ParamDefinition>()?: error("Param Definitions not loaded.")
     }
 
     /**
@@ -243,21 +192,6 @@ object Application {
     fun varbits(): List<VarbitDefinition> {
         return definitions[VarbitDefinition::class.java]?.filterIsInstance<VarbitDefinition>()?: error("Varbit Definitions not loaded.")
     }
-
-    /**
-     * Gets Music tracks.
-     */
-    fun music(): List<MusicDefinition> {
-        return definitions[MusicDefinition::class.java]?.filterIsInstance<MusicDefinition>()?: error("Music Definitions not loaded.")
-    }
-
-    /**
-     * Gets Jingle tracks.
-     */
-    fun jingle(): List<JingleDefinition> {
-        return definitions[JingleDefinition::class.java]?.filterIsInstance<JingleDefinition>()?: error("Jingle Definitions not loaded.")
-    }
-
 
 }
 
