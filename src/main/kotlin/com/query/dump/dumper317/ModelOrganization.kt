@@ -27,14 +27,30 @@ object ModelOrganization {
        val pb = progress("Dumping Objects",objects.size.toLong())
         objects.forEach {
             val name = formatName(it.name,it.id)
-
+            val dir = File("C:\\Users\\Shadow\\Desktop\\models-organised\\objects\\${if(exists.contains(name)) "${name}-${it.id}" else name}\\")
+            it.objectModels?.forEach {
+                getFiles(it).first.copyTo(File(dir,"${it}.obj"),true)
+                getFiles(it).second.copyTo(File(dir,"${it}.mtl"),true)
+            }
             pb.step()
         }
 
         val progressItems = progress("Dumping Items",items.size.toLong())
 
         items.forEach {
-            val name = formatName(it.name,it.id)
+
+
+            writeItemFiles(it.id,it.inventoryModel,it.name,"inv","")
+            writeItemFiles(it.id,it.female_dialogue_head,it.name,"chathead","female")
+            writeItemFiles(it.id,it.female_equip_attachment,it.name,"attachment","female")
+            writeItemFiles(it.id,it.female_equip_emblem,it.name,"emblem","female")
+            writeItemFiles(it.id,it.female_equip_main,it.name,"main","female")
+
+            writeItemFiles(it.id,it.male_dialogue_head,it.name,"chathead","male")
+            writeItemFiles(it.id,it.male_equip_attachment,it.name,"attachment","male")
+            writeItemFiles(it.id,it.male_equip_emblem,it.name,"emblem","male")
+            writeItemFiles(it.id,it.male_equip_main,it.name,"main","male")
+
 
             progressItems.step()
         }

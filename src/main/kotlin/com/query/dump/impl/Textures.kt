@@ -25,11 +25,18 @@ class Textures : TypeManager {
 
     private fun writeTexures() {
 
-        val progress = progress("Writing Textures", textures()!!.size.toLong())
-        textures()!!.forEach {
-            val trans = FileUtils.getFile("sprites/transparent/", "${it.fileIds[0]}.png")
-            val pink = FileUtils.getFile("sprites/pink/", "${it.fileIds[0]}.png")
+        val progress = progress("Writing Textures", textures().size.toLong())
+        textures().forEach {
+            try {
+                val trans = FileUtils.getFile("sprites/transparent/", "${it.fileIds[0]}.png")
+                val pink = FileUtils.getFile("sprites/pink/", "${it.fileIds[0]}.png")
 
+                trans.copyTo(FileUtils.getFile("textures/transparent/","${it.fileIds[0]}.png"),true)
+                pink.copyTo(FileUtils.getFile("textures/pink/","${it.fileIds[0]}.png"),true)
+
+            }catch (e : Exception) {
+
+            }
 
 
             progress.step()

@@ -46,6 +46,15 @@ data class NpcDefinition(
     var isInteractable : Boolean = true,
     var rotationFlag : Boolean = true,
     var isPet : Boolean = false,
+    var runSequence : Int = -1,
+    var runBackSequence : Int = -1,
+    var runRightSequence : Int = -1,
+    var runLeftSequence : Int = -1,
+    var crawlSequence : Int = -1,
+    var crawlBackSequence : Int = -1,
+    var crawlRightSequence : Int = -1,
+    var crawlLeftSequence : Int = -1,
+
     var params : MutableMap<Int,String> = mutableMapOf<Int, String>()
 ): Definition
 
@@ -154,6 +163,20 @@ class NpcProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true) :
             107 -> definition.isInteractable = false
             109 -> definition.rotationFlag = false
             111 -> definition.isPet = true
+            114 -> definition.runSequence = buffer.uShort
+            115 -> {
+                definition.runSequence = buffer.uShort
+                definition.runBackSequence = buffer.uShort
+                definition.runRightSequence = buffer.uShort
+                definition.runLeftSequence = buffer.uShort
+            }
+            116 -> definition.crawlSequence = buffer.uShort
+            117 -> {
+                definition.crawlSequence = buffer.uShort
+                definition.crawlBackSequence = buffer.uShort
+                definition.crawlRightSequence = buffer.uShort
+                definition.crawlLeftSequence = buffer.uShort
+            }
             118 -> {
                 definition.varbitId = buffer.uShort
                 if (definition.varbitId == 65535) {

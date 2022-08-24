@@ -93,7 +93,7 @@ class MapFunctions : TypeManager {
             val parser = ArgParser("app")
             val rev by parser.option(ArgType.Int, description = "The revision you wish to dump").default(0)
             parser.parse(args)
-            Application.revision = 1
+            Application.revision = 108
 
             MapFunctions().test()
         }

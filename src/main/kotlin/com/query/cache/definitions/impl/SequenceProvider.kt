@@ -28,6 +28,9 @@ data class SequenceDefinition(
     var maxLoops: Int = 99,
     var precedenceAnimating: Int = -1,
     var priority: Int = -1,
+    var skeletalId : Int = -1,
+    var skeletalRangeBegin : Int = -1,
+    var skeletalRangeEnd : Int = -1,
     var replyMode: Int = 2
 ): Definition
 
@@ -99,6 +102,26 @@ class SequenceProvider(val latch: CountDownLatch?, val writeTypes : Boolean = tr
                 (0 until length).forEach {
                     definition.frameSounds!![it] = buffer.medium
                 }
+            }
+            14 -> definition.skeletalId = buffer.int
+            15 -> {
+                val count = buffer.uShort
+                repeat(count) {
+                    buffer.uShort
+                    buffer.medium
+                }
+                println("Opcode $opcode used by animation ${definition.id}")
+            }
+            16 -> {
+                definition.skeletalRangeBegin = buffer.uShort
+                definition.skeletalRangeEnd = buffer.uShort
+            }
+            17 -> {
+                val count = buffer.uByte
+                repeat(count) {
+                    buffer.uByte
+                }
+                println("Opcode $opcode used by animation ${definition.id}")
             }
             0 -> break
             else -> logger.warn { "Unhandled seq definition opcode with id: ${opcode}." }
