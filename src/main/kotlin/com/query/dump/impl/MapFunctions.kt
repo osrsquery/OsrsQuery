@@ -1,6 +1,6 @@
 package com.query.dump.impl
 
-import SpriteData
+import com.query.cache.Sprite
 import com.query.Application
 import com.query.Application.areas
 import com.query.Application.objects
@@ -60,7 +60,7 @@ class MapFunctions : TypeManager {
                 val functions = objects().filter { it.mapAreaId != -1 }
                 functions.filter { it.mapAreaId != -1 }.forEachIndexed { index, area ->
                     val container: ByteArray = Constants.library.data(IndexType.SPRITES.number, 318)!!
-                    val sprite = SpriteData.decode(ByteBuffer.wrap(container))
+                    val sprite = Sprite.decode(ByteBuffer.wrap(container))
                     val img = sprite.getFrame(area.mapAreaId)
 
                     val background = BufferedImage(15, 15, BufferedImage.TYPE_INT_RGB)

@@ -26,13 +26,20 @@ class Textures : TypeManager {
     private fun writeTexures() {
 
         val progress = progress("Writing Textures", textures().size.toLong())
+
+        val textureAlready = mutableListOf<Int>()
+        var index = 0
         textures().forEach {
             try {
-                val trans = FileUtils.getFile("sprites/transparent/", "${it.fileIds[0]}.png")
-                val pink = FileUtils.getFile("sprites/pink/", "${it.fileIds[0]}.png")
+                if(!textureAlready.contains(it.fileIds[0])) {
+                    val trans = FileUtils.getFile("sprites/transparent/", "${it.fileIds[0]}.png")
+                    val pink = FileUtils.getFile("sprites/pink/", "${it.fileIds[0]}.png")
 
-                trans.copyTo(FileUtils.getFile("textures/transparent/","${it.fileIds[0]}.png"),true)
-                pink.copyTo(FileUtils.getFile("textures/pink/","${it.fileIds[0]}.png"),true)
+                    trans.copyTo(FileUtils.getFile("textures/transparent/","${index}.png"),true)
+                    pink.copyTo(FileUtils.getFile("textures/pink/","${index}.png"),true)
+                    textureAlready.add(it.fileIds[0])
+                    index++
+                }
 
             }catch (e : Exception) {
 

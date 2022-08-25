@@ -1,7 +1,7 @@
 
 package com.query.cache.map
 
-import SpriteData
+import com.query.cache.Sprite
 import com.query.Constants
 import com.query.cache.definitions.impl.*
 import com.query.cache.map.builders.MapImageBuilder
@@ -540,12 +540,12 @@ class MapImageGenerator(private val builder : MapImageBuilder) {
 
     private fun findSprite(id: Int) = sprites[id]?: error("Could not find Sprite")
 
-    private fun findMapIcon(id: Int) = if(revisionBefore(142)) pre142MapFunction(id) else findSprite(findArea(id).spriteId).sprite.toBufferImage()
+    private fun findMapIcon(id: Int) = if(revisionBefore(142)) pre142MapFunction(id) else findSprite(findArea(id).spriteId).sprite
 
     private fun pre142MapFunction(id : Int) : BufferedImage {
         val container: ByteArray = Constants.library.data(IndexType.SPRITES.number, 318)!!
-        val sprite = SpriteData.decode(ByteBuffer.wrap(container))
-        return sprite.getFrame(id)
+        val sprite = Sprite.decode(ByteBuffer.wrap(container))
+        return sprite.getFrame(id)!!
     }
 
     private fun resizeMapScene() {

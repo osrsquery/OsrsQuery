@@ -20,7 +20,7 @@ data class AreaDefinition(
     var name: String? = null,
     var fontColor : Int = 0,
     var field3297: Int = -1,
-    var field3298: Array<String?> = arrayOfNulls(5),
+    var options: Array<String?> = arrayOfNulls(5),
     var field3300: IntArray? = null,
     var field3308: String? = null,
     var field3309: ByteArray? = null,
@@ -47,12 +47,15 @@ class AreaProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true) 
         val definitions = archive.fileIds().map {
            decode(ByteBuffer.wrap(archive.file(it)?.data), AreaDefinition(it))
         }
+
         return Serializable(DefinitionsTypes.AREAS,this, definitions,writeTypes)
     }
 
     fun decode(buffer: ByteBuffer, definition: AreaDefinition): Definition {
         do when (val opcode: Int = buffer.uByte) {
-            1 -> definition.spriteId = buffer.uShort
+            1 -> {
+                definition.spriteId = buffer.uShort
+            }
             2 -> definition.field3294 = buffer.uShort
             3 -> definition.name = buffer.rsString
             4 -> definition.fontColor = buffer.medium
@@ -60,7 +63,7 @@ class AreaProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true) 
             6 -> definition.fontSize = buffer.uByte
             7 -> buffer.uByte
             8 -> buffer.uByte
-            in 10..14 -> definition.field3298[opcode - 10] = buffer.rsString
+            in 10..14 -> definition.options[opcode - 10] = buffer.rsString
             15 -> {
                 val length: Int = buffer.uByte
                 definition.field3300 = IntArray(length * 2)

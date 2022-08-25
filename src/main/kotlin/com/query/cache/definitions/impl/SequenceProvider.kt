@@ -110,7 +110,6 @@ class SequenceProvider(val latch: CountDownLatch?, val writeTypes : Boolean = tr
                     buffer.uShort
                     buffer.medium
                 }
-                println("Opcode $opcode used by animation ${definition.id}")
             }
             16 -> {
                 definition.skeletalRangeBegin = buffer.uShort
@@ -121,7 +120,6 @@ class SequenceProvider(val latch: CountDownLatch?, val writeTypes : Boolean = tr
                 repeat(count) {
                     buffer.uByte
                 }
-                println("Opcode $opcode used by animation ${definition.id}")
             }
             0 -> break
             else -> logger.warn { "Unhandled seq definition opcode with id: ${opcode}." }

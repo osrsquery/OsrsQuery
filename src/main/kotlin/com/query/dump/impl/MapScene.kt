@@ -1,11 +1,12 @@
 package com.query.dump.impl
 
-import SpriteData
+import com.query.cache.Sprite
 import com.query.Application
 import com.query.Application.objects
 import com.query.Constants.library
 import com.query.dump.DefinitionsTypes
 import com.query.dump.TypeManager
+import com.query.dump.impl.Sprites.Companion.writePink
 import com.query.utils.FileUtils.getFile
 import com.query.utils.IndexType
 import com.query.utils.progress
@@ -39,7 +40,7 @@ class MapScene : TypeManager {
         val progress = progress("Writing Area Sprites",  objects().filter { it.mapSceneID != -1 }.distinctBy { it.mapSceneID }.size.toLong())
         collectSprites().forEach {
             try {
-                ImageIO.write(it.value, "png", getFile("mapsSences/","${it.key}.png"))
+                it.value.writePink(getFile("mapsSences/", "${it.key}.png"))
                 progress.step()
             }catch (e : Exception) {
                 progress.step()
@@ -64,9 +65,9 @@ class MapScene : TypeManager {
             val map : MutableMap<Int,BufferedImage> = emptyMap<Int,BufferedImage>().toMutableMap()
             objects().filter { it.mapSceneID != -1 }.distinctBy { it.mapSceneID }.forEachIndexed { index, objects ->
                 val container: ByteArray = library.data(IndexType.SPRITES.number, 317)!!
-                val sprite = SpriteData.decode(ByteBuffer.wrap(container))
+                val sprite = Sprite.decode(ByteBuffer.wrap(container))
                 val img = sprite.getFrame(index)
-                map[index] = img
+                map[index] = img!!
             }
             return map
         }

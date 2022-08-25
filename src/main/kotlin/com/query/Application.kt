@@ -52,7 +52,7 @@ object Application {
             //Latch is necessary.
             val latch = CountDownLatch(17)
 
-            SpriteProvider(latch).run()
+            SpriteProvider(latch,false).run()
 
             val commands = listOf(
                 AreaProvider(latch),
@@ -88,8 +88,6 @@ object Application {
             MapScene().load()
             Overlay().load()
             Textures().load()
-            Music().load()
-            Jingle().load()
         }
 
         logger.info { "Dump Completed in ${TimeUtils.millsToFormat(time)}" }
