@@ -7,11 +7,11 @@ import com.query.cache.Loader
 import com.query.cache.Serializable
 import com.query.cache.definitions.Definition
 import com.query.dump.DefinitionsTypes
-import com.query.utils.IndexType
-import com.query.utils.index
+import com.query.utils.*
+import java.io.DataOutputStream
+import java.io.IOException
 import java.nio.ByteBuffer
 import java.util.concurrent.CountDownLatch
-import com.query.utils.*
 
 data class TextureDefinition(
     override var id: Int,
@@ -22,9 +22,33 @@ data class TextureDefinition(
     var field2329: IntArray = IntArray(0),
     var animationSpeed : Int = 0,
     var animationDirection : Int = 0,
-    var sprite: Int = -1,
     var averageRGB: Int = -1
-) : Definition
+) : Definition {
+    @Throws(IOException::class)
+    fun encode(dos: DataOutputStream, texID : Int) {
+
+        if (!fileIds.contentEquals(IntArray(0))) {
+            dos.writeByte(1)
+            dos.writeShort(texID)
+        }
+
+        if (animationSpeed != 0) {
+            dos.writeByte(2)
+            dos.writeShort(animationSpeed)
+        }
+        if (animationDirection != 0) {
+            dos.writeByte(3)
+            dos.writeShort(animationDirection)
+        }
+        if (averageRGB != -1) {
+            dos.writeByte(4)
+            dos.writeByte(averageRGB shr 16)
+            dos.writeByte(averageRGB shr 8)
+            dos.writeByte(averageRGB)
+        }
+
+    }
+}
 
 class TextureProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true) : Loader, Runnable {
 
@@ -81,7 +105,6 @@ class TextureProvider(val latch: CountDownLatch?, val writeTypes : Boolean = tru
 
         definition.animationDirection = buffer.byte.toInt()
         definition.animationSpeed = buffer.byte.toInt()
-        definition.sprite = definition.fileIds[0]
 
         return definition
     }

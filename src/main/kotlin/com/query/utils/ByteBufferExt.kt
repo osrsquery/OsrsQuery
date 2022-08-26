@@ -8,7 +8,16 @@ val ByteBuffer.byte: Byte get() = this.get()
 val ByteBuffer.rsString: String get() = getString(this)
 val ByteBuffer.medium: Int get() = this.get().toInt() and 0xff shl 16 or (this.get().toInt() and 0xff shl 8) or (this.get().toInt() and 0xff)
 
+val ByteBuffer.shortSmart : Int get() {
+    val peek = uByte
+    return if (peek < 128) peek - 64 else (peek shl 8 or uByte) - 49152
+}
 
+fun ByteBuffer.readByteArray(length: Int): ByteArray {
+    val array = ByteArray(length)
+    get(array)
+    return array
+}
 
 fun getString(buffer: ByteBuffer): String {
     val builder = StringBuilder()

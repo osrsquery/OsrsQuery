@@ -31,7 +31,9 @@ data class SequenceDefinition(
     var skeletalId : Int = -1,
     var skeletalRangeBegin : Int = -1,
     var skeletalRangeEnd : Int = -1,
-    var replyMode: Int = 2
+    var replyMode: Int = 2,
+    var skeletalSounds : MutableMap<Int,Int> = emptyMap<Int, Int>().toMutableMap(),
+    var unknown : BooleanArray? = null,
 ): Definition
 
 class SequenceProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true) : Loader , Runnable {
@@ -105,10 +107,9 @@ class SequenceProvider(val latch: CountDownLatch?, val writeTypes : Boolean = tr
             }
             14 -> definition.skeletalId = buffer.int
             15 -> {
-                val count = buffer.uShort
-                repeat(count) {
-                    buffer.uShort
-                    buffer.medium
+                val length = buffer.uShort
+                repeat(length) {
+                    definition.skeletalSounds[buffer.uShort] = buffer.medium
                 }
             }
             16 -> {
@@ -116,10 +117,16 @@ class SequenceProvider(val latch: CountDownLatch?, val writeTypes : Boolean = tr
                 definition.skeletalRangeEnd = buffer.uShort
             }
             17 -> {
+                definition.unknown = BooleanArray(256)
+                repeat(definition.unknown!!.size) {
+                    definition.unknown!![it] = false
+                }
+
                 val count = buffer.uByte
                 repeat(count) {
-                    buffer.uByte
+                    definition.unknown!![buffer.uByte] = false
                 }
+
             }
             0 -> break
             else -> logger.warn { "Unhandled seq definition opcode with id: ${opcode}." }

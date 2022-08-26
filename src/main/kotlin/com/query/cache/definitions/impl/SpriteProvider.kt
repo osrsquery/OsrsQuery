@@ -35,14 +35,14 @@ class SpriteProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true
     override fun load(): Serializable {
         val table = Constants.library.index(IndexType.SPRITES)
         val sprites : MutableList<SpriteDefinition> = emptyList<SpriteDefinition>().toMutableList()
-        for (i in 0 until table.archives().size) {
-            val sector = table.readArchiveSector(i) ?: continue
-            val sprite = Sprite.decode(ByteBuffer.wrap(sector.decompress()))
-
-            for (frame in 0 until sprite.size()) {
-                sprites.add(SpriteDefinition(i,sprite.getFrame(frame)!!))
+        table.archives().forEach {
+            val sector = table.readArchiveSector(it.id)
+            if(sector != null) {
+                val sprite = Sprite.decode(ByteBuffer.wrap(sector.decompress()))
+                for (frame in 0 until sprite.size()) {
+                    sprites.add(SpriteDefinition(it.id,sprite.getFrame(frame)!!))
+                }
             }
-
         }
         return Serializable(DefinitionsTypes.SPRITES,this, sprites,writeTypes)
     }
@@ -53,6 +53,7 @@ class SpriteProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true
 }
 
 fun main() {
+
     CacheLoader.initialize()
     SpriteProvider(null,false).run()
 }
