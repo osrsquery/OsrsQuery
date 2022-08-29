@@ -181,7 +181,7 @@ class Textures : TypeManager {
         dat.writeShort(textures.size)
 
         textures.forEach {
-            it.encode(dat, sprites317[it.fileIds[0]]!!)
+            it.encode(dat, sprites317)
             dat.writeByte(0)
             progress.step()
         }

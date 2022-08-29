@@ -15,33 +15,69 @@ import java.util.concurrent.CountDownLatch
 
 data class TextureDefinition(
     override var id: Int,
-    var field2332 : Boolean = false,
     var fileIds: IntArray = IntArray(0),
-    var field2334: IntArray = IntArray(0),
-    var field2335: IntArray = IntArray(0),
-    var field2329: IntArray = IntArray(0),
+    var field2293: Boolean = false,
+    var field2301: IntArray = IntArray(0),
+    var field2296: IntArray = IntArray(0),
+    var field2295: IntArray = IntArray(0),
     var animationSpeed : Int = 0,
     var animationDirection : Int = 0,
     var averageRGB: Int = -1
 ) : Definition {
     @Throws(IOException::class)
-    fun encode(dos: DataOutputStream, texID : Int) {
+    fun encode(dos: DataOutputStream, texID: Map<Int, Int>) {
+
+        dos.writeByte(1)
+        dos.writeShort(id)
+
+        if(field2293) {
+            dos.writeByte(2)
+            dos.writeByte(if(field2293) 1 else 0)
+        }
+
+        if(!fileIds.contentEquals(IntArray(0))) {
+            dos.writeByte(3)
+            dos.writeByte(fileIds.size)
+        }
 
         if (!fileIds.contentEquals(IntArray(0))) {
-            dos.writeByte(1)
-            dos.writeShort(texID)
+            dos.writeByte(4)
+            repeat(fileIds.count()) {
+                dos.writeShort(texID[fileIds[it]]!!)
+            }
+        }
+
+        if (!field2301.contentEquals(IntArray(0))) {
+            dos.writeByte(5)
+            repeat(field2301.count()) {
+                dos.writeByte(field2301[it])
+            }
+        }
+
+        if (!field2296.contentEquals(IntArray(0))) {
+            dos.writeByte(6)
+            repeat(field2296.count()) {
+                dos.writeByte(field2296[it])
+            }
+        }
+
+        if (!field2295.contentEquals(IntArray(0))) {
+            dos.writeByte(7)
+            repeat(field2295.count()) {
+                dos.writeInt(field2295[it])
+            }
         }
 
         if (animationSpeed != 0) {
-            dos.writeByte(2)
+            dos.writeByte(8)
             dos.writeShort(animationSpeed)
         }
         if (animationDirection != 0) {
-            dos.writeByte(3)
+            dos.writeByte(9)
             dos.writeShort(animationDirection)
         }
         if (averageRGB != -1) {
-            dos.writeByte(4)
+            dos.writeByte(10)
             dos.writeByte(averageRGB shr 16)
             dos.writeByte(averageRGB shr 8)
             dos.writeByte(averageRGB)
@@ -72,39 +108,37 @@ class TextureProvider(val latch: CountDownLatch?, val writeTypes : Boolean = tru
     }
 
     private fun decode(buffer: ByteBuffer, definition: TextureDefinition): Definition {
-
+       
         definition.averageRGB = buffer.uShort
-        definition.field2332 = buffer.byte.toInt() != 0
+        definition.field2293 = buffer.uByte == 1
+        val count: Int = buffer.uByte
 
-        val count: Int = buffer.byte.toInt()
-        val files = IntArray(count)
-
-        for (i in 0 until count) files[i] = buffer.uShort
-
-        definition.fileIds = files
-
-        if (count > 1) {
-            definition.field2334 = IntArray(count - 1)
-            for (var3 in 0 until count - 1) {
-                definition.field2334[var3] = buffer.byte.toInt()
+        if (count in 1..4) {
+            definition.fileIds = IntArray(count)
+            for (index in 0 until count) {
+                definition.fileIds[index] = buffer.uShort
             }
-        }
-
-        if (count > 1) {
-            definition.field2335 = IntArray(count - 1)
-            for (var3 in 0 until count - 1) {
-                definition.field2335[var3] = buffer.byte.toInt()
+            if (count > 1) {
+                definition.field2301 = IntArray(count - 1)
+                for (index in 0 until count - 1) {
+                    definition.field2301[index] = buffer.uByte
+                }
             }
+            if (count > 1) {
+                definition.field2296 = IntArray(count - 1)
+                for (index in 0 until count - 1) {
+                    definition.field2296[index] = buffer.uByte
+                }
+            }
+            definition.field2295 = IntArray(count)
+            for (index in 0 until count) {
+                definition.field2295[index] = buffer.int
+            }
+            definition.animationDirection = buffer.uByte
+            definition.animationSpeed = buffer.uByte
+        } else {
+           println("Texture: ${definition.id} Out of range 1..4 [${count}]")
         }
-
-        definition.field2329 = IntArray(count)
-
-        for (var3 in 0 until count) {
-            definition.field2329[var3] = buffer.int
-        }
-
-        definition.animationDirection = buffer.byte.toInt()
-        definition.animationSpeed = buffer.byte.toInt()
 
         return definition
     }
