@@ -3,6 +3,7 @@ package com.query.cache.download
 import com.displee.cache.CacheLibrary
 import com.displee.cache.ProgressListener
 import com.google.gson.Gson
+import com.query.Application
 import com.query.Application.cacheInfo
 import com.query.Application.loadProperties
 import com.query.Application.revision
@@ -16,6 +17,7 @@ import com.query.utils.DownloadUtils.downloadCache
 import com.query.utils.FileUtils.getCacheLocation
 import com.query.utils.ZipUtils.unZip
 import mu.KotlinLogging
+import pertinax.osrscd.CacheDownloader
 import java.io.*
 import java.net.URL
 import java.util.*
@@ -57,10 +59,14 @@ object CacheLoader {
             cacheInfo = if(revision == 0) getLatest(caches) else findRevision(revision,caches)
             needsUpdate = needsUpdate()
             if(needsUpdate) {
-                downloadCache(cacheInfo)
+                if(Application.gameWorld == -1) {
+                    downloadCache(cacheInfo)
+                    unZip()
+                    FileUtils.getFile("cache/osrs/","cache.zip").delete()
+                } else {
+                    CacheDownloader.downloadCache(Application.gameWorld)
+                }
                 saveXteas(cacheInfo)
-                unZip()
-                FileUtils.getFile("cache/osrs/","cache.zip").delete()
                 properties.setProperty("cache-version-${cacheInfo.builds[0].major}", cacheInfo.timestamp)
                 saveProperties(properties)
             }
@@ -107,14 +113,13 @@ object CacheLoader {
     }
 
     private fun getLatest(caches : Array<CacheInfo>) = caches.filter {
-        it.game.contains("oldschool")
+        it.game.contains(Application.gameType)
         && it.timestamp != null
         && it.builds.isNotEmpty()
-        && it.builds.first().major > 201
     }.maxByOrNull { it.timestamp.stringToTimestamp().toEchochUTC() }?: error("Unable to find Latest Revision")
 
     private fun findRevision(rev : Int, caches : Array<CacheInfo>) = caches.filter {
-        it.game.contains("oldschool")
+        it.game.contains(Application.gameType)
         && it.timestamp != null && it.builds.isNotEmpty() && it.builds[0].major == rev
     }.maxByOrNull { it.timestamp.stringToTimestamp().toEchochUTC() }?: error("Unable to find Revision: $revision")
 

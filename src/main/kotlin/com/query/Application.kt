@@ -13,6 +13,7 @@ import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
 import kotlinx.cli.default
 import mu.KotlinLogging
+import pertinax.osrscd.CacheDownloader
 import java.io.File
 import java.io.FileOutputStream
 import java.util.*
@@ -27,7 +28,17 @@ object Application {
     /**
      * What Revision the user wants to dump.
      */
-    var revision : Int = 0
+    var revision : Int = 1
+
+    /**
+     * What Game Type you wish to dump.
+     */
+    var gameType : String = "oldschool"
+
+    /**
+     * What Game World you wish to download.
+     */
+    var gameWorld : Int = -1
 
     /**
      * Main Logger for the Application.
@@ -42,10 +53,12 @@ object Application {
 
     var gson = GsonBuilder().setPrettyPrinting().create()
 
-    fun initialize(rev : Int) {
+    fun initialize(rev : Int, game: String, world : Int) {
         val time = measureTimeMillis {
 
             revision = rev
+            gameType = game
+            gameWorld = world
 
             CacheLoader.initialize()
 
@@ -264,7 +277,9 @@ fun main(args : Array<String>) {
 
     val parser = ArgParser("app")
     val rev by parser.option(ArgType.Int, description = "The revision you wish to dump").default(0)
-    parser.parse(args)
+    val gameType by parser.option(ArgType.String, description = "The game you wish to download [darkscape,dotd,oldschool,runescape]").default("oldschool")
+    val world by parser.option(ArgType.Int, description = "The game world you wish to download").default(-1)
 
-    Application.initialize(rev)
+    parser.parse(args)
+    Application.initialize(rev,gameType, world)
 }

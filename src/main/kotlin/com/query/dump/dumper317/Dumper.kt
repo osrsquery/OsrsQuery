@@ -19,13 +19,14 @@ object Dumper  {
         TextureDumper.init()
         ModelDumper.init()
         val progress = progress("Copying Existing Stuff", 3)
-        FileUtils.getDir("mapsScenes/").copyTo(FileUtils.getDir("dump317/mapsScenes/"),true)
+        FileUtils.getDir("mapScenes/").copyTo(FileUtils.getDir("dump317/mapScenes/"),true)
         progress.step()
-        FileUtils.getDir("mapsFunctions/").copyTo(FileUtils.getDir("dump317/mapsFunctions/"),true)
+        FileUtils.getDir("mapFunctions/").copyTo(FileUtils.getDir("dump317/mapFunctions/"),true)
         progress.step()
         FileUtils.getDir("sprites/").copyTo(FileUtils.getDir("dump317/sprites/"),true)
         progress.step()
-        
+        FileUtils.getDir("textures/pink/").copyTo(FileUtils.getDir("dump317/textures/"),false)
+        progress.step()
         progress.close()
         VarbitDumper.init()
         FloorDumper.init()
@@ -39,14 +40,14 @@ object Dumper  {
 
 
         val map = MapImageBuilder().
-        outline(true).
-        label(true).
-        functions(true).
-        mapScenes(true).
-        objects(true).
-        fill(false).
-        scale(4)
-            .build()
+            outline(true).
+            label(true).
+            functions(true).
+            mapScenes(true).
+            objects(true).
+            fill(false).
+            scale(4)
+        .build()
 
         val dumper = MapImageGenerator(map, FileUtils.getDir("dump317/mapImages/"))
         dumper.objects = Application.objects().associateBy { it.id }

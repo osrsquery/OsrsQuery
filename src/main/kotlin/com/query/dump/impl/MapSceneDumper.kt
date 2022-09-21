@@ -39,7 +39,7 @@ class MapSceneDumper : TypeManager {
         val progress = progress("Writing Area Sprites",  objects().filter { it.mapSceneID != -1 }.distinctBy { it.mapSceneID }.size.toLong())
         collectSprites().forEach {
             try {
-                it.value.writePink(getFile("mapsScenes/", "${it.key}.png"))
+                it.value.writePink(getFile("mapScenes/", "${it.key}.png"))
                 progress.step()
             }catch (e : Exception) {
                 progress.step()
