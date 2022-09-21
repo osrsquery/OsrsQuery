@@ -8,18 +8,21 @@ import com.query.cache.Serializable
 import com.query.cache.definitions.Definition
 import com.query.dump.DefinitionsTypes
 import com.query.utils.*
+import java.io.DataOutputStream
+import java.io.IOException
 import java.nio.ByteBuffer
 import java.util.concurrent.CountDownLatch
 
 
 data class UnderlayDefinition(
     override val id: Int = 0,
-    var color: Int = 0,
-    var hue: Int = 0,
-    var saturation: Int = 0,
-    var lightness: Int = -1,
-    var hueMultiplier: Int = 0
+    var color: Int = 0
 ): Definition {
+
+    var hue: Int = 0
+    var saturation: Int = 0
+    var lightness: Int = -1
+    var hueMultiplier: Int = 0
 
     fun calculateHsl() {
         val var1: Int = color
@@ -80,6 +83,18 @@ data class UnderlayDefinition(
             hueMultiplier = 1
         }
         hue = (hueMultiplier.toDouble() * var12).toInt()
+    }
+
+    @Throws(IOException::class)
+    fun encode(dos: DataOutputStream) {
+        if (color != 0) {
+            dos.writeByte(1)
+            dos.writeByte(color shr 16)
+            dos.writeByte(color shr 8)
+            dos.writeByte(color)
+        }
+        dos.writeByte(0)
+
     }
 
 }

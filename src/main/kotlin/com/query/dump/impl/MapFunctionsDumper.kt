@@ -21,7 +21,7 @@ import java.nio.ByteBuffer
 import javax.imageio.ImageIO
 
 
-class MapFunctions : TypeManager {
+class MapFunctionsDumper : TypeManager {
 
     override val requiredDefs = listOf(
         DefinitionsTypes.AREAS,
@@ -34,7 +34,7 @@ class MapFunctions : TypeManager {
     }
 
     override fun onTest() {
-        Sprites().load()
+        SpriteDumper().load()
         writeImage()
     }
 
@@ -95,7 +95,7 @@ class MapFunctions : TypeManager {
             parser.parse(args)
             Application.revision = 108
 
-            MapFunctions().test()
+            MapFunctionsDumper().test()
         }
     }
 

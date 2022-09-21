@@ -8,6 +8,7 @@ import com.query.cache.Serializable
 import com.query.cache.definitions.Definition
 import com.query.dump.DefinitionsTypes
 import com.query.utils.*
+import java.io.DataOutputStream
 import java.nio.ByteBuffer
 import java.util.concurrent.CountDownLatch
 
@@ -25,7 +26,53 @@ data class AreaDefinition(
     var field3308: String? = null,
     var field3309: ByteArray? = null,
     var fontSize : Int = 0
-): Definition
+): Definition {
+    fun encode(dos : DataOutputStream, count : Int) {
+
+        if (spriteId != -1) {
+            dos.writeByte(1)
+            if(spriteId == 1454) {
+                dos.writeShort(6)
+            } else {
+                dos.writeShort(count)
+            }
+        }
+
+        if (field3294 != -1) {
+            dos.writeByte(2)
+            dos.writeShort(field3294)
+        }
+
+        if (name != null) {
+            dos.writeByte(3)
+            dos.writeString(name!!)
+        }
+
+        if (fontColor != 0) {
+            dos.writeByte(4)
+            dos.writeInt(fontColor)
+        }
+        if (field3297 != -1) {
+            dos.writeByte(5)
+            dos.writeInt(field3297)
+        }
+        if (fontSize != 0) {
+            dos.writeByte(6)
+            dos.writeByte(fontSize)
+        }
+
+        if (options.any { it != null }) {
+            for (index in options.indices) {
+                if (options[index] != null) {
+                    dos.writeByte(7 + index)
+                    dos.writeString(options[index]!!)
+                }
+            }
+        }
+
+        dos.writeByte(0)
+    }
+}
 
 class AreaProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true) : Loader, Runnable {
 

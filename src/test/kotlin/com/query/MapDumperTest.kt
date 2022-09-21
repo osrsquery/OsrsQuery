@@ -32,12 +32,12 @@ object MapDumperTest {
         TextureProvider(null,false).run()
 
         val map = MapImageBuilder().
-            outline(true).
-            label(true).
+            outline(false).
+            label(false).
             functions(true).
             mapScenes(true).
             objects(true).
-            fill(true).
+            fill(false).
             scale(4)
         .build()
 

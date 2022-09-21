@@ -49,6 +49,12 @@ fun gzip(output : File,uncompressedData: ByteArray) {
     }
 }
 
+fun isObjectInteger(o: Any?): Boolean {
+    return o is Int
+}
+
+fun getRegion(x : Int, y : Int) = x shl 8 or y
+
 fun gzip(content: String): ByteArray {
     val bos = ByteArrayOutputStream()
     GZIPOutputStream(bos).bufferedWriter().use { it.write(content) }
@@ -74,6 +80,23 @@ fun progress(task : String, amt : Long) : ProgressBar {
     return ProgressBar(
         task,
         amt,
+        1,
+        System.err,
+        ProgressBarStyle.ASCII,
+        "",
+        1,
+        false,
+        null,
+        ChronoUnit.SECONDS,
+        0L,
+        Duration.ZERO
+    )
+}
+
+fun progress(task : String, amt : Int) : ProgressBar {
+    return ProgressBar(
+        task,
+        amt.toLong(),
         1,
         System.err,
         ProgressBarStyle.ASCII,

@@ -5,7 +5,7 @@ import com.query.cache.Sprite
 import com.query.Constants
 import com.query.cache.definitions.impl.*
 import com.query.cache.map.builders.MapImageBuilder
-import com.query.dump.impl.MapScene
+import com.query.dump.impl.MapSceneDumper
 import com.query.utils.*
 import mu.KotlinLogging
 import java.awt.Color
@@ -17,11 +17,15 @@ import com.query.cache.map.region.*
 import com.query.cache.map.region.data.Location
 import com.query.utils.image.BigBufferedImage
 import java.awt.RenderingHints
+import java.io.File
 import javax.imageio.ImageIO
 
 private val logger = KotlinLogging.logger {}
 
-class MapImageGenerator(private val builder : MapImageBuilder) {
+class MapImageGenerator(
+    private val builder : MapImageBuilder,
+    val saveLocation : File = FileUtils.getDir("mapImages/")
+) {
 
 
     private val flags: MutableList<Int> = ArrayList()
@@ -65,7 +69,7 @@ class MapImageGenerator(private val builder : MapImageBuilder) {
                     "South most region: ${regionLoader.highestY.baseY}\n" +
                     "West most region: ${regionLoader.lowestX.baseX}\n" +
                     "East most region: ${regionLoader.highestY.baseY}\n" +
-                    "====== Starting Drawing Map Image =====\n"
+            "====== Starting Drawing Map Image =====\n"
         }
 
 
@@ -97,7 +101,7 @@ class MapImageGenerator(private val builder : MapImageBuilder) {
             drawRegions(graphics)
             graphics.dispose()
 
-            ImageIO.write(fullImage, "png", FileUtils.getFile("mapImages/", "map-$plane.png"))
+            ImageIO.write(fullImage, "png", File(saveLocation, "map-${plane}.png"))
         }
     }
 
@@ -550,7 +554,7 @@ class MapImageGenerator(private val builder : MapImageBuilder) {
 
     private fun resizeMapScene() {
         if (!builder.drawMapScene) return
-        MapScene.collectSprites().forEach {
+        MapSceneDumper.collectSprites().forEach {
             scaledMapIcons[it.key] = it.value
         }
     }

@@ -8,6 +8,8 @@ import com.query.cache.Serializable
 import com.query.cache.definitions.Definition
 import com.query.dump.DefinitionsTypes
 import com.query.utils.*
+import java.io.DataOutputStream
+import java.io.IOException
 import java.nio.ByteBuffer
 import java.util.concurrent.CountDownLatch
 
@@ -30,7 +32,7 @@ data class NpcDefinition(
     var recolorToReplace: ShortArray? = null,
     var retextureToFind: ShortArray? = null,
     var retextureToReplace: ShortArray? = null,
-    var actions : MutableList<String?> = mutableListOf<String?>(null, null, null, null, null),
+    var actions : MutableList<String?> = mutableListOf(null, null, null, null, null),
     var isMinimapVisible : Boolean = true,
     var combatLevel : Int = -1,
     var widthScale : Int = 128,
@@ -39,12 +41,12 @@ data class NpcDefinition(
     var ambient : Int = 0,
     var contrast : Int = 0,
     var headIcon : Int = -1,
-    var rotationSpeed : Int = 32,
+    var rotation : Int = 32,
     var configs: MutableList<Int>? = null,
     var varbitId : Int = -1,
     var varpIndex : Int = -1,
     var isInteractable : Boolean = true,
-    var rotationFlag : Boolean = true,
+    var isClickable : Boolean = true,
     var isPet : Boolean = false,
     var runSequence : Int = -1,
     var runBackSequence : Int = -1,
@@ -54,9 +56,201 @@ data class NpcDefinition(
     var crawlBackSequence : Int = -1,
     var crawlRightSequence : Int = -1,
     var crawlLeftSequence : Int = -1,
+    var params : MutableMap<Int,String> = mutableMapOf()
+): Definition {
 
-    var params : MutableMap<Int,String> = mutableMapOf<Int, String>()
-): Definition
+    @Throws(IOException::class)
+    fun encode(dos: DataOutputStream) {
+
+        if (models != null && models!!.isNotEmpty()) {
+            dos.writeByte(1)
+            dos.writeByte(models!!.size)
+            for (i in models!!.indices) {
+                dos.writeShort(models!![i])
+            }
+        }
+
+        if (name != "null") {
+            dos.writeByte(2)
+            dos.writeString(name)
+        }
+
+        if (size != -1) {
+            dos.writeByte(12)
+            dos.writeByte(size)
+        }
+
+        if (standingAnimation != -1) {
+            dos.writeByte(13)
+            dos.writeShort(standingAnimation)
+        }
+
+        if (walkingAnimation != -1) {
+            dos.writeByte(14)
+            dos.writeShort(walkingAnimation)
+        }
+
+        if (rotateLeftAnimation != -1) {
+            dos.writeByte(15)
+            dos.writeShort(rotateLeftAnimation)
+        }
+
+        if (rotateRightAnimation != -1) {
+            dos.writeByte(16)
+            dos.writeShort(rotateRightAnimation)
+        }
+
+        if (walkingAnimation != -1 || rotate180Animation != -1 || rotate90RightAnimation != -1 || rotate90LeftAnimation != -1) {
+            dos.writeByte(17)
+            dos.writeShort(walkingAnimation)
+            dos.writeShort(rotate180Animation)
+            dos.writeShort(rotate90RightAnimation)
+            dos.writeShort(rotate90LeftAnimation)
+        }
+
+        if (category != -1) {
+            dos.writeByte(18)
+            dos.writeShort(category)
+        }
+
+        if (actions.any { it != null }) {
+            for (i in 0 until actions.size) {
+                if (actions[i] == null) {
+                    continue
+                }
+                dos.writeByte(30 + i)
+                dos.writeString(actions[i]!!)
+            }
+        }
+
+        if (recolorToFind != null && recolorToReplace != null) {
+            dos.writeByte(40)
+            dos.writeByte(recolorToFind!!.size)
+            repeat(recolorToFind!!.size) {
+                dos.writeShort(recolorToFind!![it].toInt())
+                dos.writeShort(recolorToReplace!![it].toInt())
+            }
+        }
+
+        if (retextureToFind != null && retextureToReplace != null) {
+            dos.writeByte(41)
+            dos.writeByte(retextureToFind!!.size)
+            repeat(retextureToFind!!.size) {
+                dos.writeShort(retextureToFind!![it].toInt())
+                dos.writeShort(retextureToReplace!![it].toInt())
+            }
+        }
+
+        if (chatheadModels != null) {
+            dos.writeByte(60)
+            dos.writeByte(chatheadModels!!.size)
+            for (i in chatheadModels!!.indices) {
+                dos.writeShort(chatheadModels!![i])
+            }
+        }
+
+        if (!isMinimapVisible) {
+            dos.writeByte(93)
+        }
+        if (combatLevel != -1) {
+            dos.writeByte(95)
+            dos.writeShort(combatLevel)
+        }
+
+        if (widthScale != 128) {
+            dos.writeByte(97)
+            dos.writeShort(widthScale)
+        }
+
+        if (heightScale != 128) {
+            dos.writeByte(98)
+            dos.writeShort(heightScale)
+        }
+
+        if (hasRenderPriority) {
+            dos.writeByte(99)
+        }
+
+        if (ambient != 0) {
+            dos.writeByte(100)
+            dos.writeByte(ambient)
+        }
+
+        if (contrast != 0) {
+            dos.writeByte(101)
+            dos.writeByte(contrast)
+        }
+        if (headIcon != -1) {
+            dos.writeByte(102)
+            dos.writeShort(headIcon)
+        }
+
+        if (rotation != 32) {
+            dos.writeByte(103)
+            dos.writeShort(rotation)
+        }
+
+        if ((varbitId != -1 || varpIndex != -1) && configs != null) {
+            val `var` = configs!![configs!!.size - 1]
+            dos.writeByte(if (`var` != -1) 118 else 106)
+            dos.writeShort(varbitId)
+            dos.writeShort(varpIndex)
+            if (`var` != -1) {
+                dos.writeShort(`var`)
+            }
+            dos.writeByte(configs!!.size - 2)
+            for (i in 0..configs!!.size - 2) {
+                dos.writeShort(configs!![i])
+            }
+        }
+
+        if (!isInteractable) {
+            dos.writeByte(107)
+        }
+
+        if (!isClickable) {
+            dos.writeByte(109)
+        }
+
+        if (isPet) {
+            dos.writeByte(111)
+        }
+
+        if (runSequence != -1) {
+            dos.writeByte(114)
+            dos.writeShort(runSequence)
+        }
+
+        if (runSequence != -1) {
+            dos.writeByte(115)
+            dos.writeShort(runSequence)
+            dos.writeShort(runBackSequence)
+            dos.writeShort(runRightSequence)
+            dos.writeShort(runLeftSequence)
+        }
+
+        if (crawlSequence != -1) {
+            dos.writeByte(116)
+            dos.writeShort(crawlSequence)
+        }
+
+        if (crawlSequence != -1) {
+            dos.writeByte(117)
+            dos.writeShort(crawlSequence)
+            dos.writeShort(crawlBackSequence)
+            dos.writeShort(crawlRightSequence)
+            dos.writeShort(crawlLeftSequence)
+        }
+
+        if (params != mutableMapOf<Int, String>()) {
+            dos.writeByte(249)
+            dos.writeParams(params)
+        }
+
+        dos.writeByte(0)
+    }
+
+}
 
 class NpcProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true) : Loader, Runnable {
 
@@ -139,7 +333,7 @@ class NpcProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true) :
             100 -> definition.ambient = buffer.byte.toInt()
             101 -> definition.contrast = buffer.byte.toInt()
             102 -> definition.headIcon = buffer.uShort
-            103 -> definition.rotationSpeed = buffer.uShort
+            103 -> definition.rotation = buffer.uShort
             106 -> {
                 definition.varbitId = buffer.uShort
                 if (definition.varbitId == 65535) {
@@ -161,7 +355,7 @@ class NpcProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true) :
                 definition.configs!![length + 1] = -1
             }
             107 -> definition.isInteractable = false
-            109 -> definition.rotationFlag = false
+            109 -> definition.isClickable = false
             111 -> definition.isPet = true
             114 -> definition.runSequence = buffer.uShort
             115 -> {
@@ -200,19 +394,7 @@ class NpcProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true) :
                 }
                 definition.configs!![length + 1] = i
             }
-            249 -> {
-                val length: Int = buffer.uByte
-                (0 until length).forEach { _ ->
-                    val string: Boolean = (buffer.uByte) == 1
-                    val key: Int = buffer.medium
-                    val value: Any = if (string) {
-                        buffer.rsString
-                    } else {
-                        buffer.int
-                    }
-                    definition.params[key] = value.toString()
-                }
-            }
+            249 -> buffer.readParams()
             0 -> break
             else -> logger.warn { "Unhandled npc definition opcode with id: ${opcode}." }
         } while (true)

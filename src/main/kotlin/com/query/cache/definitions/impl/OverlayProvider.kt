@@ -8,6 +8,8 @@ import com.query.cache.Serializable
 import com.query.cache.definitions.Definition
 import com.query.dump.DefinitionsTypes
 import com.query.utils.*
+import java.io.DataOutputStream
+import java.io.IOException
 import java.nio.ByteBuffer
 import java.util.concurrent.CountDownLatch
 
@@ -17,14 +19,16 @@ data class OverlayDefinition(
     var rgbColor: Int = 0,
     var secondaryRgbColor: Int = -1,
     var textureId: Int = -1,
-    var hideUnderlay: Boolean = true,
-    var hue: Int = 0,
-    var saturation: Int = 0,
-    var lightness: Int = 0,
-    var otherHue: Int = 0,
-    var otherSaturation: Int = 0,
-    var otherLightness: Int = 0
+    var hideUnderlay: Boolean = true
 ): Definition {
+
+
+    var hue: Int = 0
+    var saturation: Int = 0
+    var lightness: Int = 0
+    var otherHue: Int = 0
+    var otherSaturation: Int = 0
+    var otherLightness: Int = 0
 
     fun calculateHsl() {
         if (secondaryRgbColor != -1) {
@@ -35,8 +39,6 @@ data class OverlayDefinition(
         }
         calculateHsl(rgbColor)
     }
-
-
 
     private fun calculateHsl(var1: Int) {
         val var2 = (var1 shr 16 and 255).toDouble() / 256.0
@@ -88,6 +90,30 @@ data class OverlayDefinition(
         } else if (lightness > 255) {
             lightness = 255
         }
+    }
+
+    @Throws(IOException::class)
+    fun encode(dos: DataOutputStream) {
+        if (rgbColor != 0) {
+            dos.writeByte(1)
+            dos.writeByte(rgbColor shr 16)
+            dos.writeByte(rgbColor shr 8)
+            dos.writeByte(rgbColor)
+        }
+        if (textureId != -1) {
+            dos.writeByte(2)
+            dos.writeByte(textureId)
+        }
+        if (!hideUnderlay) {
+            dos.writeByte(5)
+        }
+        if (secondaryRgbColor != -1) {
+            dos.writeByte(7)
+            dos.writeByte(secondaryRgbColor shr 16)
+            dos.writeByte(secondaryRgbColor shr 8)
+            dos.writeByte(secondaryRgbColor)
+        }
+        dos.writeByte(0)
     }
 
 }

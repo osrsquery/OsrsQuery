@@ -24,6 +24,7 @@ data class TextureDefinition(
     var animationDirection : Int = 0,
     var averageRGB: Int = -1
 ) : Definition {
+
     @Throws(IOException::class)
     fun encode(dos: DataOutputStream, texID: Map<Int, Int>) {
 
@@ -82,7 +83,7 @@ data class TextureDefinition(
             dos.writeByte(averageRGB shr 8)
             dos.writeByte(averageRGB)
         }
-
+        dos.writeByte(0)
     }
 }
 

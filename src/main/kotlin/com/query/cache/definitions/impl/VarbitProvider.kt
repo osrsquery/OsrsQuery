@@ -7,19 +7,32 @@ import com.query.cache.Loader
 import com.query.cache.Serializable
 import com.query.cache.definitions.Definition
 import com.query.dump.DefinitionsTypes
-import com.query.utils.ConfigType
-import com.query.utils.IndexType
-import com.query.utils.index
+import com.query.utils.*
+import java.io.DataOutputStream
+import java.io.IOException
 import java.nio.ByteBuffer
 import java.util.concurrent.CountDownLatch
-import com.query.utils.*
 
 data class VarbitDefinition(
     override val id: Int = 0,
     var index: Int = 0,
     var leastSignificantBit: Int = 0,
     var mostSignificantBit: Int = 0
-): Definition
+): Definition {
+
+    @Throws(IOException::class)
+    fun encode(dos: DataOutputStream) {
+        if (index != -1 || leastSignificantBit != -1 || mostSignificantBit != -1) {
+            dos.writeByte(1)
+            dos.writeShort(index)
+            dos.writeByte(leastSignificantBit)
+            dos.writeByte(mostSignificantBit)
+        }
+        dos.writeByte(0)
+    }
+
+
+}
 
 class VarbitProvider(val latch: CountDownLatch?, val writeTypes : Boolean = false) : Loader, Runnable {
 

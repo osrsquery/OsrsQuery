@@ -6,7 +6,7 @@ import com.query.cache.definitions.Definition
 import com.query.cache.definitions.impl.*
 import com.query.cache.download.CacheInfo
 import com.query.cache.download.CacheLoader
-import com.query.dump.HeightMapDumper
+import com.query.dump.dumper317.Dumper
 import com.query.dump.impl.*
 import com.query.utils.TimeUtils
 import kotlinx.cli.ArgParser
@@ -83,11 +83,12 @@ object Application {
             }
             latch.await()
 
-            Sprites().load()
-            MapFunctions().load()
-            MapScene().load()
-            Overlay().load()
+            SpriteDumper().load()
+            MapFunctionsDumper().load()
+            MapSceneDumper().load()
+            OverlayImages().load()
             Textures().load()
+            Dumper.init()
         }
 
         logger.info { "Dump Completed in ${TimeUtils.millsToFormat(time)}" }

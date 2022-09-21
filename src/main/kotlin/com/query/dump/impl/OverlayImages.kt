@@ -15,7 +15,7 @@ import java.awt.image.BufferedImage
 import javax.imageio.ImageIO
 
 
-class Overlay : TypeManager {
+class OverlayImages : TypeManager {
 
     override val requiredDefs = listOf(DefinitionsTypes.OVERLAYS)
 
@@ -71,7 +71,7 @@ class Overlay : TypeManager {
             Application.revision = rev
 
 
-            Overlay().test()
+            OverlayImages().test()
         }
 
     }

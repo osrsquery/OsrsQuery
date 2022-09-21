@@ -20,7 +20,7 @@ import kotlinx.cli.default
 import org.apache.commons.lang.StringUtils
 import java.net.URL
 
-class Music : TypeManager {
+class MusicDumper : TypeManager {
 
     private val musicData = mapOf(
         0 to MusicDef(
@@ -210,7 +210,7 @@ class Music : TypeManager {
             parser.parse(args)
             Application.revision = rev
 
-            Music().test()
+            MusicDumper().test()
 
         }
     }

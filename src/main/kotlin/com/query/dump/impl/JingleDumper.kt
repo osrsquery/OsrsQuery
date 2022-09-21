@@ -11,7 +11,7 @@ import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
 import kotlinx.cli.default
 
-class Jingle : TypeManager {
+class JingleDumper : TypeManager {
 
     override val requiredDefs = listOf(DefinitionsTypes.JINGLE)
 
@@ -42,7 +42,7 @@ class Jingle : TypeManager {
             parser.parse(args)
             Application.revision = rev
 
-            Jingle().test()
+            JingleDumper().test()
 
         }
     }

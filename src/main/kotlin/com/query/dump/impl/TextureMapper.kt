@@ -1,7 +1,6 @@
 package com.query.dump.impl
 
 import com.google.gson.GsonBuilder
-import com.query.Application
 import com.query.Application.items
 import com.query.Application.npcs
 import com.query.Application.objects
@@ -14,8 +13,6 @@ import com.query.dump.DefinitionsTypes
 import com.query.dump.TypeManager
 import com.query.utils.FileUtils
 import com.query.utils.progress
-import java.io.DataOutputStream
-import java.io.FileOutputStream
 
 
 data class TextureMapped(
@@ -36,21 +33,19 @@ class Textures : TypeManager {
     val modelToName = mutableMapOf<Int,String>()
 
     override fun load() {
-        writeTextures()
-        mapTextures()
+        init()
     }
 
     override fun onTest() {
-        writeTextures()
         NpcProvider(null,false).run()
         ObjectProvider(null,false).run()
         ItemProvider(null,false).run()
-        mapTextures()
+        init()
 
 
     }
 
-    fun mapTextures() {
+    private fun init() {
         val mappedTextures : MutableMap<Short,TextureMapped> = mutableMapOf()
 
         val texturedModels = texturesToModels()
@@ -149,52 +144,11 @@ class Textures : TypeManager {
         return textureToModel
     }
 
-    private fun writeTextures() {
-        val progress = progress("Writing Textures", textures().size.toLong())
-
-        val sprites317 = mutableMapOf<Int,Int>()
-        var index = 0
-        textures().forEach {
-            if(!sprites317.contains(it.fileIds[0])) {
-                sprites317.putIfAbsent(it.fileIds[0],index)
-                val trans = FileUtils.getFile("sprites/transparent/", "${it.fileIds[0]}.png")
-                val pink = FileUtils.getFile("sprites/pink/", "${it.fileIds[0]}.png")
-
-                trans.copyTo(FileUtils.getFile("textures/transparent/","${index}.png"),true)
-                pink.copyTo(FileUtils.getFile("textures/pink/","${index}.png"),true)
-                index++
-            }
-            progress.step()
-        }
-        progress.close()
-        encodeTo317(sprites317)
-    }
-
-    private fun encodeTo317(sprites317 : Map<Int,Int>) {
-
-        val textures = textures()
-        val progress = progress("Writing Textures 317", textures().size.toLong())
-
-        val dat = DataOutputStream(FileOutputStream(FileUtils.getFile("dump317/configs/","textures.dat")))
-
-        println("Texture SizE: " + textures.size)
-        dat.writeShort(textures.size)
-
-        textures.forEach {
-            it.encode(dat, sprites317)
-            dat.writeByte(0)
-            progress.step()
-        }
-
-        dat.close()
-        progress.close()
-    }
 
 
     companion object {
         @JvmStatic
         fun main(args : Array<String>) {
-            Application.revision = 207
             Textures().test()
         }
     }

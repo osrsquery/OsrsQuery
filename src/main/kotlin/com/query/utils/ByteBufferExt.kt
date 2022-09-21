@@ -19,6 +19,17 @@ fun ByteBuffer.readByteArray(length: Int): ByteArray {
     return array
 }
 
+fun ByteBuffer.readParams(): MutableMap<Int, String> {
+    val params : MutableMap<Int,String> = mutableMapOf()
+    (0 until uByte).forEach { _ ->
+        val string: Boolean = (uByte) == 1
+        val key: Int = medium
+        val value: Any = if (string) { rsString } else { int }
+        params[key] = value.toString()
+    }
+    return params
+}
+
 fun getString(buffer: ByteBuffer): String {
     val builder = StringBuilder()
     var b: Int

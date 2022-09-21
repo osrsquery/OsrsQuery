@@ -73,7 +73,7 @@ class RegionLoader {
     }
 
     companion object {
-        private const val MAX_REGION = 32768
+        const val MAX_REGION = 32768
     }
 
 }

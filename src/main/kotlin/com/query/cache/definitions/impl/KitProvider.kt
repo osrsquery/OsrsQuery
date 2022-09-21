@@ -8,6 +8,8 @@ import com.query.cache.Serializable
 import com.query.cache.definitions.Definition
 import com.query.dump.DefinitionsTypes
 import com.query.utils.*
+import java.io.DataOutputStream
+import java.io.IOException
 import java.nio.ByteBuffer
 import java.util.concurrent.CountDownLatch
 
@@ -22,7 +24,63 @@ data class KitDefinition(
     var models : IntArray? = null,
     var chatheadModels : MutableList<Int> = mutableListOf(-1, -1, -1, -1, -1),
     var nonSelectable : Boolean = false
-): Definition
+): Definition {
+
+
+    @Throws(IOException::class)
+    fun encode(dos: DataOutputStream) {
+
+        if(bodyPartId != -1) {
+            dos.writeByte(1)
+            dos.writeByte(bodyPartId)
+        }
+
+        if(models != null) {
+            dos.writeByte(2)
+            dos.writeByte(models!!.size)
+            models!!.forEach {
+                dos.writeShort(it)
+            }
+        }
+
+        if (nonSelectable) {
+            dos.writeByte(3)
+        }
+
+        if (recolorToFind != null && recolorToFind!!.isNotEmpty()) {
+            dos.writeByte(40)
+            dos.writeByte(recolorToFind!!.size)
+            recolorToFind!!.forEach {
+                dos.writeShort(it.toInt())
+            }
+            recolorToReplace!!.forEach {
+                dos.writeShort(it.toInt())
+            }
+        }
+
+        if (retextureToFind != null && retextureToFind!!.isNotEmpty()) {
+            dos.writeByte(41)
+            dos.writeByte(retextureToFind!!.size)
+            retextureToFind!!.forEach {
+                dos.writeShort(it.toInt())
+            }
+            retextureToReplace!!.forEach {
+                dos.writeShort(it.toInt())
+            }
+        }
+
+        if (chatheadModels.any { it != -1 }) {
+            for (i in 0 until chatheadModels.size) {
+                dos.writeByte(i + 60)
+                dos.writeShort(chatheadModels[i])
+                dos.writeByte(10)
+            }
+        }
+
+        dos.writeByte(0)
+    }
+
+}
 
 class KitProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true) : Loader, Runnable {
 

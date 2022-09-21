@@ -8,6 +8,8 @@ import com.query.cache.Serializable
 import com.query.cache.definitions.Definition
 import com.query.dump.DefinitionsTypes
 import com.query.utils.*
+import java.io.DataOutputStream
+import java.io.IOException
 import java.nio.ByteBuffer
 import java.util.concurrent.CountDownLatch
 
@@ -25,7 +27,60 @@ data class SpotAnimationDefinition(
     var modelId: Int = 0,
     var ambient: Int = 0,
     var contrast: Int = 0,
-): Definition
+): Definition {
+
+    @Throws(IOException::class)
+    fun encode(dos: DataOutputStream) {
+        if (modelId != 0) {
+            dos.writeByte(1)
+            dos.writeShort(modelId)
+        }
+        if (animationId != -1) {
+            dos.writeByte(2)
+            dos.writeShort(animationId)
+        }
+        if (resizeX != 128) {
+            dos.writeByte(4)
+            dos.writeShort(resizeX)
+        }
+        if (resizeY!= 128) {
+            dos.writeByte(5)
+            dos.writeShort(resizeY)
+        }
+        if (rotation != 0) {
+            dos.writeByte(6)
+            dos.writeShort(rotation)
+        }
+        if (ambient != 0) {
+            dos.writeByte(7)
+            dos.writeByte(ambient)
+        }
+        if (contrast != 0) {
+            dos.writeByte(8)
+            dos.writeByte(contrast)
+        }
+        if (recolorToFind != null && recolorToReplace != null) {
+            dos.writeByte(40)
+            val len: Int = recolorToFind!!.size
+            dos.writeByte(len)
+            for (i in 0 until len) {
+                dos.writeShort(recolorToFind!![i].toInt())
+                dos.writeShort(recolorToReplace!![i].toInt())
+            }
+        }
+        if (textureToFind != null && textureToReplace != null) {
+            dos.writeByte(41)
+            val len: Int = textureToFind!!.size
+            dos.writeByte(len)
+            for (i in 0 until len) {
+                dos.writeShort(textureToFind!![i].toInt())
+                dos.writeShort(textureToReplace!![i].toInt())
+            }
+        }
+        dos.writeByte(0)
+    }
+
+}
 
 class SpotAnimationProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true) : Loader, Runnable {
 

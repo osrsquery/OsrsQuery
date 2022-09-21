@@ -6,7 +6,7 @@ import com.query.Application.objects
 import com.query.Constants.library
 import com.query.dump.DefinitionsTypes
 import com.query.dump.TypeManager
-import com.query.dump.impl.Sprites.Companion.writePink
+import com.query.dump.impl.SpriteDumper.Companion.writePink
 import com.query.utils.FileUtils.getFile
 import com.query.utils.IndexType
 import com.query.utils.progress
@@ -15,9 +15,8 @@ import kotlinx.cli.ArgType
 import kotlinx.cli.default
 import java.awt.image.BufferedImage
 import java.nio.ByteBuffer
-import javax.imageio.ImageIO
 
-class MapScene : TypeManager {
+class MapSceneDumper : TypeManager {
 
     override val requiredDefs = listOf(
         DefinitionsTypes.OBJECTS,
@@ -40,7 +39,7 @@ class MapScene : TypeManager {
         val progress = progress("Writing Area Sprites",  objects().filter { it.mapSceneID != -1 }.distinctBy { it.mapSceneID }.size.toLong())
         collectSprites().forEach {
             try {
-                it.value.writePink(getFile("mapsSences/", "${it.key}.png"))
+                it.value.writePink(getFile("mapsScenes/", "${it.key}.png"))
                 progress.step()
             }catch (e : Exception) {
                 progress.step()
@@ -58,7 +57,7 @@ class MapScene : TypeManager {
             parser.parse(args)
             Application.revision = rev
 
-            MapScene().test()
+            MapSceneDumper().test()
         }
 
         fun collectSprites() : Map<Int, BufferedImage> {

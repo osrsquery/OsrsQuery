@@ -1,14 +1,11 @@
 package com.query.dump.impl
 
-import com.displee.cache.index.archive.Archive
 import com.query.Application
 import com.query.Application.sprites
 import com.query.Constants
 import com.query.dump.DefinitionsTypes
 import com.query.dump.TypeManager
 import com.query.utils.FileUtils.getFile
-import com.query.utils.IndexType
-import com.query.utils.index
 import com.query.utils.progress
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
@@ -19,11 +16,10 @@ import java.awt.image.BufferedImage
 import java.awt.image.DataBufferInt
 import java.io.File
 import java.nio.file.Files
-import java.nio.file.Paths
 import javax.imageio.ImageIO
 
 
-class Sprites : TypeManager {
+class SpriteDumper : TypeManager {
 
     override fun load() {
         writeSprites()
@@ -57,7 +53,7 @@ class Sprites : TypeManager {
             parser.parse(args)
             Application.revision = rev
 
-            Sprites().test()
+            SpriteDumper().test()
         }
 
         fun BufferedImage.writeTransparent(file : File) {
