@@ -3,16 +3,15 @@ package com.query.cache.definitions.impl
 import com.query.Application
 import com.query.Application.logger
 import com.query.Constants.library
-import com.query.cache.Loader
-import com.query.cache.Serializable
-import com.query.cache.definitions.Definition
+import com.query.cache.definitions.Loader
+import com.query.cache.definitions.Serializable
 import com.query.dump.DefinitionsTypes
+import com.query.cache.definitions.Definition
 import com.query.utils.*
 import java.io.DataOutputStream
 import java.io.IOException
 import java.nio.ByteBuffer
 import java.util.concurrent.CountDownLatch
-
 
 data class SpotAnimationDefinition(
     override val id: Int = 0,
@@ -27,10 +26,10 @@ data class SpotAnimationDefinition(
     var modelId: Int = 0,
     var ambient: Int = 0,
     var contrast: Int = 0,
-): Definition {
+): Definition() {
 
     @Throws(IOException::class)
-    fun encode(dos: DataOutputStream) {
+    override fun encode(dos: DataOutputStream) {
         if (modelId != 0) {
             dos.writeByte(1)
             dos.writeShort(modelId)
@@ -82,7 +81,7 @@ data class SpotAnimationDefinition(
 
 }
 
-class SpotAnimationProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true) : Loader, Runnable {
+class SpotAnimationProvider(val latch: CountDownLatch?) : Loader, Runnable {
 
     override val revisionMin = 1
 
@@ -98,7 +97,7 @@ class SpotAnimationProvider(val latch: CountDownLatch?, val writeTypes : Boolean
         val definitions = archive.fileIds().map {
            decode(ByteBuffer.wrap(archive.file(it)?.data), SpotAnimationDefinition(it))
         }
-        return Serializable(DefinitionsTypes.SPOTANIMS,this, definitions,writeTypes)
+        return Serializable(DefinitionsTypes.SPOTANIMS,this, definitions)
     }
 
     fun decode(buffer: ByteBuffer, definition: SpotAnimationDefinition): Definition {

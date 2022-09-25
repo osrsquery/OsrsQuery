@@ -3,11 +3,12 @@ package com.query.cache.definitions.impl
 import com.query.Application
 import com.query.Application.logger
 import com.query.Constants.library
-import com.query.cache.Loader
-import com.query.cache.Serializable
 import com.query.cache.definitions.Definition
+import com.query.cache.definitions.Loader
+import com.query.cache.definitions.Serializable
 import com.query.dump.DefinitionsTypes
 import com.query.utils.*
+import java.io.DataOutputStream
 import java.nio.ByteBuffer
 import java.util.concurrent.CountDownLatch
 
@@ -15,9 +16,15 @@ import java.util.concurrent.CountDownLatch
 data class InvDefinition(
     override val id: Int = 0,
     var size: Int = 0
-): Definition
+): Definition() {
 
-class InvProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true) : Loader, Runnable {
+    override fun encode(dos: DataOutputStream) {
+        TODO("Not yet implemented")
+    }
+
+}
+
+class InvProvider(val latch: CountDownLatch?) : Loader, Runnable {
 
     override val revisionMin = 1
 
@@ -33,7 +40,7 @@ class InvProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true) :
         val definitions = archive.fileIds().map {
            decode(ByteBuffer.wrap(archive.file(it)?.data), InvDefinition(it))
         }
-        return Serializable(DefinitionsTypes.INVS,this, definitions,writeTypes)
+        return Serializable(DefinitionsTypes.INVS,this, definitions)
     }
 
     fun decode(buffer: ByteBuffer, definition: InvDefinition): Definition {

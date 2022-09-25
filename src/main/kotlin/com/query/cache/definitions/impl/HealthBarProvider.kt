@@ -3,11 +3,12 @@ package com.query.cache.definitions.impl
 import com.query.Application
 import com.query.Application.logger
 import com.query.Constants.library
-import com.query.cache.Loader
-import com.query.cache.Serializable
 import com.query.cache.definitions.Definition
+import com.query.cache.definitions.Loader
+import com.query.cache.definitions.Serializable
 import com.query.dump.DefinitionsTypes
 import com.query.utils.*
+import java.io.DataOutputStream
 import java.nio.ByteBuffer
 import java.util.concurrent.CountDownLatch
 
@@ -24,9 +25,15 @@ data class HealthBarDefinition(
     var healthBarBackSpriteId: Int = -1,
     var healthScale: Int = 30,
     var healthBarPadding: Int = 0
-): Definition
+): Definition() {
 
-class HealthBarProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true) : Loader,Runnable {
+    override fun encode(dos: DataOutputStream) {
+        TODO("Not yet implemented")
+    }
+
+}
+
+class HealthBarProvider(val latch: CountDownLatch?) : Loader,Runnable {
 
     override val revisionMin = 189
 
@@ -46,7 +53,7 @@ class HealthBarProvider(val latch: CountDownLatch?, val writeTypes : Boolean = t
         val definitions = archive.fileIds().map {
            decode(ByteBuffer.wrap(archive.file(it)?.data), HealthBarDefinition(it))
         }
-        return Serializable(DefinitionsTypes.HEALTH,this, definitions,writeTypes)
+        return Serializable(DefinitionsTypes.HEALTH,this, definitions)
     }
 
     fun decode(buffer: ByteBuffer, definition: HealthBarDefinition): Definition {

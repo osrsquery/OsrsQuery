@@ -2,18 +2,16 @@ package com.query.utils
 
 import com.query.Application
 import com.query.Constants
-import com.query.cache.definitions.impl.ItemProvider
-import com.query.cache.definitions.impl.KitProvider
-import com.query.cache.definitions.impl.NpcProvider
-import com.query.cache.definitions.impl.ObjectProvider
+import com.query.cache.definitions.impl.*
 
 object UnusedModels {
 
     fun init() {
-        ObjectProvider(null,false).run()
-        ItemProvider(null,false).run()
-        NpcProvider(null,false).run()
-        KitProvider(null,false).run()
+        ObjectProvider(null).run()
+        ItemProvider(null).run()
+        NpcProvider(null).run()
+        KitProvider(null).run()
+        SpotAnimationProvider(null).run()
 
         val usedModels : MutableList<Int> = mutableListOf()
 
@@ -28,6 +26,10 @@ object UnusedModels {
             it.chatheadModels.forEach { model ->
                 usedModels.add(model)
             }
+        }
+
+        Application.spotanimations().forEach {
+            usedModels.add(it.modelId)
         }
 
         Application.npcs().forEach {
@@ -62,6 +64,11 @@ object UnusedModels {
         println("Total Models: ${table.archives().size}")
         println("Unused Models: ${table.archives().size - models.size}")
 
+    }
+
+    @JvmStatic
+    fun main(args : Array<String>) {
+        init()
     }
 
 }

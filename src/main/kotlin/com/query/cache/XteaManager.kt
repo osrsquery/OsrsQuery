@@ -1,8 +1,9 @@
 package com.query.cache
 
 import com.google.gson.Gson
-import com.query.utils.FileUtils.getFile
+import com.query.utils.FileUtil.getBase
 import mu.KotlinLogging
+import java.io.File
 
 private val logger = KotlinLogging.logger {}
 data class Xtea(
@@ -16,7 +17,7 @@ object XteaLoader {
     val xteasList: MutableMap<Int, IntArray> = HashMap<Int, IntArray>().toMutableMap()
 
     fun load() {
-        val file = getFile("cache/osrs/","xteas.json")
+        val file = File(getBase(), "xteas.json")
         val data = Gson().fromJson(file.readText(), Array<Xtea>::class.java)
         data.forEach {
             xteas[it.mapsquare] = it

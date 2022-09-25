@@ -4,9 +4,9 @@ import com.displee.cache.index.archive.Archive
 import com.query.Application
 import com.query.Application.logger
 import com.query.Constants.library
-import com.query.cache.Loader
-import com.query.cache.Serializable
 import com.query.cache.definitions.Definition
+import com.query.cache.definitions.Loader
+import com.query.cache.definitions.Serializable
 import com.query.dump.DefinitionsTypes
 import com.query.utils.ConfigType
 import com.query.utils.IndexType
@@ -14,6 +14,7 @@ import com.query.utils.index
 import java.nio.ByteBuffer
 import java.util.concurrent.CountDownLatch
 import com.query.utils.*
+import java.io.DataOutputStream
 
 data class EnumDefinition(
     override val id: Int = 0,
@@ -22,9 +23,14 @@ data class EnumDefinition(
     var defaultString: String = "null",
     var defaultInt: Int = 0,
     var params : MutableMap<Long,String> = mutableMapOf()
-): Definition
+): Definition() {
 
-class EnumProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true) : Loader, Runnable {
+    override fun encode(dos: DataOutputStream) {
+        TODO("Not yet implemented")
+    }
+}
+
+class EnumProvider(val latch: CountDownLatch?) : Loader, Runnable {
 
     override val revisionMin = 1
 
@@ -40,7 +46,7 @@ class EnumProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true) 
         val definitions = archive.fileIds().map {
             decode(ByteBuffer.wrap(archive.file(it)?.data), EnumDefinition(it))
         }
-        return Serializable(DefinitionsTypes.ENUMS,this, definitions,writeTypes)
+        return Serializable(DefinitionsTypes.ENUMS,this, definitions)
     }
 
     fun decode(buffer: ByteBuffer, definition: EnumDefinition): Definition {

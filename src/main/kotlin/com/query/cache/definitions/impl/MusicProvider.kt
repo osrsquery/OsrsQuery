@@ -1,31 +1,29 @@
 package com.query.cache.definitions.impl
 
 import TrackLoader
-import com.beust.klaxon.Klaxon
 import com.displee.compress.decompress
 import com.query.Application
 import com.query.Constants
-import com.query.Constants.client
-import com.query.cache.Loader
-import com.query.cache.Serializable
-import com.query.cache.definitions.Definition
+import com.query.cache.definitions.Loader
+import com.query.cache.definitions.Serializable
 import com.query.dump.DefinitionsTypes
+import com.query.cache.definitions.Definition
 import com.query.utils.IndexType
-import com.query.utils.Position
 import com.query.utils.index
-import com.squareup.okhttp.Request
-import com.squareup.okhttp.Response
-import org.apache.commons.lang.StringUtils
-import java.net.URL
+import java.io.DataOutputStream
 import java.util.concurrent.CountDownLatch
 
 data class MusicDefinition(
     override var id: Int,
     var midi: ByteArray = ByteArray(0),
     val wikiLink : String = ""
-) : Definition
+) : Definition() {
+    override fun encode(dos: DataOutputStream) {
+        TODO("Not yet implemented")
+    }
+}
 
-class MusicProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true) : Loader, Runnable {
+class MusicProvider(val latch: CountDownLatch?) : Loader, Runnable {
 
     override val revisionMin = 1
 
@@ -39,10 +37,10 @@ class MusicProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true)
     override fun load(): Serializable {
 
         val table = Constants.library.index(IndexType.MUSIC)
-        val definitions = listOf<Definition>().toMutableList()
+        val definitions = listOf<com.query.cache.definitions.Definition>().toMutableList()
         for (i in 0 until table.archives().size) {
             val sector = table.readArchiveSector(i) ?: continue
-            definitions.add(decode(sector.decompress(),MusicDefinition(i)))
+            definitions.add(decode(sector.decompress(), MusicDefinition(i)))
         }
 
         return Serializable(DefinitionsTypes.MUSIC,this, definitions,false)
@@ -58,7 +56,7 @@ class MusicProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true)
 }
 
 data class MusicData(
-    val results : MutableMap<String,Results> = emptyMap<String, Results>().toMutableMap(),
+    val results : MutableMap<String, Results> = emptyMap<String, Results>().toMutableMap(),
 )
 
 data class Results(

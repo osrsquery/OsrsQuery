@@ -4,9 +4,9 @@ import com.displee.cache.index.archive.Archive
 import com.query.Application
 import com.query.Application.logger
 import com.query.Constants.library
-import com.query.cache.Loader
-import com.query.cache.Serializable
 import com.query.cache.definitions.Definition
+import com.query.cache.definitions.Loader
+import com.query.cache.definitions.Serializable
 import com.query.dump.DefinitionsTypes
 import com.query.utils.*
 import java.io.DataOutputStream
@@ -64,11 +64,11 @@ data class ItemDefinition(
     var placeholderId: Int = -1,
     var placeholderTemplateId: Int = -1,
     var params : MutableMap<Int,String> = mutableMapOf()
-): Definition {
+): Definition() {
 
 
     @Throws(IOException::class)
-    fun encode(dos: DataOutputStream) {
+    override fun encode(dos: DataOutputStream) {
 
         if (inventoryModel != 0) {
             dos.writeByte(1)
@@ -308,7 +308,7 @@ data class ItemDefinition(
 
 }
 
-class ItemProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true) : Loader, Runnable {
+class ItemProvider(val latch: CountDownLatch?) : Loader, Runnable {
 
     override val revisionMin = 1
 
@@ -324,7 +324,7 @@ class ItemProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true) 
         val definitions = archive.fileIds().map {
             decode(ByteBuffer.wrap(archive.file(it)?.data), ItemDefinition(it))
         }
-        return Serializable(DefinitionsTypes.ITEMS,this, definitions,writeTypes)
+        return Serializable(DefinitionsTypes.ITEMS,this, definitions)
     }
 
     fun decode(buffer: ByteBuffer, definition: ItemDefinition): Definition {

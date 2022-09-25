@@ -3,15 +3,16 @@ package com.query.cache.definitions.impl
 import com.query.Application
 import com.query.Application.logger
 import com.query.Constants.library
-import com.query.cache.Loader
-import com.query.cache.Serializable
 import com.query.cache.definitions.Definition
+import com.query.cache.definitions.Loader
+import com.query.cache.definitions.Serializable
 import com.query.dump.DefinitionsTypes
 import com.query.utils.*
 import java.io.DataOutputStream
+import java.io.File
+import java.io.IOException
 import java.nio.ByteBuffer
 import java.util.concurrent.CountDownLatch
-
 
 data class AreaDefinition(
     override val id: Int = 0,
@@ -26,15 +27,26 @@ data class AreaDefinition(
     var field3308: String? = null,
     var field3309: ByteArray? = null,
     var fontSize : Int = 0
-): Definition {
-    fun encode(dos : DataOutputStream, count : Int) {
+): Definition() {
+
+    val count : Int = 0
+
+    @Throws(IOException::class)
+    override fun encode(dos : DataOutputStream) {
 
         if (spriteId != -1) {
             dos.writeByte(1)
+            val dir = File(FileUtil.getBase(),"/sprites/pink/")
+            val newdir = File(FileUtil.getBase(),"/mapFunctions/")
             if(spriteId == 1454) {
+                if(!File(newdir,"${6}.png").exists()) {
+                    File(dir,"${1454}.png").copyTo(File(newdir,"${6}.png"),true)
+                }
                 dos.writeShort(6)
             } else {
-                dos.writeShort(count)
+                val finialID = if(newdir.listFiles().size < 6) newdir.listFiles().size else newdir.listFiles().size + 1
+                File(dir,"${spriteId}.png").copyTo(File(newdir,"${finialID}.png"),true)
+                dos.writeShort(finialID)
             }
         }
 
@@ -50,7 +62,7 @@ data class AreaDefinition(
 
         if (fontColor != 0) {
             dos.writeByte(4)
-            dos.writeInt(fontColor)
+            dos.write24bitInt(fontColor)
         }
         if (field3297 != -1) {
             dos.writeByte(5)
@@ -62,11 +74,13 @@ data class AreaDefinition(
         }
 
         if (options.any { it != null }) {
-            for (index in options.indices) {
-                if (options[index] != null) {
-                    dos.writeByte(7 + index)
-                    dos.writeString(options[index]!!)
+            dos.writeByte(7)
+            dos.writeByte(options.size)
+            for (i in options.indices) {
+                if (options[i] == null) {
+                    continue
                 }
+                dos.writeString(options[i]!!)
             }
         }
 
@@ -74,7 +88,7 @@ data class AreaDefinition(
     }
 }
 
-class AreaProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true) : Loader, Runnable {
+class AreaProvider(val latch: CountDownLatch?) : Loader, Runnable {
 
     override val revisionMin = 142
 
@@ -95,7 +109,7 @@ class AreaProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true) 
            decode(ByteBuffer.wrap(archive.file(it)?.data), AreaDefinition(it))
         }
 
-        return Serializable(DefinitionsTypes.AREAS,this, definitions,writeTypes)
+        return Serializable(DefinitionsTypes.AREAS,this, definitions)
     }
 
     fun decode(buffer: ByteBuffer, definition: AreaDefinition): Definition {

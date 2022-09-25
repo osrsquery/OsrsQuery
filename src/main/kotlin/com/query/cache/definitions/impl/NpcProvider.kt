@@ -3,16 +3,15 @@ package com.query.cache.definitions.impl
 import com.query.Application
 import com.query.Application.logger
 import com.query.Constants.library
-import com.query.cache.Loader
-import com.query.cache.Serializable
-import com.query.cache.definitions.Definition
+import com.query.cache.definitions.Loader
+import com.query.cache.definitions.Serializable
 import com.query.dump.DefinitionsTypes
+import com.query.cache.definitions.Definition
 import com.query.utils.*
 import java.io.DataOutputStream
 import java.io.IOException
 import java.nio.ByteBuffer
 import java.util.concurrent.CountDownLatch
-
 
 data class NpcDefinition(
     override val id: Int = 0,
@@ -57,10 +56,10 @@ data class NpcDefinition(
     var crawlRightSequence : Int = -1,
     var crawlLeftSequence : Int = -1,
     var params : MutableMap<Int,String> = mutableMapOf()
-): Definition {
+): Definition() {
 
     @Throws(IOException::class)
-    fun encode(dos: DataOutputStream) {
+    override fun encode(dos: DataOutputStream) {
 
         if (models != null && models!!.isNotEmpty()) {
             dos.writeByte(1)
@@ -252,7 +251,7 @@ data class NpcDefinition(
 
 }
 
-class NpcProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true) : Loader, Runnable {
+class NpcProvider(val latch: CountDownLatch?) : Loader, Runnable {
 
     override val revisionMin = 1
 
@@ -269,7 +268,7 @@ class NpcProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true) :
         val definitions = archive.fileIds().map {
            decode(ByteBuffer.wrap(archive.file(it)?.data), NpcDefinition(it))
         }
-        return Serializable(DefinitionsTypes.NPCS,this, definitions,writeTypes)
+        return Serializable(DefinitionsTypes.NPCS,this, definitions)
     }
 
     fun decode(buffer: ByteBuffer, definition: NpcDefinition): Definition {

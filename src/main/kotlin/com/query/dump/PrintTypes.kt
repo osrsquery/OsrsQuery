@@ -2,7 +2,7 @@ package com.query.dump
 
 import com.query.Application.gson
 import com.query.cache.definitions.Definition
-import com.query.utils.FileUtils
+import com.query.utils.FileUtil
 import com.query.utils.capitalizeWords
 import com.query.utils.progress
 import java.io.BufferedWriter
@@ -36,8 +36,8 @@ enum class DefinitionsTypes {
 class PrintTypes(type : DefinitionsTypes, def : List<Definition>) {
 
     private val name = type.typeName
-    private val completeLocation = FileUtils.getFile("/types/","$name-complete.json")
-    private val location = FileUtils.getDir("/types/${name}/")
+    private val completeLocation = FileUtil.getFile("/types/","$name-complete.json")
+    private val location = FileUtil.getDir("/types/${name}/")
 
     init {
         val output = BufferedWriter(FileWriter(completeLocation))

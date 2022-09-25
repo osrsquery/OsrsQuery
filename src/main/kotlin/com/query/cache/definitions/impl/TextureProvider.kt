@@ -3,10 +3,11 @@ package com.query.cache.definitions.impl
 import com.displee.cache.index.archive.Archive
 import com.query.Application
 import com.query.Constants
-import com.query.cache.Loader
-import com.query.cache.Serializable
 import com.query.cache.definitions.Definition
+import com.query.cache.definitions.Loader
+import com.query.cache.definitions.Serializable
 import com.query.dump.DefinitionsTypes
+import com.query.dump.TextureDumper
 import com.query.utils.*
 import java.io.DataOutputStream
 import java.io.IOException
@@ -23,10 +24,13 @@ data class TextureDefinition(
     var animationSpeed : Int = 0,
     var animationDirection : Int = 0,
     var averageRGB: Int = -1
-) : Definition {
+): Definition() {
+
+
+    val texID: Map<Int, Int> = emptyMap<Int, Int>().toMutableMap()
 
     @Throws(IOException::class)
-    fun encode(dos: DataOutputStream, texID: Map<Int, Int>) {
+    override fun encode(dos: DataOutputStream) {
 
         dos.writeByte(1)
         dos.writeShort(id)
@@ -44,7 +48,7 @@ data class TextureDefinition(
         if (!fileIds.contentEquals(IntArray(0))) {
             dos.writeByte(4)
             repeat(fileIds.count()) {
-                dos.writeShort(texID[fileIds[it]]!!)
+                dos.writeShort(TextureDumper.sprites317[fileIds[it]]!!)
             }
         }
 
@@ -79,15 +83,13 @@ data class TextureDefinition(
         }
         if (averageRGB != -1) {
             dos.writeByte(10)
-            dos.writeByte(averageRGB shr 16)
-            dos.writeByte(averageRGB shr 8)
-            dos.writeByte(averageRGB)
+            dos.write24bitInt(averageRGB)
         }
         dos.writeByte(0)
     }
 }
 
-class TextureProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true) : Loader, Runnable {
+class TextureProvider(val latch: CountDownLatch?) : Loader, Runnable {
 
     override val revisionMin = 1
 
@@ -105,7 +107,7 @@ class TextureProvider(val latch: CountDownLatch?, val writeTypes : Boolean = tru
             decode(ByteBuffer.wrap(archive.file(it)?.data), TextureDefinition(it))
         }
 
-        return Serializable(DefinitionsTypes.TEXTURES,this, definitions,writeTypes)
+        return Serializable(DefinitionsTypes.TEXTURES,this, definitions)
     }
 
     private fun decode(buffer: ByteBuffer, definition: TextureDefinition): Definition {

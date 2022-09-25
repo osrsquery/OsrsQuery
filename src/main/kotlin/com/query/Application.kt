@@ -2,18 +2,21 @@ package com.query
 
 import com.google.gson.GsonBuilder
 import com.query.Constants.properties
-import com.query.cache.definitions.Definition
+import com.query.cache.CacheManager
 import com.query.cache.definitions.impl.*
-import com.query.cache.download.CacheInfo
-import com.query.cache.download.CacheLoader
-import com.query.dump.dumper317.Dumper
-import com.query.dump.impl.*
+import com.query.dump.*
+import com.query.game.map.HeightMapGenerator
+import com.query.game.map.MapImageGenerator
+import com.query.game.map.builders.HeightMapImageBuilder
+import com.query.game.map.builders.MapImageBuilder
+import com.query.utils.FileUtil
 import com.query.utils.TimeUtils
-import kotlinx.cli.ArgParser
-import kotlinx.cli.ArgType
-import kotlinx.cli.default
+import com.query.utils.revisionBefore
+import joptsimple.ArgumentAcceptingOptionSpec
+import joptsimple.OptionParser
+import joptsimple.ValueConverter
+import joptsimple.util.EnumConverter
 import mu.KotlinLogging
-import pertinax.osrscd.CacheDownloader
 import java.io.File
 import java.io.FileOutputStream
 import java.util.*
@@ -28,44 +31,58 @@ object Application {
     /**
      * What Revision the user wants to dump.
      */
-    var revision : Int = 1
+    var revision : Int = 0
 
     /**
      * What Game Type you wish to dump.
      */
-    var gameType : String = "oldschool"
+    var gameType : GameType = GameType.OLDSCHOOL
 
     /**
      * What Game World you wish to download.
      */
-    var gameWorld : Int = -1
+    var gameWorld : Int = 0
+
+    /**
+     * How Many cores to run with
+     */
+    var cores : Int = 0
+
+    /**
+     * Task Type
+     */
+    var type : TaskType = TaskType.ALL
+
+    /**
+     * Write Types
+     */
+    var writeData = false;
+
+    /**
+     * Base Dir to store your data
+     */
+    var BASE_DIR = "./repository/"
 
     /**
      * Main Logger for the Application.
      */
     val logger = KotlinLogging.logger {}
 
-    /**
-     * Cache Revision data for the Revision that user requests.
-     */
-
-    lateinit var cacheInfo : CacheInfo
-
     var gson = GsonBuilder().setPrettyPrinting().create()
 
-    fun initialize(rev : Int, game: String, world : Int) {
+    private fun initialize() {
         val time = measureTimeMillis {
 
-            revision = rev
-            gameType = game
-            gameWorld = world
-
-            CacheLoader.initialize()
+            CacheManager.initialize()
 
             //Latch is necessary.
             val latch = CountDownLatch(17)
 
-            SpriteProvider(latch,false).run()
+            writeData = when(type) {
+                TaskType.TYPES, TaskType.ALL, TaskType.DUMP317 -> true
+                else -> false
+            }
+
 
             val commands = listOf(
                 AreaProvider(latch),
@@ -86,8 +103,10 @@ object Application {
                 UnderlayProvider(latch),
                 VarbitProvider(latch),
             )
-            val cores = Runtime.getRuntime().availableProcessors()
-            if (cores > 4) {
+
+            val availableCores = Runtime.getRuntime().availableProcessors()
+
+            if (availableCores > cores) {
                 val pool = Executors.newFixedThreadPool(cores)
                 commands.forEach(pool::execute)
                 pool.shutdown()
@@ -96,16 +115,67 @@ object Application {
             }
             latch.await()
 
-            SpriteDumper().load()
-            MapFunctionsDumper().load()
-            MapSceneDumper().load()
-            OverlayImages().load()
-            Textures().load()
-            Dumper.init()
+            when(type) {
+
+                TaskType.ALL -> {
+                    SpriteProvider(latch).run()
+                    SpriteDumper().init()
+                    MapSceneDumper().init()
+                    OverlayImages().init()
+                    Textures().init()
+                    Dump317.init()
+
+                    ModelOrganization.init()
+                    dumpMapImages(true)
+                    dumpMapImages(false)
+
+                }
+
+                TaskType.MODELS_SORTED -> ModelOrganization.init()
+
+                TaskType.DUMP317 -> {
+                    SpriteDumper().init()
+                    MapSceneDumper().init()
+                    OverlayImages().init()
+                    Textures().init()
+                    Dump317.init()
+                }
+
+                TaskType.SPRITES -> SpriteDumper().init()
+                TaskType.HEIGHT_MAPS -> dumpMapImages(true)
+                TaskType.MAP_IMAGES -> dumpMapImages(false)
+                TaskType.MAP_SCENE -> MapSceneDumper().init()
+                TaskType.TEXTURE_IMAGES -> Textures().init()
+                TaskType.MAP_FUNCTIONS -> MapFunctionsDumper.init()
+                TaskType.UNUSED_MODELS -> UnusedModels.init()
+            }
+
+
         }
 
         logger.info { "Dump Completed in ${TimeUtils.millsToFormat(time)}" }
 
+    }
+
+    private fun dumpMapImages(heightMap : Boolean) {
+        when(heightMap) {
+            true -> {
+                val dumper = HeightMapGenerator(HeightMapImageBuilder().scale(4).viewable(true).build())
+                val timer = measureTimeMillis {
+                    dumper.drawHeightMap()
+                }
+                logger.info { "Map Images Written in ${TimeUtils.millsToFormat(timer)}" }
+            }
+            false -> {
+                val dumper = MapImageGenerator(MapImageBuilder().scale(4).build())
+
+                val timer = measureTimeMillis {
+                    dumper.draw()
+                }
+
+                logger.info { "Map Images Written in ${TimeUtils.millsToFormat(timer)}" }
+            }
+        }
     }
 
     fun loadProperties() {
@@ -127,7 +197,7 @@ object Application {
     /**
      * Cached definitions provided from the cache library.
      */
-    val definitions: ConcurrentHashMap<Class<out Definition>, List<Definition>> = ConcurrentHashMap()
+    val definitions: ConcurrentHashMap<Class<out com.query.cache.definitions.Definition>, List<com.query.cache.definitions.Definition>> = ConcurrentHashMap()
 
 
     /**
@@ -140,7 +210,7 @@ object Application {
     /**
      * Stores a provided list of definitions.
      */
-    fun store(clazz: Class<out Definition>, list: List<Definition>) {
+    fun store(clazz: Class<out com.query.cache.definitions.Definition>, list: List<com.query.cache.definitions.Definition>) {
         definitions[clazz] = list
     }
 
@@ -270,16 +340,69 @@ object Application {
         return definitions[JingleDefinition::class.java]?.filterIsInstance<JingleDefinition>()?: error("Jingle Definitions not loaded.")
     }
 
+    @JvmStatic
+    fun main(args : Array<String>) {
+        val parser = OptionParser(false)
 
-}
+        val rev: ArgumentAcceptingOptionSpec<Int> = parser
+            .accepts("revision", "The revision you wish to dump")
+            .withRequiredArg()
+            .ofType(Int::class.java)
+        .defaultsTo(0)
 
-fun main(args : Array<String>) {
+        val game: ArgumentAcceptingOptionSpec<GameType> = parser
+            .accepts("game", "Select a Game type you wish to download")
+            .withRequiredArg()
+            .ofType(GameType::class.java)
+            .defaultsTo(GameType.OLDSCHOOL)
+            .withValuesConvertedBy(object : EnumConverter<GameType>(GameType::class.java), ValueConverter<GameType> {
+                override fun convert(v: String): GameType {
+                    return super.convert(v.lowercase())
+                }
+            }
+        )
 
-    val parser = ArgParser("app")
-    val rev by parser.option(ArgType.Int, description = "The revision you wish to dump").default(0)
-    val gameType by parser.option(ArgType.String, description = "The game you wish to download [darkscape,dotd,oldschool,runescape]").default("oldschool")
-    val world by parser.option(ArgType.Int, description = "The game world you wish to download").default(-1)
+        val world: ArgumentAcceptingOptionSpec<Int> = parser
+            .accepts("world", "Select the the world cache you wish to download live useful for beta caches")
+            .withRequiredArg()
+            .ofType(Int::class.java)
+        .defaultsTo(0)
 
-    parser.parse(args)
-    Application.initialize(rev,gameType, world)
+        val storeDir: ArgumentAcceptingOptionSpec<String> = parser
+            .accepts("storeDir", "Select the location to store files")
+            .withRequiredArg()
+            .ofType(String::class.java)
+        .defaultsTo("./repository/")
+
+        val useCores: ArgumentAcceptingOptionSpec<Int> = parser
+            .accepts("cores", "Select the amount of cores to use")
+            .withRequiredArg()
+            .ofType(Int::class.java)
+        .defaultsTo(4)
+
+        var task: ArgumentAcceptingOptionSpec<TaskType> = parser
+            .accepts("task", "Select the task you wish to run")
+            .withRequiredArg()
+            .ofType(TaskType::class.java)
+            .defaultsTo(TaskType.ALL)
+            .withValuesConvertedBy(object : EnumConverter<TaskType>(TaskType::class.java), ValueConverter<TaskType> {
+                override fun convert(v: String): TaskType {
+                    return super.convert(v.lowercase())
+                }
+            }
+        )
+
+
+        val options = parser.parse(*args)
+
+        gameWorld = options.valueOf(world)
+        gameType = options.valueOf(game)
+        revision = options.valueOf(rev)
+        BASE_DIR = options.valueOf(storeDir)
+        cores = options.valueOf(useCores)
+        type = options.valueOf(task)
+        initialize()
+    }
+
+
 }

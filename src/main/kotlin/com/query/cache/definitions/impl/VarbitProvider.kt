@@ -3,9 +3,9 @@ package com.query.cache.definitions.impl
 import com.query.Application
 import com.query.Application.logger
 import com.query.Constants.library
-import com.query.cache.Loader
-import com.query.cache.Serializable
 import com.query.cache.definitions.Definition
+import com.query.cache.definitions.Loader
+import com.query.cache.definitions.Serializable
 import com.query.dump.DefinitionsTypes
 import com.query.utils.*
 import java.io.DataOutputStream
@@ -15,13 +15,13 @@ import java.util.concurrent.CountDownLatch
 
 data class VarbitDefinition(
     override val id: Int = 0,
-    var index: Int = 0,
-    var leastSignificantBit: Int = 0,
-    var mostSignificantBit: Int = 0
-): Definition {
+    var index: Int = -1,
+    var leastSignificantBit: Int = -1,
+    var mostSignificantBit: Int = -1
+): Definition() {
 
     @Throws(IOException::class)
-    fun encode(dos: DataOutputStream) {
+    override fun encode(dos: DataOutputStream) {
         if (index != -1 || leastSignificantBit != -1 || mostSignificantBit != -1) {
             dos.writeByte(1)
             dos.writeShort(index)
@@ -50,7 +50,7 @@ class VarbitProvider(val latch: CountDownLatch?, val writeTypes : Boolean = fals
         val definitions = archive.fileIds().map {
            decode(ByteBuffer.wrap(archive.file(it)?.data), VarbitDefinition(it))
         }
-        return Serializable(DefinitionsTypes.VARBITS,this, definitions,writeTypes)
+        return Serializable(DefinitionsTypes.VARBITS,this, definitions)
     }
 
     fun decode(buffer: ByteBuffer, definition: VarbitDefinition): Definition {

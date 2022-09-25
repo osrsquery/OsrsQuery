@@ -65,7 +65,7 @@ fun LocalDateTime.toEchochUTC() : Long {
     return this.toEpochSecond(ZoneOffset.UTC)
 }
 
-fun revisionID() = Application.cacheInfo.builds[0].major
+fun revisionID() = Application.revision
 
 fun revisionAfter(rev : Int) = rev <= revisionID()
 fun revisionBefore(rev : Int) = rev >= revisionID()

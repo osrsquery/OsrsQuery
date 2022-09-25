@@ -3,15 +3,15 @@ package com.query.cache.definitions.impl
 import com.query.Application
 import com.query.Application.logger
 import com.query.Constants.library
-import com.query.cache.Loader
-import com.query.cache.Serializable
-import com.query.cache.definitions.Definition
+import com.query.cache.definitions.Loader
+import com.query.cache.definitions.Serializable
 import com.query.dump.DefinitionsTypes
 import com.query.utils.*
 import java.io.DataOutputStream
 import java.io.IOException
 import java.nio.ByteBuffer
 import java.util.concurrent.CountDownLatch
+import com.query.cache.definitions.Definition
 
 
 data class OverlayDefinition(
@@ -20,7 +20,7 @@ data class OverlayDefinition(
     var secondaryRgbColor: Int = -1,
     var textureId: Int = -1,
     var hideUnderlay: Boolean = true
-): Definition {
+): Definition() {
 
 
     var hue: Int = 0
@@ -93,12 +93,10 @@ data class OverlayDefinition(
     }
 
     @Throws(IOException::class)
-    fun encode(dos: DataOutputStream) {
+    override fun encode(dos: DataOutputStream) {
         if (rgbColor != 0) {
             dos.writeByte(1)
-            dos.writeByte(rgbColor shr 16)
-            dos.writeByte(rgbColor shr 8)
-            dos.writeByte(rgbColor)
+            dos.write24bitInt(rgbColor)
         }
         if (textureId != -1) {
             dos.writeByte(2)
@@ -109,16 +107,14 @@ data class OverlayDefinition(
         }
         if (secondaryRgbColor != -1) {
             dos.writeByte(7)
-            dos.writeByte(secondaryRgbColor shr 16)
-            dos.writeByte(secondaryRgbColor shr 8)
-            dos.writeByte(secondaryRgbColor)
+            dos.write24bitInt(secondaryRgbColor)
         }
         dos.writeByte(0)
     }
 
 }
 
-class OverlayProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true) : Loader, Runnable {
+class OverlayProvider(val latch: CountDownLatch?) : Loader, Runnable {
 
     override val revisionMin = 1
 
@@ -134,7 +130,7 @@ class OverlayProvider(val latch: CountDownLatch?, val writeTypes : Boolean = tru
         val definitions = archive.fileIds().map {
            decode(ByteBuffer.wrap(archive.file(it)?.data), OverlayDefinition(it))
         }
-        return Serializable(DefinitionsTypes.OVERLAYS,this, definitions,writeTypes)
+        return Serializable(DefinitionsTypes.OVERLAYS,this, definitions)
     }
 
     fun decode(buffer: ByteBuffer, definition: OverlayDefinition): Definition {

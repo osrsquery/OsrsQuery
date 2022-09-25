@@ -4,11 +4,12 @@ import com.displee.cache.index.archive.Archive
 import com.query.Application
 import com.query.Application.logger
 import com.query.Constants.library
-import com.query.cache.Loader
-import com.query.cache.Serializable
-import com.query.cache.definitions.Definition
+import com.query.cache.definitions.Loader
+import com.query.cache.definitions.Serializable
 import com.query.dump.DefinitionsTypes
+import com.query.cache.definitions.Definition
 import com.query.utils.*
+import java.io.DataOutputStream
 import java.nio.ByteBuffer
 import java.util.concurrent.CountDownLatch
 
@@ -19,9 +20,13 @@ data class ParamDefinition(
     var isMembers: Boolean = true,
     var defaultInt: Int = 0,
     var defaultString: String? = null
-): Definition
+): Definition() {
+    override fun encode(dos: DataOutputStream) {
+        TODO("Not yet implemented")
+    }
+}
 
-class ParamProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true) : Loader, Runnable {
+class ParamProvider(val latch: CountDownLatch?) : Loader, Runnable {
 
     override val revisionMin = 1
 
@@ -37,7 +42,7 @@ class ParamProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true)
         val definitions = archive.fileIds().map {
             decode(ByteBuffer.wrap(archive.file(it)?.data), ParamDefinition(it))
         }
-        return Serializable(DefinitionsTypes.PARAMS,this, definitions,writeTypes)
+        return Serializable(DefinitionsTypes.PARAMS,this, definitions)
     }
 
     fun decode(buffer: ByteBuffer, definition: ParamDefinition): Definition {

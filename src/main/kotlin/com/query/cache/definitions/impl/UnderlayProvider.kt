@@ -3,9 +3,9 @@ package com.query.cache.definitions.impl
 import com.query.Application
 import com.query.Application.logger
 import com.query.Constants.library
-import com.query.cache.Loader
-import com.query.cache.Serializable
 import com.query.cache.definitions.Definition
+import com.query.cache.definitions.Loader
+import com.query.cache.definitions.Serializable
 import com.query.dump.DefinitionsTypes
 import com.query.utils.*
 import java.io.DataOutputStream
@@ -17,7 +17,7 @@ import java.util.concurrent.CountDownLatch
 data class UnderlayDefinition(
     override val id: Int = 0,
     var color: Int = 0
-): Definition {
+): Definition() {
 
     var hue: Int = 0
     var saturation: Int = 0
@@ -86,12 +86,10 @@ data class UnderlayDefinition(
     }
 
     @Throws(IOException::class)
-    fun encode(dos: DataOutputStream) {
+    override fun encode(dos: DataOutputStream) {
         if (color != 0) {
             dos.writeByte(1)
-            dos.writeByte(color shr 16)
-            dos.writeByte(color shr 8)
-            dos.writeByte(color)
+            dos.write24bitInt(color)
         }
         dos.writeByte(0)
 
@@ -99,7 +97,7 @@ data class UnderlayDefinition(
 
 }
 
-class UnderlayProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true) : Loader, Runnable {
+class UnderlayProvider(val latch: CountDownLatch?) : Loader, Runnable {
 
     override val revisionMin = 1
 
@@ -115,7 +113,7 @@ class UnderlayProvider(val latch: CountDownLatch?, val writeTypes : Boolean = tr
         val definitions = archive.fileIds().map {
            decode(ByteBuffer.wrap(archive.file(it)?.data), UnderlayDefinition(it))
         }
-        return Serializable(DefinitionsTypes.UNDERLAYS,this, definitions,writeTypes)
+        return Serializable(DefinitionsTypes.UNDERLAYS,this, definitions)
     }
 
     fun decode(buffer: ByteBuffer, definition: UnderlayDefinition): Definition {

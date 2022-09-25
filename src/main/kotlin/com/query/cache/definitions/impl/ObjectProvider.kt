@@ -3,9 +3,9 @@ package com.query.cache.definitions.impl
 import com.query.Application
 import com.query.Application.logger
 import com.query.Constants.library
-import com.query.cache.Loader
-import com.query.cache.Serializable
 import com.query.cache.definitions.Definition
+import com.query.cache.definitions.Loader
+import com.query.cache.definitions.Serializable
 import com.query.dump.DefinitionsTypes
 import com.query.utils.*
 import java.io.DataOutputStream
@@ -13,7 +13,6 @@ import java.io.IOException
 import java.nio.ByteBuffer
 import java.util.concurrent.CountDownLatch
 import java.util.stream.IntStream
-
 
 data class ObjectDefinition(
     override val id: Int = 0,
@@ -62,17 +61,17 @@ data class ObjectDefinition(
     var anInt2113: Int = 0,
     var blocksProjectile: Boolean = true,
     var params : MutableMap<Int,String> = mutableMapOf()
-): Definition {
+): Definition() {
 
     @Throws(IOException::class)
-    fun encode(dos: DataOutputStream) {
+    override fun encode(dos: DataOutputStream) {
 
         if (objectModels != null) {
             if (objectTypes != null) {
                 dos.writeByte(1)
                 dos.writeByte(objectModels!!.size)
-                if (objectModels!!.size > 0) {
-                    for (i in objectModels!!.indices) {
+                if (objectModels!!.isNotEmpty()) {
+                    for (i in 0 until objectModels!!.size) {
                         dos.writeShort(objectModels!![i])
                         dos.writeByte(objectTypes!![i])
                     }
@@ -80,7 +79,7 @@ data class ObjectDefinition(
             } else {
                 dos.writeByte(5)
                 dos.writeByte(objectModels!!.size)
-                if (objectModels!!.size > 0) {
+                if (objectModels!!.isNotEmpty()) {
                     for (i in 0 until objectModels!!.size) {
                         dos.writeShort(objectModels!![i])
                     }
@@ -105,7 +104,6 @@ data class ObjectDefinition(
 
         if (clipType == 0) {
             dos.writeByte(17)
-            dos.writeByte(0)
         }
 
         if (!blocksProjectile) {
@@ -136,7 +134,6 @@ data class ObjectDefinition(
 
         if (clipType == 1) {
             dos.writeByte(27)
-            dos.writeByte(1)
         }
 
         if (decorDisplacement != 16) {
@@ -177,8 +174,8 @@ data class ObjectDefinition(
             dos.writeByte(41)
             dos.writeByte(retextureToFind!!.size)
             for (i in 0 until retextureToFind!!.size) {
-                dos.writeShort(retextureToFind!!.get(i).toInt())
-                dos.writeShort(retextureToReplace!!.get(i).toInt())
+                dos.writeShort(retextureToFind!![i].toInt())
+                dos.writeShort(retextureToReplace!![i].toInt())
             }
         }
 
@@ -278,7 +275,7 @@ data class ObjectDefinition(
         if (!randomizeAnimStart) {
             dos.writeByte(89)
         }
-
+        
         if ((varbitId != -1 || varpId != -1) && configs != null && configs!!.isNotEmpty()) {
             val value: Int = configs!![configs!!.size - 1]
             dos.writeByte(if (value != -1) 92 else 77)
@@ -292,7 +289,7 @@ data class ObjectDefinition(
                 dos.writeShort(configs!![i])
             }
         }
-
+        
         if (params != mutableMapOf<Int, String>()) {
             dos.writeByte(249)
             dos.writeParams(params)
@@ -302,9 +299,10 @@ data class ObjectDefinition(
 
     }
 
+
 }
 
-class ObjectProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true) : Loader, Runnable {
+class ObjectProvider(val latch: CountDownLatch?) : Loader, Runnable {
 
     override val revisionMin = 1
 
@@ -320,7 +318,7 @@ class ObjectProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true
         val definitions = archive.fileIds().map {
            decode(ByteBuffer.wrap(archive.file(it)?.data), ObjectDefinition(it))
         }
-        return Serializable(DefinitionsTypes.OBJECTS,this, definitions,writeTypes)
+        return Serializable(DefinitionsTypes.OBJECTS,this, definitions)
     }
 
     private fun decode(buffer: ByteBuffer, definition: ObjectDefinition): Definition {

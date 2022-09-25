@@ -3,16 +3,15 @@ package com.query.cache.definitions.impl
 import com.query.Application
 import com.query.Application.logger
 import com.query.Constants.library
-import com.query.cache.Loader
-import com.query.cache.Serializable
-import com.query.cache.definitions.Definition
+import com.query.cache.definitions.Loader
+import com.query.cache.definitions.Serializable
 import com.query.dump.DefinitionsTypes
 import com.query.utils.*
 import java.io.DataOutputStream
+import com.query.cache.definitions.Definition
 import java.io.IOException
 import java.nio.ByteBuffer
 import java.util.concurrent.CountDownLatch
-
 
 data class KitDefinition(
     override val id: Int = 0,
@@ -24,11 +23,10 @@ data class KitDefinition(
     var models : IntArray? = null,
     var chatheadModels : MutableList<Int> = mutableListOf(-1, -1, -1, -1, -1),
     var nonSelectable : Boolean = false
-): Definition {
-
+): Definition() {
 
     @Throws(IOException::class)
-    fun encode(dos: DataOutputStream) {
+    override fun encode(dos: DataOutputStream) {
 
         if(bodyPartId != -1) {
             dos.writeByte(1)
@@ -71,9 +69,8 @@ data class KitDefinition(
 
         if (chatheadModels.any { it != -1 }) {
             for (i in 0 until chatheadModels.size) {
-                dos.writeByte(i + 60)
+                dos.writeByte(60 + i)
                 dos.writeShort(chatheadModels[i])
-                dos.writeByte(10)
             }
         }
 
@@ -82,7 +79,7 @@ data class KitDefinition(
 
 }
 
-class KitProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true) : Loader, Runnable {
+class KitProvider(val latch: CountDownLatch?) : Loader, Runnable {
 
     override val revisionMin = 1
 
@@ -98,7 +95,7 @@ class KitProvider(val latch: CountDownLatch?, val writeTypes : Boolean = true) :
         val definitions = archive.fileIds().map {
            decode(ByteBuffer.wrap(archive.file(it)?.data), KitDefinition(it))
         }
-        return Serializable(DefinitionsTypes.KIT,this, definitions,writeTypes)
+        return Serializable(DefinitionsTypes.KIT,this, definitions)
     }
 
     fun decode(buffer: ByteBuffer, definition: KitDefinition): Definition {
