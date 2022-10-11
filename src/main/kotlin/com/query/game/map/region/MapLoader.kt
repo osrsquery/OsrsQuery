@@ -24,7 +24,7 @@ class MapLoader {
 					tiles[z][x][y] = Tile()
 					val tile = tiles[z][x][y]
 					while (true) {
-						val attribute: Int = buffer.uByte
+						val attribute: Int = buffer.short.toInt()
 						if (attribute == 0) {
 							break
 						} else if (attribute == 1) {
@@ -33,13 +33,13 @@ class MapLoader {
 							break
 						} else if (attribute <= 49) {
 							tile.attrOpcode = attribute
-							tile.overlayId = buffer.byte
+							tile.overlayId = buffer.short
 							tile.overlayPath = ((attribute - 2) / 4).toByte()
 							tile.overlayRotation = (attribute - 2 and 3).toByte()
 						} else if (attribute <= 81) {
 							tile.settings = (attribute - 49).toByte()
 						} else {
-							tile.underlayId = (attribute - 81).toByte()
+							tile.underlayId = (attribute - 81).toByte().toShort()
 						}
 					}
 				}

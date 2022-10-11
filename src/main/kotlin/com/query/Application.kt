@@ -76,7 +76,7 @@ object Application {
             CacheManager.initialize()
 
             //Latch is necessary.
-            val latch = CountDownLatch(17)
+            val latch = CountDownLatch(18)
 
             writeData = when(type) {
                 TaskType.TYPES, TaskType.ALL, TaskType.DUMP317 -> true
@@ -103,6 +103,7 @@ object Application {
                 UnderlayProvider(latch),
                 VarbitProvider(latch),
             )
+            SpriteProvider(latch).run()
 
             val availableCores = Runtime.getRuntime().availableProcessors()
 
@@ -118,7 +119,6 @@ object Application {
             when(type) {
 
                 TaskType.ALL -> {
-                    SpriteProvider(latch).run()
                     SpriteDumper().init()
                     MapSceneDumper().init()
                     OverlayImages().init()

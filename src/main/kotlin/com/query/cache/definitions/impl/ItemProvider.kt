@@ -25,6 +25,10 @@ data class ItemDefinition(
     var category : Int = -1,
     var yan2d: Int = 0,
     var zan2d: Int = 0,
+    var wearPos1: Int = 0,
+    var wearPos2: Int = 0,
+    var wearPos3: Int = 0,
+    var weight: Int = 0,
     var cost: Int = 1,
     var isTradeable: Boolean = false,
     var stackable: Int = 0,
@@ -114,6 +118,16 @@ data class ItemDefinition(
             dos.writeInt(cost)
         }
 
+        if (wearPos1 != 0) {
+            dos.writeByte(13)
+            dos.writeByte(wearPos1)
+        }
+
+        if (wearPos2 != 0) {
+            dos.writeByte(14)
+            dos.writeByte(wearPos2)
+        }
+
         if (members) {
             dos.writeByte(16)
         }
@@ -138,6 +152,11 @@ data class ItemDefinition(
         if (equipped_model_female_2 != -1) {
             dos.writeByte(26)
             dos.writeShort(equipped_model_female_2)
+        }
+
+        if (wearPos3 != 0) {
+            dos.writeByte(27)
+            dos.writeByte(wearPos3)
         }
 
         if (options != mutableListOf(null, null, "Take", null, null)) {
@@ -187,6 +206,11 @@ data class ItemDefinition(
 
         if (isTradeable) {
             dos.writeByte(65)
+        }
+
+        if (weight != 0) {
+            dos.writeByte(75)
+            dos.writeShort(weight)
         }
 
         if (male_equip_emblem != -1) {
@@ -348,6 +372,8 @@ class ItemProvider(val latch: CountDownLatch?) : Loader, Runnable {
             }
             11 -> definition.stackable = 1
             12 -> definition.cost = buffer.int
+            13 -> definition.wearPos1 = buffer.uByte
+            14 -> definition.wearPos2 = buffer.uByte
             16 -> definition.members = true
             23 -> {
                 definition.male_equip_main = buffer.uShort
@@ -359,6 +385,7 @@ class ItemProvider(val latch: CountDownLatch?) : Loader, Runnable {
                 definition.female_equip_attachment = buffer.uByte
             }
             26 -> definition.equipped_model_female_2 = buffer.uShort
+            27 -> definition.wearPos3 = buffer.uByte
             in 30..34 -> {
                 definition.options[opcode - 30] = buffer.rsString
                 if (definition.options[opcode - 30].equals("Hidden", true)) {
@@ -386,6 +413,7 @@ class ItemProvider(val latch: CountDownLatch?) : Loader, Runnable {
             }
             42 -> definition.shiftClickDropIndex = buffer.byte.toInt()
             65 -> definition.isTradeable = true
+            75 -> definition.weight = buffer.uShort
             78 -> definition.male_equip_emblem = buffer.uShort
             79 -> definition.female_equip_emblem = buffer.uShort
             90 -> definition.male_dialogue_head = buffer.uShort
@@ -418,7 +446,14 @@ class ItemProvider(val latch: CountDownLatch?) : Loader, Runnable {
             0 -> break
             else -> logger.warn { "Unhandled item definition opcode with id: ${opcode}." }
         } while (true)
+        post(definition)
         return definition
+    }
+
+    private fun post(definition : ItemDefinition) {
+        if (definition.stackable == 1) {
+            definition.weight = 0
+        }
     }
 
 

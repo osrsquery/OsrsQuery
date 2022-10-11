@@ -25,10 +25,10 @@ class Region(id : Int) {
 
     private val tileHeights = Array(regionSizeZ) { Array(regionSizeX) { IntArray(regionSizeY) } }
     private val tileSettings = Array(regionSizeZ) { Array(regionSizeX) { ByteArray(regionSizeY) } }
-    private val overlayIds = Array(regionSizeZ) { Array(regionSizeX) { ByteArray(regionSizeY) } }
+    private val overlayIds = Array(regionSizeZ) { Array(regionSizeX) { ShortArray(regionSizeY) } }
     private val overlayPaths = Array(regionSizeZ) { Array(regionSizeX) { ByteArray(regionSizeY) } }
     private val overlayRotations = Array(regionSizeZ) { Array(regionSizeX) { ByteArray(regionSizeY) } }
-    private val underlayIds = Array(regionSizeZ) { Array(regionSizeX) { ByteArray(regionSizeY) } }
+    private val underlayIds = Array(regionSizeZ) { Array(regionSizeX) { ShortArray(regionSizeY) } }
     private val locations: MutableList<Location> = ArrayList()
 
     fun loadTerrain(map: MapDefinition) {
@@ -76,10 +76,13 @@ class Region(id : Int) {
 
     fun getTileHeight(z: Int, x: Int, y: Int) = tileHeights[z][x][y]
     fun getTileSetting(z: Int, x: Int, y: Int) = tileSettings[z][x][y]
-    fun getOverlayId(z: Int, x: Int, y: Int) = (overlayIds[z][x][y].toUByte()).toInt()
+
+    fun getOverlayId(z: Int, x: Int, y: Int) = (overlayIds[z][x][y] and 0x7FFF).toInt()
+
+    fun getUnderlayId(z: Int, x: Int, y: Int) = (underlayIds[z][x][y] and 0x7FFF).toInt()
+
     fun getOverlayPath(z: Int, x: Int, y: Int) = overlayPaths[z][x][y]
     fun getOverlayRotation(z: Int, x: Int, y: Int) = overlayRotations[z][x][y]
-    fun getUnderlayId(z: Int, x: Int, y: Int) = (underlayIds[z][x][y].toUByte()).toInt()
     fun isLinkedBelow(z: Int, x: Int, y: Int) = (getTileSetting(z, x, y) and 0x2) > 0
     fun isVisibleBelow(z: Int, x: Int, y: Int): Boolean = getTileSetting(z, x, y) and 0x8 > 0
 
