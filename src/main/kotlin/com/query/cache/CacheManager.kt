@@ -57,24 +57,25 @@ object CacheManager {
             logger.info { "Looking for cache Updates" }
 
             val caches = Gson().fromJson(URL(CACHE_DOWNLOAD_LOCATION).readText(), Array<CacheInfo>::class.java)
-            val cacheInfo = if(revision == 0) getLatest(caches) else findRevision(revision,caches)
-            updateAvailable = updateAvailable(cacheInfo.timestamp)
-            if(updateAvailable) {
-                if (gameWorld == 0) {
-                    if (revision == 0) {
-                        revision = cacheInfo.builds.first().major
-                    }
+            val cacheInfo = if(revision == -1) getLatest(caches) else findRevision(revision,caches)
+
+            revision = cacheInfo.builds.first().major
+
+            if (gameWorld != 0) {
+                if(gameType == GameType.OLDSCHOOL) {
+                    DownloadOSRS.init()
+                }
+            } else {
+                updateAvailable = updateAvailable(cacheInfo.timestamp)
+
+                if(updateAvailable) {
                     DownloadOpenRS2.downloadCache(cacheInfo)
                     ZipUtils.unZip()
-                } else {
-                   if(gameType == GameType.OLDSCHOOL) {
-                       DownloadOSRS.init()
-                   }
+                    saveXteas(cacheInfo.id)
+                    properties.setProperty("${gameType.getName()}-cache-version-${revision}", cacheInfo.timestamp)
+                    saveProperties(properties)
+                    File(FileUtil.getBase(),"/cache.zip").delete()
                 }
-                saveXteas(cacheInfo.id)
-                properties.setProperty("${gameType.getName()}-cache-version-${revision}", cacheInfo.timestamp)
-                saveProperties(properties)
-                File(FileUtil.getBase(),"/cache.zip").delete()
             }
         }
 
@@ -97,12 +98,15 @@ object CacheManager {
     }
 
     private fun updateAvailable(timestamp: String) : Boolean {
+        System.out.println(getCacheLocation().path)
         if(getCacheLocation().listFiles() == null) {
             return true
         }
         if(getCacheLocation().listFiles()?.isEmpty()!!) {
             return true
         }
+        System.out.println("New Time: ${timestamp}")
+        System.out.println("Time: ${properties.getProperty("${gameType.getName()}-cache-version-${revision}")}")
         return properties.getProperty("${gameType.getName()}-cache-version-${revision}") != timestamp
     }
 

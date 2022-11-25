@@ -8,4 +8,5 @@ object Constants {
     const val CACHE_DOWNLOAD_LOCATION = "https://archive.openrs2.org/caches.json"
     var properties : Properties = Properties()
     lateinit var library : CacheLibrary
+    const val OVERLAY_SHORT_BREAKING_CHANGE_REV_NUMBER = 209
 }

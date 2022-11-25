@@ -1,5 +1,7 @@
 package com.query.game.map.region
 
+import com.query.Application
+import com.query.Constants.OVERLAY_SHORT_BREAKING_CHANGE_REV_NUMBER
 import com.query.game.map.region.HeightCalculations.calculate
 import com.query.game.map.region.data.Location
 import com.query.game.map.region.data.LocationsDefinition
@@ -12,6 +14,8 @@ const val regionSizeY = 64
 const val regionSizeZ = 4
 
 class Region(id : Int) {
+
+    private val readOverlayAsShort = Application.revision >= OVERLAY_SHORT_BREAKING_CHANGE_REV_NUMBER
 
     val regionID: Int
     val baseX: Int
@@ -77,9 +81,9 @@ class Region(id : Int) {
     fun getTileHeight(z: Int, x: Int, y: Int) = tileHeights[z][x][y]
     fun getTileSetting(z: Int, x: Int, y: Int) = tileSettings[z][x][y]
 
-    fun getOverlayId(z: Int, x: Int, y: Int) = (overlayIds[z][x][y] and 0x7FFF).toInt()
+    fun getOverlayId(z: Int, x: Int, y: Int) = (overlayIds[z][x][y] and if(readOverlayAsShort) 0xFF else 0x7FFF).toInt()
 
-    fun getUnderlayId(z: Int, x: Int, y: Int) = (underlayIds[z][x][y] and 0x7FFF).toInt()
+    fun getUnderlayId(z: Int, x: Int, y: Int) = (underlayIds[z][x][y] and if(readOverlayAsShort) 0xFF else 0x7FFF).toInt()
 
     fun getOverlayPath(z: Int, x: Int, y: Int) = overlayPaths[z][x][y]
     fun getOverlayRotation(z: Int, x: Int, y: Int) = overlayRotations[z][x][y]

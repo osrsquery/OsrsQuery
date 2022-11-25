@@ -348,7 +348,7 @@ object Application {
             .accepts("revision", "The revision you wish to dump")
             .withRequiredArg()
             .ofType(Int::class.java)
-        .defaultsTo(0)
+        .defaultsTo(-1)
 
         val game: ArgumentAcceptingOptionSpec<GameType> = parser
             .accepts("game", "Select a Game type you wish to download")

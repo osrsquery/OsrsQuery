@@ -1,13 +1,18 @@
 package com.query.game.map.region
 
+import com.query.Application
+import com.query.Constants
 import com.query.game.map.region.data.MapDefinition
 import com.query.game.map.region.data.Tile
 import com.query.utils.byte
 import com.query.utils.uByte
+import com.query.utils.uShort
 import java.nio.ByteBuffer
 
 
 class MapLoader {
+
+	private val readOverlayAsShort = Application.revision >= Constants.OVERLAY_SHORT_BREAKING_CHANGE_REV_NUMBER
 
 	fun load(regionX: Int, regionY: Int, b: ByteArray): MapDefinition {
 		val map = MapDefinition(regionX,regionY)
@@ -24,7 +29,7 @@ class MapLoader {
 					tiles[z][x][y] = Tile()
 					val tile = tiles[z][x][y]
 					while (true) {
-						val attribute: Int = buffer.short.toInt()
+						val attribute: Int = if (readOverlayAsShort) buffer.uShort else buffer.uByte
 						if (attribute == 0) {
 							break
 						} else if (attribute == 1) {
@@ -33,7 +38,7 @@ class MapLoader {
 							break
 						} else if (attribute <= 49) {
 							tile.attrOpcode = attribute
-							tile.overlayId = buffer.short
+							tile.overlayId = if (readOverlayAsShort) buffer.uShort.toShort() else buffer.uByte.toShort()
 							tile.overlayPath = ((attribute - 2) / 4).toByte()
 							tile.overlayRotation = (attribute - 2 and 3).toByte()
 						} else if (attribute <= 81) {
