@@ -3,10 +3,10 @@ package com.query.cache.definitions.impl
 import com.query.Application
 import com.query.Application.logger
 import com.query.Constants.library
+import com.query.cache.definitions.Definition
 import com.query.cache.definitions.Loader
 import com.query.cache.definitions.Serializable
 import com.query.dump.DefinitionsTypes
-import com.query.cache.definitions.Definition
 import com.query.utils.*
 import java.io.DataOutputStream
 import java.io.IOException
@@ -39,7 +39,8 @@ data class NpcDefinition(
     var hasRenderPriority : Boolean = false,
     var ambient : Int = 0,
     var contrast : Int = 0,
-    var headIcon : Int = -1,
+    var headIconArchiveIds: IntArray? = null,
+    var headIconSpriteIndex: IntArray? = null,
     var rotation : Int = 32,
     var configs: MutableList<Int>? = null,
     var varbitId : Int = -1,
@@ -179,9 +180,13 @@ data class NpcDefinition(
             dos.writeByte(101)
             dos.writeByte(contrast)
         }
-        if (headIcon != -1) {
+
+        if (headIconArchiveIds != null) {
             dos.writeByte(102)
-            dos.writeShort(headIcon)
+            repeat(headIconArchiveIds!!.size) {
+                dos.writeShort(headIconArchiveIds!![it])
+                dos.writeShort(headIconSpriteIndex!![it])
+            }
         }
 
         if (rotation != 32) {
@@ -255,6 +260,11 @@ class NpcProvider(val latch: CountDownLatch?) : Loader, Runnable {
 
     override val revisionMin = 1
 
+    var archiveRevision = 1
+    val REV_210_NPC_ARCHIVE_REV = 1493
+
+    fun newHeadIcons() = archiveRevision >= REV_210_NPC_ARCHIVE_REV
+
     override fun run() {
         val start: Long = System.currentTimeMillis()
         Application.store(NpcDefinition::class.java, load().definition)
@@ -265,6 +275,7 @@ class NpcProvider(val latch: CountDownLatch?) : Loader, Runnable {
 
     override fun load(): Serializable {
         val archive = library.index(IndexType.CONFIGS).archive(ConfigType.NPC.id)!!
+        archiveRevision = archive.revision
         val definitions = archive.fileIds().map {
            decode(ByteBuffer.wrap(archive.file(it)?.data), NpcDefinition(it))
         }
@@ -331,7 +342,35 @@ class NpcProvider(val latch: CountDownLatch?) : Loader, Runnable {
             99 -> definition.hasRenderPriority = true
             100 -> definition.ambient = buffer.byte.toInt()
             101 -> definition.contrast = buffer.byte.toInt()
-            102 -> definition.headIcon = buffer.uShort
+            102 -> {
+                if (!newHeadIcons()) {
+                    definition.headIconArchiveIds = intArrayOf(-1)
+                    definition.headIconSpriteIndex = IntArray(buffer.uShort)
+                } else {
+                    val bitfield = buffer.uByte
+                    var size = 0
+
+                    var pos = bitfield
+                    while (pos != 0) {
+                        ++size
+                        pos = pos shr 1
+                    }
+                    definition.headIconArchiveIds = IntArray(size)
+                    definition.headIconSpriteIndex = IntArray(size)
+
+                    for (i in 0 until size) {
+                        if (bitfield and (1 shl i) == 0) {
+                            definition.headIconArchiveIds!![i] = -1
+                            definition.headIconSpriteIndex!![i] = -1
+                        } else {
+                            definition.headIconArchiveIds!![i] = buffer.uShort
+                            definition.headIconSpriteIndex!![i] = buffer.shortSmart - 1
+                        }
+                    }
+
+
+                }
+            }
             103 -> definition.rotation = buffer.uShort
             106 -> {
                 definition.varbitId = buffer.uShort

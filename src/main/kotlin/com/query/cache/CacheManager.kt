@@ -98,15 +98,12 @@ object CacheManager {
     }
 
     private fun updateAvailable(timestamp: String) : Boolean {
-        System.out.println(getCacheLocation().path)
         if(getCacheLocation().listFiles() == null) {
             return true
         }
         if(getCacheLocation().listFiles()?.isEmpty()!!) {
             return true
         }
-        System.out.println("New Time: ${timestamp}")
-        System.out.println("Time: ${properties.getProperty("${gameType.getName()}-cache-version-${revision}")}")
         return properties.getProperty("${gameType.getName()}-cache-version-${revision}") != timestamp
     }
 
