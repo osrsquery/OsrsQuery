@@ -125,7 +125,7 @@ object Application {
                     Textures().init()
                     Dump317.init()
 
-                    ModelOrganization.init()
+                    //ModelOrganization.init()
                     dumpMapImages(true)
                     dumpMapImages(false)
 
