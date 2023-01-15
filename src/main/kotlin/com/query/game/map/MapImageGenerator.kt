@@ -19,7 +19,6 @@ import java.nio.ByteBuffer
 import com.query.game.map.region.data.Location
 import com.query.game.map.region.regionSizeX
 import com.query.game.map.region.regionSizeY
-import com.query.utils.image.BigBufferedImage
 import java.awt.RenderingHints
 import java.io.File
 import javax.imageio.ImageIO

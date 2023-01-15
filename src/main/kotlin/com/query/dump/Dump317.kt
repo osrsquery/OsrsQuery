@@ -12,6 +12,9 @@ import com.query.Application.spotanimations
 import com.query.Application.textures
 import com.query.Application.underlays
 import com.query.Application.varbits
+import com.query.TaskType
+import com.query.cache.CacheManager
+import com.query.cache.definitions.impl.*
 import com.query.game.map.MapImageGenerator
 import com.query.game.map.builders.MapImageBuilder
 import com.query.utils.FileUtil
@@ -23,6 +26,8 @@ import org.apache.commons.io.FileUtils
 import java.io.DataOutputStream
 import java.io.File
 import java.io.FileOutputStream
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.Executors
 import kotlin.system.measureTimeMillis
 
 enum class DataType {
@@ -167,4 +172,52 @@ object Dump317 {
 
     }
 
+}
+
+fun main() {
+    Application.revision = 210
+    CacheManager.initialize()
+
+    val latch = CountDownLatch(18)
+
+    Application.writeData = false
+
+
+    val commands = listOf(
+        AreaProvider(latch),
+        EnumProvider(latch),
+        HealthBarProvider(latch),
+        InvProvider(latch),
+        MusicProvider(latch),
+        JingleProvider(latch),
+        ItemProvider(latch),
+        KitProvider(latch),
+        NpcProvider(latch),
+        ObjectProvider(latch),
+        OverlayProvider(latch),
+        ParamProvider(latch),
+        SequenceProvider(latch),
+        SpotAnimationProvider(latch),
+        TextureProvider(latch),
+        UnderlayProvider(latch),
+        VarbitProvider(latch),
+    )
+    SpriteProvider(latch).run()
+
+    val availableCores = Runtime.getRuntime().availableProcessors()
+
+    if (availableCores > 4) {
+        val pool = Executors.newFixedThreadPool(4)
+        commands.forEach(pool::execute)
+        pool.shutdown()
+    } else {
+        commands.forEach(Runnable::run)
+    }
+    latch.await()
+
+    SpriteDumper().init()
+    MapSceneDumper().init()
+    OverlayImages().init()
+    Textures().init()
+    Dump317.init()
 }

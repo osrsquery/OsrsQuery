@@ -137,8 +137,14 @@ data class SequenceDefinition(
 
         if (mask != null) {
             dos.writeByte(17)
-            dos.writeByte(mask!!.size)
-            (mask!!.indices).filter { mask!![it] }.forEach(dos::writeByte)
+
+
+            dos.writeByte(mask!!.filter { it }.size)
+            mask!!.forEachIndexed { index, state ->
+                if(state) {
+                    dos.writeByte(index)
+                }
+            }
         }
 
         dos.writeByte(0)

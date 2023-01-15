@@ -5,9 +5,7 @@ import com.query.game.map.builders.HeightMapImageBuilder
 import com.query.game.map.region.RegionLoader
 import com.query.game.map.region.regionSizeX
 import com.query.game.map.region.regionSizeY
-import com.query.utils.image.BigBufferedImage
 import com.query.utils.FileUtil
-import com.query.utils.revisionBefore
 import mu.KotlinLogging
 import java.awt.Color
 import java.awt.RenderingHints

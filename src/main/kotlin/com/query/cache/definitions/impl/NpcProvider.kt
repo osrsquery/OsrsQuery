@@ -183,6 +183,7 @@ data class NpcDefinition(
 
         if (headIconArchiveIds != null) {
             dos.writeByte(102)
+            dos.writeShort(headIconArchiveIds!!.size)
             repeat(headIconArchiveIds!!.size) {
                 dos.writeShort(headIconArchiveIds!![it])
                 dos.writeShort(headIconSpriteIndex!![it])

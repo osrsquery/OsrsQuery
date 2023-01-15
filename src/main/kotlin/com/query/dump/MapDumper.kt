@@ -61,25 +61,23 @@ object MapDumper {
 
                 if (mapID != -1) {
                     val mapData: ByteArray? = Constants.library.data(5, "m${x}_${y}")
-                    if (mapData != null) {
-                        gzip(FileUtil.getFile("dump317/index4/", "${mapID}.gz"),mapData)
-                    } else {
-                        failedMaps[regionId] = Pair(mapID,landscapeID)
+                    mapData?.let { gzip(FileUtil.getFile("dump317/index4/", "${mapID}.gz"),it) } ?: run {
+                        failedMaps[regionId] = Pair(mapID, landscapeID)
                     }
                 }
 
                 if (landscapeID != -1) {
                     val keys = XteaLoader.getKeys(regionId)
-                    if (keys != null) {
+
+                    keys?.let {
                         val landscapeData: ByteArray? = Constants.library.data(5, "l${x}_${y}", keys)
-                        if (landscapeData != null) {
-                            gzip(FileUtil.getFile("dump317/index4/", "${landscapeID}.gz"), landscapeData)
-                        } else {
+                        landscapeData?.let { gzip(FileUtil.getFile("dump317/index4/", "${landscapeID}.gz"),it) } ?: run {
                             failedMaps[regionId] = Pair(mapID, landscapeID)
                         }
-                    } else {
+                    } ?: run {
                         missingKeys.add(regionId)
                     }
+
                 }
 
                 mapProgress.step()

@@ -56,7 +56,7 @@ object Application {
     /**
      * Write Types
      */
-    var writeData = false;
+    var writeData = false
 
     /**
      * Base Dir to store your data
