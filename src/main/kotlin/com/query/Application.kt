@@ -31,7 +31,7 @@ object Application {
     /**
      * What Revision the user wants to dump.
      */
-    var revision : Int = 0
+    var revision : Int = -1
 
     /**
      * What Game Type you wish to dump.
@@ -252,7 +252,7 @@ object Application {
     /**
      * Gets the health definitions.
      */
-    fun healths(): List<HealthBarDefinition>? {
+    fun healths(): List<HealthBarDefinition> {
         return definitions[HealthBarDefinition::class.java]?.filterIsInstance<HealthBarDefinition>()?: error("Health Bar Definitions not loaded.")
     }
 

@@ -2,6 +2,7 @@ package com.query.dump
 
 import com.query.Application
 import com.query.Application.areas
+import com.query.Application.healths
 import com.query.Application.items
 import com.query.Application.kits
 import com.query.Application.npcs
@@ -12,7 +13,6 @@ import com.query.Application.spotanimations
 import com.query.Application.textures
 import com.query.Application.underlays
 import com.query.Application.varbits
-import com.query.TaskType
 import com.query.cache.CacheManager
 import com.query.cache.definitions.impl.*
 import com.query.game.map.MapImageGenerator
@@ -53,85 +53,9 @@ object Dump317 {
 
         TextureDumper.init()
 
-        val providers = mapOf(
-            items() to DumpInfo(DataType.BOTH, "obj","Item"),
-            varbits() to DumpInfo(DataType.DAT, "varbit","Varbit"),
-            areas() to DumpInfo(DataType.BOTH, "areas","Area"),
-            kits() to DumpInfo(DataType.DAT, "idk","Identity Kit"),
-            sequences() to DumpInfo(DataType.DAT, "seq","Sequence"),
-            spotanimations() to DumpInfo(DataType.DAT, "spotanim","Spot Animation"),
-            npcs() to DumpInfo(DataType.BOTH, "npc","Npc"),
-            objects() to DumpInfo(DataType.BOTH, "loc","Object"),
-            textures() to DumpInfo(DataType.DAT, "textures","Texture")
-
-        )
-
-        providers.filterNot { it.value.dataType == DataType.BOTH }.forEach {
-
-            val defs = it.key
-            val settings = it.value
-            val progress = progress("Dumping ${settings.name} Definitions", defs.size)
-
-            val dat = DataOutputStream(FileOutputStream(FileUtil.getFile("dump317/configs/","${settings.fileName}.dat")))
-
-            dat.writeShort(defs.size)
-
-            defs.forEach { def ->
-                def.encode(dat)
-                progress.step()
-            }
-
-            dat.close()
-        }
-
-        providers.filter { it.value.dataType == DataType.BOTH }.forEach {
-
-            val defs = it.key
-            val settings = it.value
-            val progress = progress("Dumping ${settings.name} Definitions", defs.size)
-
-            val dat = DataOutputStream(FileOutputStream(FileUtil.getFile("dump317/configs/","${settings.fileName}.dat")))
-            val idx = DataOutputStream(FileOutputStream(FileUtil.getFile("dump317/configs/","${settings.fileName}.idx")))
-
-            idx.writeShort(defs.size)
-            dat.writeShort(defs.size)
-
-            defs.forEach { def ->
-                val start = dat.size()
-                def.encode(dat)
-                val end = dat.size()
-                idx.writeShort(end - start)
-                progress.step()
-            }
-
-            dat.close()
-            idx.close()
-
-        }
-
-        val progressFloors = progress("Writing Floors", underlays().size + overlays().size)
-
-
-        val floorDat = DataOutputStream(FileOutputStream(FileUtil.getFile("dump317/configs/","flo.dat")))
-
-        floorDat.writeShort(underlays().size)
-
-        underlays().forEach {
-            it.encode(floorDat)
-            progressFloors.step()
-        }
-
-        floorDat.writeShort(overlays().size)
-
-        overlays().forEach {
-            it.encode(floorDat)
-            progressFloors.step()
-        }
-
-        floorDat.close()
-
         ModelDumper.init()
         MapDumper.init()
+        writeConfigs()
 
         val progress = progress("Copying Existing Stuff", 3)
 
@@ -144,7 +68,7 @@ object Dump317 {
 
         progress.close()
 
-        val map = MapImageBuilder().
+       /* val map = MapImageBuilder().
             outline(true).
             label(true).
             functions(true).
@@ -168,7 +92,112 @@ object Dump317 {
         val timer = measureTimeMillis {
             dumper.draw()
         }
-        logger.info { "Map Images Written in ${TimeUtils.millsToFormat(timer)}" }
+        logger.info { "Map Images Written in ${TimeUtils.millsToFormat(timer)}" }*/
+
+    }
+
+    private fun writeConfigs() {
+
+
+        val providers = mapOf(
+            items() to DumpInfo(DataType.BOTH, "obj","Item"),
+            varbits() to DumpInfo(DataType.DAT, "varbit","Varbit"),
+            areas() to DumpInfo(DataType.BOTH, "areas","Area"),
+            kits() to DumpInfo(DataType.DAT, "idk","Identity Kit"),
+            sequences() to DumpInfo(DataType.DAT, "seq","Sequence"),
+            spotanimations() to DumpInfo(DataType.DAT, "spotanim","Spot Animation"),
+            healths() to DumpInfo(DataType.DAT, "healths","Healths Bars"),
+            npcs() to DumpInfo(DataType.BOTH, "npc","Npc"),
+            objects() to DumpInfo(DataType.BOTH, "loc","Object"),
+            textures() to DumpInfo(DataType.DAT, "textures","Texture")
+
+        )
+
+        providers.filterNot { it.value.dataType == DataType.BOTH }.forEach {
+
+            val defs = it.key
+            val settings = it.value
+            val progress = progress("Dumping ${settings.name} Definitions", defs.size)
+
+            val dat = DataOutputStream(FileOutputStream(FileUtil.getFile("dump317/configs/","${settings.fileName}.dat")))
+
+            dat.writeShort(defs.size)
+
+            defs.forEach { def ->
+                def.encode(dat)
+                progress.step()
+            }
+
+            dat.close()
+            progress.close()
+        }
+
+        providers.filter { it.value.dataType == DataType.BOTH }.forEach {
+
+            val defs = it.key
+            val settings = it.value
+            val progress = progress("Dumping ${settings.name} Definitions", defs.size)
+
+            val dat = DataOutputStream(FileOutputStream(FileUtil.getFile("dump317/configs/","${settings.fileName}.dat")))
+            val idx = DataOutputStream(FileOutputStream(FileUtil.getFile("dump317/configs/","${settings.fileName}.idx")))
+
+            idx.writeShort(defs.size)
+
+            dat.writeShort(defs.size)
+
+            defs.forEach { def ->
+                val start = dat.size()
+                def.encode(dat)
+                val end = dat.size()
+                idx.writeShort(end - start)
+                progress.step()
+            }
+
+            dat.close()
+            idx.close()
+            progress.close()
+        }
+
+        val progressFloors = progress("Writing Floors", underlays().size + overlays().size)
+        val floorDat = DataOutputStream(FileOutputStream(FileUtil.getFile("dump317/configs/","flo.dat")))
+
+        floorDat.writeShort(underlays().size)
+
+        underlays().forEach {
+            it.encode(floorDat)
+            progressFloors.step()
+        }
+
+        floorDat.writeShort(overlays().size)
+
+        overlays().forEach {
+            it.encode(floorDat)
+            progressFloors.step()
+        }
+
+        progressFloors.close()
+
+        /*val progress = progress("Encoding 317", 9);
+
+        val dos = DataOutputStream(FileOutputStream(FileUtil.getFile("dump317/configs/", "loc.dat")))
+        val idx = DataOutputStream(FileOutputStream(FileUtil.getFile("dump317/configs/", "loc.idx")))
+
+        dos.writeShort(objects().size)
+        idx.writeShort(objects().size)
+
+        for (i in 0 until objects().size) {
+            val def = objects()[i]
+            val start = dos.size()
+            def.encode(dos)
+            val end = dos.size()
+            idx.writeShort(end - start)
+        }
+
+        dos.close()
+        idx.close()
+        progress.step()*/
+
+
 
     }
 

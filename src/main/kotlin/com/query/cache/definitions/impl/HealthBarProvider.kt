@@ -28,7 +28,51 @@ data class HealthBarDefinition(
 ): Definition() {
 
     override fun encode(dos: DataOutputStream) {
-        TODO("Not yet implemented")
+        if (field3276 != 0) {
+            dos.writeByte(1)
+            dos.writeShort(field3276)
+        }
+        if (field3277 != 255) {
+            dos.writeByte(2)
+            dos.writeByte(field3277)
+        }
+        if (field3278 != 255) {
+            dos.writeByte(3)
+            dos.writeByte(field3278)
+        }
+        if (field3283 != -1) {
+            dos.writeByte(4)
+        }
+        if (field3275 != 70) {
+            dos.writeByte(5)
+            dos.writeShort(field3275)
+        }
+        if (field3272 != 1) {
+            dos.writeByte(6)
+            dos.writeByte(field3272)
+        }
+        if (healthBarFrontSpriteId != -1) {
+            dos.writeByte(7)
+            dos.writeShort(healthBarFrontSpriteId)
+        }
+        if (healthBarBackSpriteId != -1) {
+            dos.writeByte(8)
+            dos.writeShort(healthBarBackSpriteId)
+        }
+        if (field3283 != -1) {
+            dos.writeByte(11)
+            dos.writeShort(field3283)
+        }
+        if (healthScale != 30) {
+            dos.writeByte(14)
+            dos.writeByte(healthScale)
+        }
+        if (healthBarPadding != 0) {
+            dos.writeByte(15)
+            dos.writeByte(healthBarPadding)
+        }
+
+        dos.writeByte(0)
     }
 
 }
