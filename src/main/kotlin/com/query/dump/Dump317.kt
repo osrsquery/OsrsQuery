@@ -68,7 +68,7 @@ object Dump317 {
 
         progress.close()
 
-       /* val map = MapImageBuilder().
+       val map = MapImageBuilder().
             outline(true).
             label(true).
             functions(true).
@@ -92,7 +92,7 @@ object Dump317 {
         val timer = measureTimeMillis {
             dumper.draw()
         }
-        logger.info { "Map Images Written in ${TimeUtils.millsToFormat(timer)}" }*/
+        logger.info { "Map Images Written in ${TimeUtils.millsToFormat(timer)}" }
 
     }
 
@@ -176,28 +176,6 @@ object Dump317 {
         }
 
         progressFloors.close()
-
-        /*val progress = progress("Encoding 317", 9);
-
-        val dos = DataOutputStream(FileOutputStream(FileUtil.getFile("dump317/configs/", "loc.dat")))
-        val idx = DataOutputStream(FileOutputStream(FileUtil.getFile("dump317/configs/", "loc.idx")))
-
-        dos.writeShort(objects().size)
-        idx.writeShort(objects().size)
-
-        for (i in 0 until objects().size) {
-            val def = objects()[i]
-            val start = dos.size()
-            def.encode(dos)
-            val end = dos.size()
-            idx.writeShort(end - start)
-        }
-
-        dos.close()
-        idx.close()
-        progress.step()*/
-
-
 
     }
 
