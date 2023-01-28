@@ -37,7 +37,7 @@ data class ObjectDefinition(
     var ambient: Int = 0,
     var contrast: Int = 0,
     var actions : MutableList<String?> = mutableListOf(null, null, null, null, null),
-    var clipType: Int = 2,
+    var interactType: Int = 2,
     var mapSceneID: Int = -1,
     var blockingMask: Int = 0,
     var recolorToReplace: ShortArray? = null,
@@ -49,7 +49,7 @@ data class ObjectDefinition(
     var offsetY: Int = 0,
     var obstructsGround: Boolean = false,
     var randomizeAnimStart: Boolean = false,
-    var contouredGround: Int = -1,
+    var clipType: Int = -1,
     var category : Int = -1,
     var supportsItems: Int = -1,
     var configs: IntArray? = null,
@@ -102,7 +102,7 @@ data class ObjectDefinition(
             dos.writeByte(sizeY)
         }
 
-        if (clipType == 0) {
+        if (interactType == 0) {
             dos.writeByte(17)
         }
 
@@ -115,7 +115,7 @@ data class ObjectDefinition(
             dos.writeByte(wallOrDoor)
         }
 
-        if (contouredGround == 0) {
+        if (clipType == 0) {
             dos.writeByte(21)
         }
 
@@ -132,7 +132,7 @@ data class ObjectDefinition(
             dos.writeShort(animationId)
         }
 
-        if (clipType == 1) {
+        if (interactType == 1) {
             dos.writeByte(27)
         }
 
@@ -262,9 +262,9 @@ data class ObjectDefinition(
             }
         }
 
-        if (contouredGround != -1) {
+        if (clipType != -1) {
             dos.writeByte(81)
-            dos.writeByte(contouredGround)
+            dos.writeByte(clipType)
         }
 
         if (mapAreaId != -1) {
@@ -351,12 +351,12 @@ class ObjectProvider(val latch: CountDownLatch?) : Loader, Runnable {
             14 -> definition.sizeX = buffer.uByte
             15 -> definition.sizeY = buffer.uByte
             17 -> {
-                definition.clipType = 0
+                definition.interactType = 0
                 definition.blocksProjectile = false
             }
             18 -> definition.blocksProjectile = false
             19 -> definition.wallOrDoor = buffer.uByte
-            21 -> definition.contouredGround = 0
+            21 -> definition.clipType = 0
             22 -> definition.nonFlatShading = true
             23 -> definition.modelClipped = true
             24 -> {
@@ -365,7 +365,7 @@ class ObjectProvider(val latch: CountDownLatch?) : Loader, Runnable {
                     definition.animationId = -1
                 }
             }
-            27 -> definition.clipType = 1
+            27 -> definition.interactType = 1
             28 -> definition.decorDisplacement = buffer.uByte
             29 -> definition.ambient = buffer.byte.toInt()
             39 -> definition.contrast = buffer.byte.toInt() * 25
@@ -444,7 +444,7 @@ class ObjectProvider(val latch: CountDownLatch?) : Loader, Runnable {
                     buffer.uShort
                 }.toArray()
             }
-            81 -> definition.contouredGround = (buffer.uByte) * 256
+            81 -> definition.clipType = (buffer.uByte) * 256
             60,82 -> definition.mapAreaId = buffer.uShort
             89 -> definition.randomizeAnimStart = true
             92 -> {
@@ -498,7 +498,7 @@ class ObjectProvider(val latch: CountDownLatch?) : Loader, Runnable {
             }
         }
         if (definition.supportsItems == -1) {
-            definition.supportsItems = if (definition.clipType != 0) 1 else 0
+            definition.supportsItems = if (definition.interactType != 0) 1 else 0
         }
     }
 
