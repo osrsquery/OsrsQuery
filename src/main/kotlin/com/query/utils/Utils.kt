@@ -20,6 +20,15 @@ fun Klaxon.toPrettyJsonString(value: Any): String {
     return (Parser().parse(builder) as JsonBase).toJsonString(true)
 }
 
+inline fun <T> T?.whenNull(block: T?.() -> Unit): T? {
+    if (this == null) block()
+    return this@whenNull
+}
+
+inline fun <T> T?.whenNonNull(block: T.() -> Unit): T? {
+    this?.block()
+    return this@whenNonNull
+}
 fun CacheLibrary.index(type : IndexType) = index(type.number)
 
 fun CacheLibrary.data(type : IndexType,archive: String, xtea: IntArray? = null) = this.data(type.number, archive, 0, xtea)

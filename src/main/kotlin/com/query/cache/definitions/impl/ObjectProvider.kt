@@ -48,7 +48,7 @@ data class ObjectDefinition(
     var offsetZ: Int = 0,
     var offsetY: Int = 0,
     var obstructsGround: Boolean = false,
-    var randomizeAnimStart: Boolean = false,
+    var randomizeAnimStart: Boolean = true,
     var clipType: Int = -1,
     var category : Int = -1,
     var supportsItems: Int = -1,
