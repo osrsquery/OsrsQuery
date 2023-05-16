@@ -352,6 +352,7 @@ class ObjectProvider(val latch: CountDownLatch?) : Loader, Runnable {
             15 -> definition.sizeY = buffer.uByte
             17 -> {
                 definition.interactType = 0
+                definition.blocksProjectile = false
             }
             18 -> definition.blocksProjectile = false
             19 -> definition.wallOrDoor = buffer.uByte
@@ -367,7 +368,7 @@ class ObjectProvider(val latch: CountDownLatch?) : Loader, Runnable {
             27 -> definition.interactType = 1
             28 -> definition.decorDisplacement = buffer.uByte
             29 -> definition.ambient = buffer.byte.toInt()
-            39 -> definition.contrast = buffer.byte.toInt()
+            39 -> definition.contrast = buffer.byte.toInt() * 25
             in 30..34 -> {
                 definition.actions[opcode - 30] = buffer.rsString
                 if (definition.actions[opcode - 30].equals("Hidden", true)) {
@@ -400,9 +401,9 @@ class ObjectProvider(val latch: CountDownLatch?) : Loader, Runnable {
             67 -> definition.modelSizeY = buffer.uShort
             68 -> definition.mapSceneID = buffer.uShort
             69 -> definition.blockingMask = buffer.byte.toInt()
-            70 -> definition.offsetX = buffer.short.toInt()
-            71 -> definition.offsetZ = buffer.short.toInt()
-            72 -> definition.offsetY = buffer.short.toInt()
+            70 -> definition.offsetX = buffer.uShort
+            71 -> definition.offsetZ = buffer.uShort
+            72 -> definition.offsetY = buffer.uShort
             73 -> definition.obstructsGround = true
             74 -> definition.isHollow = true
             75 -> definition.supportsItems = buffer.uByte
@@ -479,7 +480,26 @@ class ObjectProvider(val latch: CountDownLatch?) : Loader, Runnable {
             else -> logger.warn { "Unhandled object definition opcode with id: ${opcode}." }
         }
         while (true)
+        post(definition)
         return definition
+    }
+
+    private fun post(definition: ObjectDefinition) {
+        if (definition.wallOrDoor == -1) {
+            definition.wallOrDoor = 0
+            if (definition.objectModels != null && (definition.objectTypes == null || definition.objectTypes!![0] == 10)) {
+                definition.wallOrDoor = 1
+            }
+            for (it in 0..4) {
+                if (definition.actions[it] != null) {
+                    definition.wallOrDoor = 1
+                    break
+                }
+            }
+        }
+        if (definition.supportsItems == -1) {
+            definition.supportsItems = if (definition.interactType != 0) 1 else 0
+        }
     }
 
 }
