@@ -2,6 +2,7 @@ package com.query.utils
 
 import java.text.DecimalFormat
 import java.time.LocalDateTime
+import java.time.ZoneOffset
 import java.util.*
 import java.util.regex.Pattern
 import java.time.format.DateTimeFormatter
@@ -11,6 +12,10 @@ fun String.stringToTimestamp() : LocalDateTime {
     val time = this.replace("T"," ").replaceAfterLast(".","")
     val dateTime = LocalDateTime.parse(time.replaceLastLetter(""), formatter)
     return dateTime
+}
+
+fun LocalDateTime.toEchochUTC() : Long {
+    return this.toEpochSecond(ZoneOffset.UTC)
 }
 
 fun String.replaceLastLetter(newLetter: String): String {

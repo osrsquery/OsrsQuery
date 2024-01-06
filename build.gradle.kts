@@ -6,12 +6,14 @@ buildscript {
 
 plugins {
     kotlin("jvm") version "1.8.21"
+    id("com.github.johnrengelman.shadow") version "7.0.0" // Add the Shadow plugin
 }
 
 allprojects {
     apply(plugin = "kotlin")
     apply(plugin = "idea")
     apply(plugin = "org.jetbrains.kotlin.jvm")
+    apply(plugin = "com.github.johnrengelman.shadow")
 
     group = "com.query"
     version = "1.0.0"

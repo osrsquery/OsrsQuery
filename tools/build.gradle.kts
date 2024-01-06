@@ -1,6 +1,5 @@
 dependencies {
     implementation(project(":cache"))
-    implementation(project(":common"))
 
     implementation("io.insert-koin:koin-core:${findProperty("koinVersion")}")
 

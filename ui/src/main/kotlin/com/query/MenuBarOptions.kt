@@ -6,21 +6,23 @@ import javax.swing.JMenuItem
 abstract class MenuOptionData(
     open val text: String,
     open val subItems: List<MenuOptionData> = emptyList(),
-    open val action: () -> Unit = {}
+    open var action: () -> Unit = {}
 )
 
 data class MenuOption(
     override val text: String,
     override val subItems: List<MenuOptionData> = emptyList(),
-    override val action: () -> Unit = {}
+    override var action: () -> Unit = {}
 ) : MenuOptionData(text, subItems, action)
 
 data class MenuOptionTheme(
     override val text: String,
     override val subItems: List<MenuOptionData> = emptyList(),
-) : MenuOptionData(text, subItems, {
-    ThemeManager.switchToTheme(text.replace(" ",""))
-})
+) : MenuOptionData(text, subItems) {
+    init {
+        action = { ThemeManager.switchToTheme(text.replace(" ", "")) }
+    }
+}
 
 fun MenuOption.withSubItems(vararg items: MenuOptionData): MenuOption {
     return this.copy(subItems = items.toList())
@@ -30,16 +32,16 @@ fun MenuOptionTheme.withSubItems(vararg items: MenuOptionData): MenuOptionTheme 
     return this.copy(subItems = items.toList())
 }
 
-fun createMenu(name : String,menuOptions: List<MenuOptionData>): JMenu {
+fun createMenu(name: String, menuOptions: List<MenuOptionData>): JMenu {
     val menu = JMenu(name)
-    createMenuParent(menu,menuOptions);
+    createMenuParent(menu, menuOptions)
     return menu
 }
 
-fun createMenuParent(menu : JMenu, menuOptions: List<MenuOptionData>) {
+fun createMenuParent(menu: JMenu, menuOptions: List<MenuOptionData>) {
     for (menuItem in menuOptions) {
         if (menuItem.subItems.isNotEmpty()) {
-            val submenu = createMenu("",menuItem.subItems)
+            val submenu = createMenu("", menuItem.subItems)
             submenu.text = menuItem.text
             submenu.addActionListener { menuItem.action.invoke() }
             menu.add(submenu)
@@ -50,6 +52,7 @@ fun createMenuParent(menu : JMenu, menuOptions: List<MenuOptionData>) {
         }
     }
 }
+
 
 enum class MenuItemEnum(
     val menuName : String,
