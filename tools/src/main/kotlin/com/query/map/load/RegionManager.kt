@@ -1,0 +1,49 @@
+package com.query.map.load
+
+import com.query.cache.definition.data.MapDefinition
+import com.query.cache.definition.data.MapObject
+import com.query.map.raster.Raster
+import com.query.types.Region
+import java.awt.image.BufferedImage
+
+class RegionManager(
+    val tiles: Map<Int, MapDefinition>,
+    private val regionRenderSize: Int = 3
+) {
+    val width = regionRenderSize * 64
+    val height = regionRenderSize * 64
+    val scale = 4
+
+    fun renderRegion(settings: MapTileSettings, currentLevel: Int): BufferedImage {
+        val img = BufferedImage(width * scale, height * scale, BufferedImage.TYPE_INT_ARGB)
+        val raster = Raster(img)
+        val levels = settings.load()
+        for (index in currentLevel until levels.size) {
+            val level = levels[index]
+            level.drawTiles(0, 0, width, height, currentLevel, settings, raster)
+        }
+        return img
+    }
+
+    fun loadTiles(regionX: Int, regionY: Int) {
+        for (rX in regionX until regionX + regionRenderSize) {
+            for (rY in regionY until regionY + regionRenderSize) {
+                setOrLoadTiles(Region.id(rX, rY))
+            }
+        }
+    }
+
+    private fun setOrLoadTiles(region: Region): MapDefinition? {
+        return setOrLoadTiles(region.id)
+    }
+
+    private fun setOrLoadTiles(regionId: Int): MapDefinition? {
+        return tiles[regionId]
+    }
+
+    fun loadObjects(region: Region): MutableList<MapObject>? {
+        val def = setOrLoadTiles(region) ?: return null
+        return def.objects
+    }
+
+}

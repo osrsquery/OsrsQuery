@@ -2,6 +2,7 @@ package com.query.views
 
 import com.query.Application
 import com.query.ApplicationSettings
+import com.query.currentCache
 import com.query.openrs2.CacheInfo
 import com.query.openrs2.CacheManager
 import com.query.openrs2.DownloadWorker
@@ -174,6 +175,7 @@ class CacheSelector : JPanel() {
     private inner class InstallButtonActionListener(private val info: CacheInfo, private val existingCache: Boolean) : ActionListener {
         override fun actionPerformed(e: ActionEvent) {
             if (existingCache) {
+                currentCache = info
                 Application.setView(ViewTypes.DASH)
             } else {
                 if (cacheDownloading) return

@@ -47,6 +47,22 @@ object ApplicationSettings {
         return cacheFolder
     }
 
+    fun findDirectory(cache: CacheInfo, extra : String): File {
+        val cacheFolder = File(getBaseSaveLocation(), "/${cache.game}/${cache.builds.first().major}/${extra}")
+        if (!cacheFolder.exists()) {
+            cacheFolder.mkdirs()
+        }
+        return cacheFolder
+    }
+
+    fun findXteas(cache: CacheInfo): File {
+        val cacheFolder = File(getBaseSaveLocation(), "/${cache.game}/${cache.builds.first().major}/xteas.json")
+        if (!cacheFolder.exists()) {
+            cacheFolder.mkdirs()
+        }
+        return cacheFolder
+    }
+
     // Find cache folder based on a File object (no operation, just returns the input file)
     fun findCache(cache: File): File {
         return cache

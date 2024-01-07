@@ -11,8 +11,12 @@ dependencies {
     implementation("com.formdev:flatlaf-intellij-themes:3.2.5")
     // https://mvnrepository.com/artifact/org.apache.xmlgraphics/batik-transcoder
     implementation("org.apache.xmlgraphics:batik-transcoder:1.17")
-
-
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:${findProperty("kotlinCoroutinesVersion")}")
+    implementation("org.jetbrains.kotlinx:kotlinx-io-jvm:${findProperty("kotlinIoVersion")}")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:${findProperty("kotlinCoroutinesVersion")}")
+    implementation("com.fasterxml.jackson.core:jackson-core:${findProperty("jacksonVersion")}")
+    implementation("com.fasterxml.jackson.module:jackson-module-kotlin:${findProperty("jacksonVersion")}")
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${findProperty("jacksonVersion")}")
 }
 
 tasks {

@@ -31,8 +31,6 @@ object Application {
         ApplicationSettings.load()
         CacheManager.init()
         frame = createMainFrame()
-        startScreen = CacheSelector()
-        dash = Dashboard()
 
         frame.add(JPanel(), BorderLayout.NORTH)
         setView(ViewTypes.CACHE_SELECTOR)
@@ -44,8 +42,14 @@ object Application {
 
     fun setView(type : ViewTypes) {
         val view = when (type) {
-            ViewTypes.CACHE_SELECTOR -> startScreen
-            ViewTypes.DASH -> dash
+            ViewTypes.CACHE_SELECTOR -> {
+                startScreen = CacheSelector()
+                startScreen
+            }
+            ViewTypes.DASH -> {
+                dash = Dashboard()
+                dash
+            }
             else -> startScreen
         }
 

@@ -1,8 +1,12 @@
 package com.query.views.dashboard
 
+import com.query.ApplicationSettings
+import com.query.cache
+import com.query.cache.CacheDelegate
+import com.query.currentCache
 import com.query.utils.ImageUtils
 import com.query.views.dashboard.impl.MainViewer
-import com.query.views.dashboard.impl.MapViewer
+import com.query.views.dashboard.impl.map.MapViewer
 import java.awt.*
 import javax.swing.*
 import javax.swing.border.Border
@@ -19,9 +23,10 @@ class Dashboard : JPanel() {
     var currentToolOpen : ContentView? = null
 
     init {
-
+        if (cache == null) {
+            cache = CacheDelegate(ApplicationSettings.findCache(currentCache!!).absolutePath + "/cache/")
+        }
         layout = BorderLayout()
-
 
         val containerPanel = JPanel(BorderLayout())
 
@@ -35,7 +40,6 @@ class Dashboard : JPanel() {
         val customBorder: Border = BorderFactory.createMatteBorder(1, 0, 0, 0, Color.LIGHT_GRAY)
         bottomPane.border = customBorder
         bottomPane.preferredSize = Dimension(0, 50)
-
 
         val label = JLabel("Content Pane")
         contentPane.add(label)
@@ -74,8 +78,6 @@ class Dashboard : JPanel() {
 
         add(containerPanel)
 
-        add(containerPanel)
-
         switchTool(Tools.MAP_VIEWER)
     }
 
@@ -91,7 +93,7 @@ class Dashboard : JPanel() {
         contentPane.removeAll()
         contentPane.add(content.contentPane())
         bottomPane.removeAll()
-        bottomPane.add(content.contentPane())
+        bottomPane.add(content.bottomPane())
         currentToolOpen = content
         repaint()
         revalidate()
