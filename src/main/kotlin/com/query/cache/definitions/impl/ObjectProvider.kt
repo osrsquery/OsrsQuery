@@ -27,7 +27,8 @@ data class ObjectDefinition(
     var retextureToReplace: ShortArray? = null,
     var sizeX: Int = 1,
     var sizeY: Int = 1,
-    var anInt2083: Int = 0,
+    var soundDistance: Int = 0,
+    var soundRetain: Int = 0,
     var ambientSoundIds: IntArray? = null,
     var offsetX: Int = 0,
     var nonFlatShading: Boolean = false,
@@ -57,8 +58,8 @@ data class ObjectDefinition(
     var varpId: Int = -1,
     var ambientSoundId: Int = -1,
     var modelClipped: Boolean = false,
-    var anInt2112: Int = 0,
-    var anInt2113: Int = 0,
+    var soundMin: Int = 0,
+    var soundMax: Int = 0,
     var blocksProjectile: Boolean = true,
     var params : MutableMap<Int,String> = mutableMapOf()
 ): Definition() {
@@ -245,17 +246,23 @@ data class ObjectDefinition(
             dos.writeByte(supportsItems)
         }
 
-        if (ambientSoundId != -1 || anInt2083 != 0) {
+        if (ambientSoundId != -1 || soundDistance != 0) {
             dos.writeByte(78)
             dos.writeShort(ambientSoundId)
-            dos.writeByte(anInt2083)
+            dos.writeByte(soundDistance)
+            if (revisionIsOrAfter(220)) {
+                dos.writeByte(soundRetain)
+            }
         }
 
-        if (anInt2112 != 0 || anInt2113 != 0 || anInt2083 != 0 && ambientSoundIds != null) {
+        if (soundMin != 0 || soundMax != 0 || soundDistance != 0 && ambientSoundIds != null) {
             dos.writeByte(79)
-            dos.writeShort(anInt2112)
-            dos.writeShort(anInt2113)
-            dos.writeByte(anInt2083)
+            dos.writeShort(soundMin)
+            dos.writeShort(soundMax)
+            dos.writeByte(soundDistance)
+            if (revisionIsOrAfter(220)) {
+                dos.writeByte(soundRetain)
+            }
             dos.writeByte(ambientSoundIds!!.size)
             for (i in ambientSoundIds!!.indices) {
                 dos.writeShort(ambientSoundIds!![i])
@@ -433,12 +440,18 @@ class ObjectProvider(val latch: CountDownLatch?) : Loader, Runnable {
             }
             78 -> {
                 definition.ambientSoundId = buffer.uShort
-                definition.anInt2083 = buffer.uByte
+                definition.soundDistance = buffer.uByte
+                if (revisionIsOrAfter(220)) {
+                    definition.soundRetain = buffer.uByte
+                }
             }
             79 -> {
-                definition.anInt2112 = buffer.uShort
-                definition.anInt2113 = buffer.uShort
-                definition.anInt2083 = buffer.uByte
+                definition.soundMin = buffer.uShort
+                definition.soundMax = buffer.uShort
+                definition.soundDistance = buffer.uByte
+                if (revisionIsOrAfter(220)) {
+                    definition.soundRetain = buffer.uByte
+                }
                 val length: Int = buffer.uByte
                 definition.ambientSoundIds = IntStream.range(0, length).map {
                     buffer.uShort

@@ -20,7 +20,7 @@ import com.query.game.map.builders.MapImageBuilder
 import com.query.utils.FileUtil
 import com.query.utils.TimeUtils
 import com.query.utils.progress
-import com.query.utils.revisionBefore
+import com.query.utils.revisionIsOrBefore
 import mu.KotlinLogging
 import org.apache.commons.io.FileUtils
 import java.io.DataOutputStream
@@ -82,7 +82,7 @@ object Dump317 {
         dumper.objects = objects().associateBy { it.id }
         dumper.overlays = overlays().associateBy { it.id }
         dumper.underlays = underlays().associateBy { it.id }
-        if(!revisionBefore(142)) {
+        if(!revisionIsOrBefore(142)) {
             dumper.areas = areas().associateBy { it.id }
         }
 

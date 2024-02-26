@@ -9,7 +9,7 @@ import com.query.cache.definitions.impl.ObjectProvider
 import com.query.utils.FileUtil.getFile
 import com.query.utils.IndexType
 import com.query.utils.progress
-import com.query.utils.revisionBefore
+import com.query.utils.revisionIsOrBefore
 import java.awt.Color
 import java.awt.image.BufferedImage
 import java.io.IOException
@@ -33,7 +33,7 @@ object MapFunctionsDumper {
         val progress = progress("Writing Area Sprites", functions.size.toLong())
         var index = 0
         functions.forEach {
-            ImageIO.write(it.value, "png", getFile("mapFunctions/","${if(revisionBefore(142)) it.key else index}.png"))
+            ImageIO.write(it.value, "png", getFile("mapFunctions/","${if(revisionIsOrBefore(142)) it.key else index}.png"))
             progress.step()
             index++
         }
@@ -42,7 +42,7 @@ object MapFunctionsDumper {
 
     fun getMapFunctions() : Map<Int,BufferedImage> {
         val data : MutableMap<Int,BufferedImage> = emptyMap<Int, BufferedImage>().toMutableMap()
-        if (revisionBefore(142)) {
+        if (revisionIsOrBefore(142)) {
             val functions = objects().filter { it.mapAreaId != -1 }
             functions.filter { it.mapAreaId != -1 }.forEachIndexed { index, area ->
                 val container: ByteArray = Constants.library.data(IndexType.SPRITES.number, 318)!!

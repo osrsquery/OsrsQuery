@@ -9,9 +9,7 @@ import com.query.game.map.HeightMapGenerator
 import com.query.game.map.MapImageGenerator
 import com.query.game.map.builders.HeightMapImageBuilder
 import com.query.game.map.builders.MapImageBuilder
-import com.query.utils.FileUtil
 import com.query.utils.TimeUtils
-import com.query.utils.revisionBefore
 import joptsimple.ArgumentAcceptingOptionSpec
 import joptsimple.OptionParser
 import joptsimple.ValueConverter

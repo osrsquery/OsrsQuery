@@ -7,6 +7,7 @@ import com.query.Constants.library
 import com.query.cache.definitions.Definition
 import com.query.cache.definitions.Loader
 import com.query.cache.definitions.Serializable
+import com.query.cache.definitions.Sound
 import com.query.dump.DefinitionsTypes
 import com.query.utils.*
 import java.io.DataOutputStream
@@ -14,12 +15,13 @@ import java.io.IOException
 import java.nio.ByteBuffer
 import java.util.concurrent.CountDownLatch
 
+
 data class SequenceDefinition(
     override val id: Int = 0,
     var frameIDs: IntArray? = null,
     var chatFrameIds: IntArray? = null,
     var frameLengths: IntArray? = null,
-    var frameSounds: IntArray? = null,
+    var frameSounds: Array<Sound?> = emptyArray(),
     var frameStep: Int = -1,
     var interleaveLeave: IntArray? = null,
     var stretches: Boolean = false,
@@ -29,13 +31,13 @@ data class SequenceDefinition(
     var maxLoops: Int = 99,
     var precedenceAnimating: Int = -1,
     var priority: Int = -1,
-    var skeletalId : Int = -1,
-    var skeletalRangeBegin : Int = -1,
-    var skeletalRangeEnd : Int = -1,
+    var skeletalId: Int = -1,
+    var skeletalRangeBegin: Int = -1,
+    var skeletalRangeEnd: Int = -1,
     var replyMode: Int = 2,
-    var skeletalSounds : MutableMap<Int,Int> = emptyMap<Int, Int>().toMutableMap(),
-    var mask : BooleanArray? = null,
-): Definition() {
+    var skeletalSounds: MutableMap<Int, Sound> = emptyMap<Int, Sound>().toMutableMap(),
+    var mask: BooleanArray? = null,
+) : Definition() {
 
     @Throws(IOException::class)
     override fun encode(dos: DataOutputStream) {
@@ -107,11 +109,22 @@ data class SequenceDefinition(
             }
         }
 
-        if (frameSounds != null && frameSounds!!.isNotEmpty()) {
+        if (frameSounds.isNotEmpty()) {
             dos.writeByte(13)
-            dos.writeByte(frameSounds!!.size)
-            for (i in 0 until frameSounds!!.size) {
-                dos.write24bitInt(frameSounds!![i])
+            dos.writeByte(frameSounds.size)
+            if (revisionIsOrBefore(119)) {
+                frameSounds.filterNotNull().forEach {
+                    val payload: Int = (it.location and 15) or ((it.id shl 8) or (it.loops shl 4 and 7))
+                    dos.write24bitInt(payload)
+                }
+            } else {
+                dos.writeByte(frameSounds.size)
+                frameSounds.filterNotNull().forEach {
+                    dos.writeShort(it.id)
+                    dos.writeByte(it.loops)
+                    dos.writeByte(it.location)
+                    dos.writeByte(it.retain)
+                }
             }
         }
 
@@ -123,9 +136,19 @@ data class SequenceDefinition(
         if (skeletalSounds.isNotEmpty()) {
             dos.writeByte(15)
             dos.writeShort(skeletalSounds.size)
-            skeletalSounds.forEach {
-                dos.writeShort(it.key)
-                dos.write24bitInt(it.value)
+            if (revisionIsOrBefore(119)) {
+                skeletalSounds.forEach {
+                    dos.writeShort(it.key)
+                    val payload: Int = (it.value.location and 15) or (it.value.id shl 8) or (it.value.loops shl 4 and 7)
+                    dos.write24bitInt(payload)
+                }
+            } else {
+                skeletalSounds.forEach {
+                    dos.writeShort(it.key)
+                    dos.writeByte(it.value.id)
+                    dos.writeByte(it.value.location)
+                    dos.writeByte(it.value.retain)
+                }
             }
         }
 
@@ -141,7 +164,7 @@ data class SequenceDefinition(
 
             dos.writeByte(mask!!.filter { it }.size)
             mask!!.forEachIndexed { index, state ->
-                if(state) {
+                if (state) {
                     dos.writeByte(index)
                 }
             }
@@ -169,7 +192,7 @@ class SequenceProvider(val latch: CountDownLatch?) : Loader, Runnable {
         val definitions = archive.fileIds().map {
             decode(ByteBuffer.wrap(archive.file(it)?.data), SequenceDefinition(it))
         }
-        return Serializable(DefinitionsTypes.SEQUENCES,this, definitions)
+        return Serializable(DefinitionsTypes.SEQUENCES, this, definitions)
     }
 
     fun decode(buffer: ByteBuffer, definition: SequenceDefinition): Definition {
@@ -188,6 +211,7 @@ class SequenceProvider(val latch: CountDownLatch?) : Loader, Runnable {
                     definition.frameIDs!![it] += (buffer.uShort) shl 16
                 }
             }
+
             2 -> definition.frameStep = buffer.uShort
             3 -> {
                 val length: Int = buffer.uByte
@@ -197,6 +221,7 @@ class SequenceProvider(val latch: CountDownLatch?) : Loader, Runnable {
                 }
                 definition.interleaveLeave!![length] = 9_999_999
             }
+
             4 -> definition.stretches = true
             5 -> definition.forcedPriority = buffer.uByte
             6 -> definition.leftHandItem = buffer.uShort
@@ -215,24 +240,84 @@ class SequenceProvider(val latch: CountDownLatch?) : Loader, Runnable {
                     definition.chatFrameIds!![it] += (buffer.uShort) shl 16
                 }
             }
+
             13 -> {
                 val length: Int = buffer.uByte
-                definition.frameSounds = IntArray(length)
-                (0 until length).forEach {
-                    definition.frameSounds!![it] = buffer.medium
+                definition.frameSounds = arrayOfNulls(length)
+
+                for (var4 in 0 until length) {
+                    val sound: Sound?
+
+                    if (revisionIsOrBefore(119)) {
+                        val payload: Int = buffer.medium
+                        val retain = 0
+
+                        val location: Int = payload and 15
+                        val id: Int = payload shr 8
+                        val loops: Int = payload shr 4 and 7
+
+                        sound = if (id >= 1 && loops >= 1 && location >= 0 && retain >= 0) {
+                            Sound(id, loops, location, retain)
+                        } else {
+                            null
+                        }
+                    } else {
+                        val id: Int = buffer.uShort
+                        val loops: Int = buffer.uByte
+                        val location: Int = buffer.uByte
+                        val retain: Int = buffer.uByte
+
+                        sound = if (id >= 1 && loops >= 1 && location >= 0 && retain >= 0) {
+                            Sound(id, loops, location, retain)
+                        } else {
+                            null
+                        }
+                    }
+
+                    definition.frameSounds[var4] = sound
                 }
             }
+
             14 -> definition.skeletalId = buffer.int
             15 -> {
-                val length = buffer.uShort
-                repeat(length) {
-                    definition.skeletalSounds[buffer.uShort] = buffer.medium
+
+                val size: Int = buffer.uShort
+                definition.skeletalSounds = emptyMap<Int, Sound>().toMutableMap()
+
+                for (pos in 0 until size) {
+                    val index: Int = buffer.uShort
+                    var var6 = Sound(0, 0, 0, 0)
+
+                    var retain = 0
+                    var payload: Int
+                    var location: Int
+                    var id: Int
+                    var loops: Int
+
+                    if (revisionIsOrBefore(119)) {
+                        payload = buffer.medium
+                        location = payload and 15
+                        id = payload shr 8
+                        loops = payload shr 4 and 7
+                    } else {
+                        id = buffer.uShort
+                        loops = buffer.uByte
+                        location = buffer.uByte
+                        retain = buffer.uByte
+                    }
+
+                    if (id >= 1 && loops >= 1 && location >= 0 && retain >= 0) {
+                        var6 = Sound(id, loops, location, retain)
+                    }
+                    definition.skeletalSounds[index] = var6
                 }
             }
+
             16 -> {
                 definition.skeletalRangeBegin = buffer.uShort
                 definition.skeletalRangeEnd = buffer.uShort
             }
+
             17 -> {
                 definition.mask = BooleanArray(256)
                 repeat(definition.mask!!.size) {
@@ -244,12 +329,12 @@ class SequenceProvider(val latch: CountDownLatch?) : Loader, Runnable {
                 }
 
             }
+
             0 -> break
             else -> logger.warn { "Unhandled seq definition opcode with id: ${opcode}." }
         } while (true)
         return definition
     }
-
 
 
 }

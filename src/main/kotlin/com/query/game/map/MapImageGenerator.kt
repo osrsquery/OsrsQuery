@@ -546,7 +546,7 @@ class MapImageGenerator(
 
     private fun findSprite(id: Int) = sprites[id]?: error("Could not find Sprite")
 
-    private fun findMapIcon(id: Int) = if(revisionBefore(142)) pre142MapFunction(id) else findSprite(findArea(id).spriteId).sprite
+    private fun findMapIcon(id: Int) = if(revisionIsOrBefore(142)) pre142MapFunction(id) else findSprite(findArea(id).spriteId).sprite
 
     private fun pre142MapFunction(id : Int) : BufferedImage {
         val container: ByteArray = Constants.library.data(IndexType.SPRITES.number, 318)!!

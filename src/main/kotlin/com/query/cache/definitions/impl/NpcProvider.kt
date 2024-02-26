@@ -47,7 +47,8 @@ data class NpcDefinition(
     var varpIndex : Int = -1,
     var isInteractable : Boolean = true,
     var isClickable : Boolean = true,
-    var isPet : Boolean = false,
+    var lowPriorityFollowerOps : Boolean = false,
+    var isFollower : Boolean = false,
     var runSequence : Int = -1,
     var runBackSequence : Int = -1,
     var runRightSequence : Int = -1,
@@ -217,8 +218,17 @@ data class NpcDefinition(
             dos.writeByte(109)
         }
 
-        if (isPet) {
-            dos.writeByte(111)
+        if (revisionIsOrAfter(220)) {
+            if (lowPriorityFollowerOps) {
+                dos.writeByte(122)
+            }
+            if (isFollower) {
+                dos.writeByte(123)
+            }
+        } else {
+            if (isFollower) {
+                dos.writeByte(111)
+            }
         }
 
         if (runSequence != -1) {
@@ -395,7 +405,11 @@ class NpcProvider(val latch: CountDownLatch?) : Loader, Runnable {
             }
             107 -> definition.isInteractable = false
             109 -> definition.isClickable = false
-            111 -> definition.isPet = true
+            111 -> {
+                if (revisionIsOrBefore(119)) {
+                    definition.isFollower = true
+                }
+            }
             114 -> definition.runSequence = buffer.uShort
             115 -> {
                 definition.runSequence = buffer.uShort
@@ -433,6 +447,8 @@ class NpcProvider(val latch: CountDownLatch?) : Loader, Runnable {
                 }
                 definition.configs!![length + 1] = i
             }
+            122 -> definition.lowPriorityFollowerOps = true
+            123 -> definition.isFollower = true
             249 -> buffer.readParams()
             0 -> break
             else -> logger.warn { "Unhandled npc definition opcode with id: ${opcode}." }

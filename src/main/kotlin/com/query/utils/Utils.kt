@@ -76,8 +76,8 @@ fun LocalDateTime.toEchochUTC() : Long {
 
 fun revisionID() = Application.revision
 
-fun revisionAfter(rev : Int) = rev <= revisionID()
-fun revisionBefore(rev : Int) = rev >= revisionID()
+fun revisionIsOrAfter(rev : Int) = rev <= revisionID()
+fun revisionIsOrBefore(rev : Int) = rev >= revisionID()
 
 fun String.replaceLastLetter(newLetter: String): String {
     val substring = this.substring(0, this.length - 1)
