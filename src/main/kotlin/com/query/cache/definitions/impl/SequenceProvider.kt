@@ -246,70 +246,20 @@ class SequenceProvider(val latch: CountDownLatch?) : Loader, Runnable {
                 definition.frameSounds = arrayOfNulls(length)
 
                 for (var4 in 0 until length) {
-                    val sound: Sound?
-
-                    if (revisionIsOrBefore(119)) {
-                        val payload: Int = buffer.medium
-                        val retain = 0
-
-                        val location: Int = payload and 15
-                        val id: Int = payload shr 8
-                        val loops: Int = payload shr 4 and 7
-
-                        sound = if (id >= 1 && loops >= 1 && location >= 0 && retain >= 0) {
-                            Sound(id, loops, location, retain)
-                        } else {
-                            null
-                        }
-                    } else {
-                        val id: Int = buffer.uShort
-                        val loops: Int = buffer.uByte
-                        val location: Int = buffer.uByte
-                        val retain: Int = buffer.uByte
-
-                        sound = if (id >= 1 && loops >= 1 && location >= 0 && retain >= 0) {
-                            Sound(id, loops, location, retain)
-                        } else {
-                            null
-                        }
-                    }
-
-                    definition.frameSounds[var4] = sound
+                    definition.frameSounds[var4] = Sound.readFrameSound(buffer, revisionIsOrBefore(119))
                 }
             }
 
             14 -> definition.skeletalId = buffer.int
             15 -> {
-
                 val size: Int = buffer.uShort
                 definition.skeletalSounds = emptyMap<Int, Sound>().toMutableMap()
-
-                for (pos in 0 until size) {
-                    val index: Int = buffer.uShort
-                    var var6 = Sound(0, 0, 0, 0)
-
-                    var retain = 0
-                    var payload: Int
-                    var location: Int
-                    var id: Int
-                    var loops: Int
-
-                    if (revisionIsOrBefore(119)) {
-                        payload = buffer.medium
-                        location = payload and 15
-                        id = payload shr 8
-                        loops = payload shr 4 and 7
-                    } else {
-                        id = buffer.uShort
-                        loops = buffer.uByte
-                        location = buffer.uByte
-                        retain = buffer.uByte
+                for (index in 0 until size) {
+                    val frame: Int = buffer.uShort
+                    val sound = Sound.readFrameSound(buffer, revisionIsOrBefore(119))
+                    if (sound != null) {
+                        definition.skeletalSounds[frame] = sound
                     }
-
-                    if (id >= 1 && loops >= 1 && location >= 0 && retain >= 0) {
-                        var6 = Sound(id, loops, location, retain)
-                    }
-                    definition.skeletalSounds[index] = var6
                 }
             }
 
