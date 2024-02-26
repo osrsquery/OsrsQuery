@@ -1,13 +1,13 @@
 package com.query.dump
 
 import com.google.gson.GsonBuilder
+import com.query.Application
 import com.query.Application.items
 import com.query.Application.npcs
 import com.query.Application.objects
 import com.query.Application.textures
-import com.query.cache.definitions.impl.ItemProvider
-import com.query.cache.definitions.impl.NpcProvider
-import com.query.cache.definitions.impl.ObjectProvider
+import com.query.cache.CacheManager
+import com.query.cache.definitions.impl.*
 import com.query.game.model.getAllModels
 import com.query.utils.FileUtil
 import com.query.utils.progress
@@ -16,34 +16,50 @@ import com.query.utils.progress
 data class TextureMapped(
     var spriteID : Int = -1,
     var modelIds : MutableList<Int> = mutableListOf(),
+    var overlayIds : MutableList<Int> = mutableListOf(),
     val named : MutableList<String> = mutableListOf()
 )
 
-class Textures {
+object Textures {
 
     val modelToName = mutableMapOf<Int,String>()
 
+    val mappedTextures : MutableMap<Int, TextureMapped> = mutableMapOf()
+
     fun init() {
 
-        if (npcs().isEmpty()) {
+        if (Application.definitions[NpcDefinition::class.java] == null) {
             NpcProvider(null).run()
             ObjectProvider(null).run()
             ItemProvider(null).run()
+            OverlayProvider(null).run()
+            NpcProvider(null).run()
+            TextureProvider(null).run()
         }
-
-        val mappedTextures : MutableMap<Short, TextureMapped> = mutableMapOf()
 
         val texturedModels = texturesToModels()
 
         val progress = progress("Writing Textures Mappings", texturedModels.size.toLong())
 
+        Application.overlays().filter { it.textureId != -1 }.forEach {
+            mappedTextures[it.textureId] = TextureMapped()
+            try {
+                getOrCreate(it.textureId).spriteID = textures()[it.textureId].fileIds[0]
+            }catch (e: Exception) {
+                getOrCreate(it.textureId).spriteID = -1
+            }
+            if (!getOrCreate(it.textureId).overlayIds.contains(it.id)) {
+                getOrCreate(it.textureId).overlayIds.add(it.id)
+            }
+        }
+
         texturesToModels().forEach {
-            val textureMapped = TextureMapped()
+            val textureMapped = getOrCreate(it.key.toInt())
 
             try {
                 textureMapped.spriteID = textures()[it.key.toInt()].fileIds[0]
             }catch (e: Exception) {
-                textureMapped.spriteID = 4667
+                textureMapped.spriteID = -1
             }
 
             textureMapped.modelIds = it.value.toList().toMutableList()
@@ -52,14 +68,19 @@ class Textures {
                  textureMapped.named.add(getNameForModel(modelID))
             }
 
-            mappedTextures[it.key] = textureMapped
-
             progress.step()
         }
         progress.close()
 
-        val data = GsonBuilder().setPrettyPrinting().create().toJson(mappedTextures)
+        val data = GsonBuilder().setPrettyPrinting().create().toJson(mappedTextures.toSortedMap())
         FileUtil.getFile("types/","texture-mappings-complete.json").writeText(data)
+    }
+
+    private fun getOrCreate(id : Int) : TextureMapped {
+        if (!mappedTextures.containsKey(id)) {
+            mappedTextures[id] = TextureMapped()
+        }
+        return mappedTextures[id]!!
     }
 
     private fun getNameForModel(id : Int) : String {
@@ -129,4 +150,10 @@ class Textures {
         return textureToModel
     }
 
+}
+
+fun main() {
+    Application.revision = 220
+    CacheManager.initialize()
+    Textures.init()
 }

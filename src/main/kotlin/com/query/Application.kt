@@ -120,7 +120,7 @@ object Application {
                     SpriteDumper().init()
                     MapSceneDumper().init()
                     OverlayImages().init()
-                    Textures().init()
+                    Textures.init()
                     Dump317.init()
 
                     //ModelOrganization.init()
@@ -135,7 +135,7 @@ object Application {
                     SpriteDumper().init()
                     MapSceneDumper().init()
                     OverlayImages().init()
-                    Textures().init()
+                    Textures.init()
                     Dump317.init()
                 }
 
@@ -143,7 +143,7 @@ object Application {
                 TaskType.HEIGHT_MAPS -> dumpMapImages(true)
                 TaskType.MAP_IMAGES -> dumpMapImages(false)
                 TaskType.MAP_SCENE -> MapSceneDumper().init()
-                TaskType.TEXTURE_IMAGES -> Textures().init()
+                TaskType.TEXTURE_IMAGES -> Textures.init()
                 TaskType.MAP_FUNCTIONS -> MapFunctionsDumper.init()
                 TaskType.UNUSED_MODELS -> UnusedModels.init()
             }

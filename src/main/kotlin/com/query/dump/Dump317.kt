@@ -225,6 +225,6 @@ fun main() {
     SpriteDumper().init()
     MapSceneDumper().init()
     OverlayImages().init()
-    Textures().init()
+    Textures.init()
     Dump317.init()
 }
