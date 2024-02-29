@@ -146,6 +146,8 @@ object Application {
                 TaskType.TEXTURE_IMAGES -> Textures.init()
                 TaskType.MAP_FUNCTIONS -> MapFunctionsDumper.init()
                 TaskType.UNUSED_MODELS -> UnusedModels.init()
+                TaskType.TYPES -> TODO()
+                TaskType.MODELS_OBJ -> TODO()
             }
 
 
