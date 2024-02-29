@@ -11,7 +11,7 @@ fun getAllModels() : Map<Int, ModelDefinition> {
     table.archives().forEach {
         val sector = table.readArchiveSector(it.id)
         if(sector != null) {
-            models[it.id] = ModelLoader(it.id,sector.decompress()).load()
+            models[it.id] = ModelLoader(it.id,sector.data).load()
         }
     }
     return models

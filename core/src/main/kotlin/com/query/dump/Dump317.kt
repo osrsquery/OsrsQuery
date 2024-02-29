@@ -78,7 +78,7 @@ object Dump317 {
             scale(4)
          .build()
 
-        val dumper = MapImageGenerator(map,FileUtil.getDir("dump317/"))
+        val dumper = MapImageGenerator(map)
         dumper.objects = objects().associateBy { it.id }
         dumper.overlays = overlays().associateBy { it.id }
         dumper.underlays = underlays().associateBy { it.id }
@@ -90,7 +90,9 @@ object Dump317 {
         dumper.sprites = Application.sprites().associateBy { it.id }
 
         val timer = measureTimeMillis {
-            dumper.draw()
+            for (level in 0 until 4) {
+                dumper.draw(File(FileUtil.getDir("dump317/"),"map-${level}.png"),level)
+            }
         }
         logger.info { "Map Images Written in ${TimeUtils.millsToFormat(timer)}" }
 

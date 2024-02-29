@@ -26,20 +26,26 @@ import javax.imageio.ImageIO
 private val logger = KotlinLogging.logger {}
 
 class MapImageGenerator(
-    private val builder : MapImageBuilder,
-    val saveLocation : File = FileUtil.getDir("mapImages/")
-) {
+    val builder : MapImageBuilder) {
 
     private val flags: MutableList<Int> = ArrayList()
 
-    var regionLoader: RegionLoader = RegionLoader()
+    var regionLoader: RegionLoader = RegionLoader(builder.region)
     var objects: Map<Int, ObjectDefinition> = Application.objects().associateBy { it.id }
     var overlays: Map<Int, OverlayDefinition> = Application.overlays().associateBy { it.id }
     var underlays: Map<Int, UnderlayDefinition> = Application.underlays().associateBy { it.id }
-    var areas: Map<Int, AreaDefinition> = Application.areas().associateBy { it.id }
+    var areas: Map<Int, AreaDefinition> = emptyMap()
     var textures: Map<Int, TextureDefinition> = Application.textures().associateBy { it.id }
     var sprites: Map<Int, SpriteDefinition> = Application.sprites().associateBy { it.id }
     private val scaledMapIcons: MutableMap<Int, Image> = HashMap()
+
+    fun setRegion(regionID: Int) {
+        regionLoader = RegionLoader(regionID)
+    }
+
+    fun setScale(scale: Int) {
+        builder.scale = scale
+    }
 
     init {
         resizeMapScene()
@@ -49,7 +55,8 @@ class MapImageGenerator(
      * Main Method to start the Map drawing
      * @return The Full map Image
      */
-    fun draw() {
+    fun draw(saveLocation : File, plane : Int) {
+        saveLocation.mkdirs()
         val minX = regionLoader.lowestX.baseX
         val minY = regionLoader.lowestY.baseY
         val maxX: Int = regionLoader.highestX.baseX + regionSizeX
@@ -61,7 +68,11 @@ class MapImageGenerator(
         dimX *= builder.scale
         dimY *= builder.scale
 
-        logger.info {
+        if(revisionIsOrAfter(142)) {
+            areas = Application.areas().associateBy { it.id }
+        }
+
+        /*logger.info {
             "====== Setting Drawing Map Image  =====\n" +
                     "Options: ${builder}\n" +
                     "Image Size: $dimX px x $dimY px\n" +
@@ -72,39 +83,37 @@ class MapImageGenerator(
                     "West most region: ${regionLoader.lowestX.baseX}\n" +
                     "East most region: ${regionLoader.highestY.baseY}\n" +
             "====== Starting Drawing Map Image =====\n"
+        }*/
+
+        //logger.info { "Generating map images for plane = $plane" }
+        val baseImage: BufferedImage = BigBufferedImage.create(dimX, dimY, BufferedImage.TYPE_INT_RGB)
+        val fullImage: BufferedImage = BigBufferedImage.create(dimX, dimY, BufferedImage.TYPE_INT_RGB)
+        val graphics = fullImage.createGraphics()
+        graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC)
+        graphics.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY)
+        graphics.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE)
+        //logger.info { "Adding Underlay" }
+        drawUnderlay(plane, baseImage)
+        //logger.info { "Blending Underlay" }
+        blendUnderlay(baseImage, fullImage, boundX, boundY)
+        //logger.info { "Drawing Overlay" }
+        drawOverlay(plane, fullImage)
+        //logger.info { "Drawing Objects" }
+        drawLocations(plane, graphics)
+        if (builder.walls) {
+            //logger.info { "Drawing Walls" }
+            drawWalls(plane, graphics)
+        }
+        if (builder.drawFunctions) {
+            //logger.info {"Adding Map Icons / Labels" }
+            drawIcons(plane, graphics)
         }
 
+        drawRegions(graphics)
+        graphics.dispose()
 
-        for (plane in PLANE_MIN..PLANE_MAX) {
-            logger.info { "Generating map images for plane = $plane" }
-            val baseImage: BufferedImage = BigBufferedImage.create(dimX, dimY, BufferedImage.TYPE_INT_RGB)
-            val fullImage: BufferedImage = BigBufferedImage.create(dimX, dimY, BufferedImage.TYPE_INT_RGB)
-            val graphics = fullImage.createGraphics()
-            graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC)
-            graphics.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY)
-            graphics.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE)
-            logger.info { "Adding Underlay" }
-            drawUnderlay(plane, baseImage)
-            logger.info { "Blending Underlay" }
-            blendUnderlay(baseImage, fullImage, boundX, boundY)
-            logger.info { "Drawing Overlay" }
-            drawOverlay(plane, fullImage)
-            logger.info { "Drawing Objects" }
-            drawLocations(plane, graphics)
-            if (builder.walls) {
-                logger.info { "Drawing Walls" }
-                drawWalls(plane, graphics)
-            }
-            if (builder.drawFunctions) {
-                logger.info {"Adding Map Icons / Labels" }
-                drawIcons(plane, graphics)
-            }
+        ImageIO.write(fullImage, "png", saveLocation)
 
-            drawRegions(graphics)
-            graphics.dispose()
-
-            ImageIO.write(fullImage, "png", File(saveLocation, "map-${plane}.png"))
-        }
     }
 
     /**
@@ -113,7 +122,7 @@ class MapImageGenerator(
      */
     private fun drawUnderlay(plane: Int, image: BufferedImage) {
         regionLoader.getRegions().forEach {
-            val drawBaseX = it.baseX - regionLoader.lowestX.baseX
+            val drawBaseX = it!!.baseX - regionLoader.lowestX.baseX
             val drawBaseY = regionLoader.highestY.baseY - it.baseY
             for (x in 0 until regionSizeX) {
                 val drawX = drawBaseX + x
@@ -123,7 +132,7 @@ class MapImageGenerator(
                     var rgb = Color.CYAN.rgb
                     if (underlayId > -1) {
                         val underlay = findUnderlay(underlayId)
-                        rgb = underlay.color
+                        rgb = underlay!!.color
                     }
                     drawMapSquare(image, drawX, drawY, rgb, -1, -1)
                 }
@@ -141,7 +150,7 @@ class MapImageGenerator(
      */
     private fun blendUnderlay(baseImage: BufferedImage, fullImage: BufferedImage, boundX: Int, boundY: Int) {
         regionLoader.getRegions().forEach {
-            val drawBaseX = it.baseX - regionLoader.lowestX.baseX
+            val drawBaseX = it!!.baseX - regionLoader.lowestX.baseX
             val drawBaseY = regionLoader.highestY.baseY - it.baseY
             for (x in 0 until regionSizeX) {
                 val drawX = drawBaseX + x
@@ -187,7 +196,7 @@ class MapImageGenerator(
      */
     private fun drawOverlay(plane: Int, image: BufferedImage) {
         regionLoader.getRegions().forEach {
-            val drawBaseX = it.baseX - regionLoader.lowestX.baseX
+            val drawBaseX = it!!.baseX - regionLoader.lowestX.baseX
             val drawBaseY = regionLoader.highestY.baseY - it.baseY
             for (x in 0 until regionSizeX) {
                 val drawX = drawBaseX + x
@@ -233,7 +242,7 @@ class MapImageGenerator(
      */
     private fun getOverlayColor(overlayID: Int): Int {
         val overlay = findOverlay(overlayID)
-        var rgb = if (overlay.textureId >= 0) {
+        var rgb = if (overlay!!.textureId >= 0) {
             textures[overlay.textureId]?.averageRGB ?: error("Error getting Texure Color")
         } else if (overlay.rgbColor == 0xFF00FF) {
             -2
@@ -309,7 +318,7 @@ class MapImageGenerator(
      */
     private fun drawLocations(plane: Int, graphics: Graphics2D) {
         regionLoader.getRegions().forEach {
-            val drawBaseX = it.baseX - regionLoader.lowestX.baseX
+            val drawBaseX = it!!.baseX - regionLoader.lowestX.baseX
             val drawBaseY = regionLoader.highestY.baseY - it.baseY
             for (location in it.getLocations()) {
                 val localX = location.position.x - it.baseX
@@ -336,7 +345,7 @@ class MapImageGenerator(
      */
     private fun drawWalls(plane: Int, graphics: Graphics2D) {
         regionLoader.getRegions().forEach {
-            val drawBaseX = it.baseX - regionLoader.lowestX.baseX
+            val drawBaseX = it!!.baseX - regionLoader.lowestX.baseX
             val drawBaseY = regionLoader.highestY.baseY - it.baseY
             for (location in it.getLocations()) {
                 graphics.color = Color.WHITE
@@ -412,7 +421,7 @@ class MapImageGenerator(
      */
     private fun drawIcons(plane: Int, graphics: Graphics2D) {
         regionLoader.getRegions().forEach {
-            val drawBaseX = it.baseX - regionLoader.lowestX.baseX
+            val drawBaseX = it!!.baseX - regionLoader.lowestX.baseX
             val drawBaseY = regionLoader.highestY.baseY - it.baseY
             for (location in it.getLocations()) {
                 val localX = location.position.x - it.baseX
@@ -457,7 +466,7 @@ class MapImageGenerator(
      */
     private fun drawRegions(graphics: Graphics2D) {
         regionLoader.getRegions().forEach {
-            val baseX = it.baseX
+            val baseX = it!!.baseX
             val baseY = it.baseY
             val drawBaseX = baseX - regionLoader.lowestX.baseX
             val drawBaseY = regionLoader.highestY.baseY - baseY
@@ -538,9 +547,9 @@ class MapImageGenerator(
 
     private fun findObject(id: Int) = objects[id]?: error("Could not find Object")
 
-    private fun findUnderlay(id: Int) = underlays[id]?: error("Could not find Underlay")
+    private fun findUnderlay(id: Int) = underlays[id]?: underlays[0]
 
-    private fun findOverlay(id: Int) = overlays[id]?: error("Could not find Overlay")
+    private fun findOverlay(id: Int) = overlays[id]?: overlays[0]
 
     private fun findArea(id: Int) = areas[id]?: error("Could not find Area")
 

@@ -40,7 +40,7 @@ class MusicProvider(val latch: CountDownLatch?) : Loader, Runnable {
         val definitions = listOf<com.query.cache.definitions.Definition>().toMutableList()
         for (i in 0 until table.archives().size) {
             val sector = table.readArchiveSector(i) ?: continue
-            definitions.add(decode(sector.decompress(), MusicDefinition(i)))
+            definitions.add(decode(sector.data, MusicDefinition(i)))
         }
 
         return Serializable(DefinitionsTypes.MUSIC,this, definitions,false)

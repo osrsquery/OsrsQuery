@@ -8,7 +8,8 @@ data class MapImageBuilder(
     var outlineRegions  : Boolean = false,
     var walls : Boolean = true,
     var fill : Boolean = false,
-    var scale : Int = 4
+    var scale : Int = 4,
+    var region : Int = -1
 ) {
     fun objects(state: Boolean) = apply { this.drawObjects = state }
     fun mapScenes(state: Boolean) = apply { this.drawMapScene = state }
@@ -17,6 +18,9 @@ data class MapImageBuilder(
     fun scale(scale: Int) = apply { this.scale = scale }
 
     fun fill(state: Boolean) = apply { this.fill = state }
+
+    fun setRegion(state: Int) = apply { this.region = state }
+
     fun outline(state: Boolean) = apply { this.outlineRegions = state }
     fun build() = MapImageBuilder(
         drawObjects,

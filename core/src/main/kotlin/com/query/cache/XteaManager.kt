@@ -8,7 +8,8 @@ import java.io.File
 private val logger = KotlinLogging.logger {}
 data class Xtea(
     val mapsquare : Int,
-    val key : IntArray
+    val key : IntArray,
+    val name : String
 )
 
 object XteaLoader {
@@ -23,7 +24,7 @@ object XteaLoader {
             xteas[it.mapsquare] = it
             xteasList[it.mapsquare] = it.key
         }
-        logger.info { "Keys Loaded: ${xteasList.size}" }
+        //logger.info { "Keys Loaded: ${xteasList.size}" }
 
     }
 

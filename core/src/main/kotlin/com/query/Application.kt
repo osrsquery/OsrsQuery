@@ -9,6 +9,7 @@ import com.query.game.map.HeightMapGenerator
 import com.query.game.map.MapImageGenerator
 import com.query.game.map.builders.HeightMapImageBuilder
 import com.query.game.map.builders.MapImageBuilder
+import com.query.utils.FileUtil
 import com.query.utils.TimeUtils
 import joptsimple.ArgumentAcceptingOptionSpec
 import joptsimple.OptionParser
@@ -170,7 +171,9 @@ object Application {
                 val dumper = MapImageGenerator(MapImageBuilder().scale(4).build())
 
                 val timer = measureTimeMillis {
-                    dumper.draw()
+                    for (level in 0 until 4) {
+                        dumper.draw(File(FileUtil.getDir("mapImages/"),"map-${level}.png"),level)
+                    }
                 }
 
                 logger.info { "Map Images Written in ${TimeUtils.millsToFormat(timer)}" }
@@ -179,7 +182,7 @@ object Application {
     }
 
     fun loadProperties() {
-        logger.info { "Loading properties..." }
+        //logger.info { "Loading properties..." }
         val file = File("./app.properties")
         if(!file.exists()) {
             file.createNewFile()

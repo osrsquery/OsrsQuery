@@ -4,6 +4,7 @@ group = "com.query"
 version = "1.0"
 
 dependencies {
+    implementation(project(":core"))
     implementation("io.insert-koin:koin-core:${findProperty("koinVersion")}")
     implementation("io.insert-koin:koin-logger-slf4j:${findProperty("koinLogVersion")}")
     implementation("ch.qos.logback:logback-classic:${findProperty("logbackVersion")}")

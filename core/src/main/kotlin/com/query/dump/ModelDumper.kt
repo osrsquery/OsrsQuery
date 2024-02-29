@@ -12,7 +12,7 @@ object ModelDumper {
         val progress = progress("Dumping Models", models.size)
         models.forEach {
             val location =  FileUtil.getFile("dump317/index1/", "${it.id}.gz")
-            gzip(location, table.readArchiveSector(it.id)!!.decompress())
+            gzip(location, table.readArchiveSector(it.id)!!.data)
             progress.step()
         }
         progress.close()
@@ -25,7 +25,7 @@ object ModelDumper {
         val progress = progress("Dumping Models", models.size)
         models.forEach {
             val location =  FileUtil.getFile("dump317/index1/", "${it.id}.gz")
-            gzip(location, table.readArchiveSector(it.id)!!.decompress())
+            gzip(location, table.readArchiveSector(it.id)!!.data)
             progress.step()
         }
         progress.close()

@@ -40,7 +40,7 @@ class JingleProvider(val latch: CountDownLatch?) : Loader, Runnable {
 
         for (i in 0 until table.archives().size) {
             val sector = table.readArchiveSector(i) ?: continue
-            definitions.add(decode(sector.decompress(), JingleDefinition(i)))
+            definitions.add(decode(sector.data, JingleDefinition(i)))
         }
 
         return Serializable(DefinitionsTypes.JINGLE,this, definitions,false)

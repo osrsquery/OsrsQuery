@@ -6,7 +6,6 @@ import com.query.Application
 import com.query.Constants
 import com.query.cache.definitions.Loader
 import com.query.cache.definitions.Serializable
-import com.query.cache.CacheManager
 import com.query.cache.definitions.Definition
 import com.query.dump.DefinitionsTypes
 import com.query.utils.IndexType
@@ -56,3 +55,4 @@ class SpriteProvider(val latch: CountDownLatch?) : Loader, Runnable {
 
 
 }
+

@@ -77,7 +77,7 @@ class HeightMapGenerator(private val builder : HeightMapImageBuilder) {
         var max = Int.MIN_VALUE
         var min = Int.MAX_VALUE
         for (region in regionLoader.getRegions()) {
-            val baseX: Int = region.baseX
+            val baseX: Int = region!!.baseX
             val baseY: Int = region.baseY
 
             val drawBaseX = baseX - regionLoader.lowestX.baseX

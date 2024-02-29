@@ -3,6 +3,7 @@ package com.query.cache
 import com.displee.cache.CacheLibrary
 import com.displee.cache.ProgressListener
 import com.google.gson.Gson
+import com.query.Application
 import com.query.Application.gameType
 import com.query.Application.gameWorld
 import com.query.Application.loadProperties
@@ -49,17 +50,23 @@ object CacheManager {
 
     private val logger = KotlinLogging.logger {}
 
-    fun initialize() {
+
+    fun findAllCaches(): Array<CacheInfo> {
+        val caches = Gson().fromJson(URL(CACHE_DOWNLOAD_LOCATION).readText(), Array<CacheInfo>::class.java)
+        return caches
+    }
+
+    fun initialize(revision : Int = -1) {
         var updateAvailable = true
         loadProperties()
 
+        Application.revision = revision
+
         val time = measureTimeMillis {
-            logger.info { "Looking for cache Updates" }
+            //logger.info { "Looking for cache Updates" }
 
             val caches = Gson().fromJson(URL(CACHE_DOWNLOAD_LOCATION).readText(), Array<CacheInfo>::class.java)
             val cacheInfo = if(revision == -1) getLatest(caches) else findRevision(revision,caches)
-
-            revision = cacheInfo.builds.first().major
 
             if (gameWorld != 0) {
                 if(gameType == GameType.OLDSCHOOL) {
@@ -80,20 +87,20 @@ object CacheManager {
         }
 
         val message = if(updateAvailable) "Cache Downloaded in ${TimeUtils.millsToFormat(time)}" else "Cache is Latest"
-        logger.info { message }
+        //logger.info { message }
         loadCache()
 
     }
 
     private fun loadCache() {
-        val pb = progress("Loading Cache",getCacheLocation().listFiles().size.toLong())
+        //val pb = progress("Loading Cache",getCacheLocation().listFiles().size.toLong())
 
         library = CacheLibrary(getCacheLocation().toString(), false, object : ProgressListener {
             override fun notify(progress: Double, message: String?) {
-                pb.step()
+                //pb.step()
             }
         })
-        pb.close()
+        //pb.close()
         XteaLoader.load()
     }
 
@@ -108,7 +115,7 @@ object CacheManager {
     }
 
     public fun saveXteas(id : Int) {
-        logger.info { "Saving Xteas" }
+        //logger.info { "Saving Xteas" }
         val file = File(FileUtil.getBase(),"xteas.json")
         try {
             val url = "https://archive.openrs2.org/caches/${id}/keys.json"
@@ -116,7 +123,7 @@ object CacheManager {
             output.write(Gson().fromJson(URL(url).readText(), Array<Xteas>::class.java).jsonToString(true))
             output.close()
         }catch (e : Exception) {
-            logger.error { "Unable to write Xteas $e" }
+            //logger.error { "Unable to write Xteas $e" }
         }
     }
 
