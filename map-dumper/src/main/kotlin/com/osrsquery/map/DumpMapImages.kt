@@ -1,12 +1,17 @@
 package com.osrsquery.map
 
 import com.google.gson.Gson
+import com.query.Application
 import com.query.cache.CacheManager
 import com.query.cache.Xtea
 import com.query.cache.XteaLoader
-import com.query.cache.Xteas
-import com.query.game.map.region.Region
+import com.query.cache.definitions.impl.*
+import com.query.game.map.MapImageGenerator
+import com.query.game.map.builders.MapImageBuilder
+import com.query.utils.TimeUtils
+import com.query.utils.revisionIsOrBefore
 import java.io.File
+import kotlin.system.measureTimeMillis
 
 data class TileInfo(val x: Int, val y : Int, val region : Int)
 
@@ -22,7 +27,7 @@ object DumpMapImages {
         val latestMajorEntries = oldschoolCaches.groupBy { it.builds.first().major }
             .map { (_, entries) -> entries.maxByOrNull { it.timestamp } }
             .filterNotNull()
-            .sortedBy { it.builds.first().major }.take(1)
+            .sortedBy { it.builds.first().major }
 
         // Initialize a mutable map to store Xtea keys for comparison
         var compare: MutableMap<Int, IntArray> = emptyMap<Int, IntArray>().toMutableMap()
@@ -53,8 +58,45 @@ object DumpMapImages {
             compare = XteaLoader.xteasList.toMutableMap()
         }
 
+        val map = MapImageBuilder().
+            outline(false).
+            label(false).
+            functions(true).
+            mapScenes(true).
+            objects(true).
+            fill(false).
+            scale(4)
+        .build()
+
         updatedTilesPerRev.forEach {
-            WorldMapDumper.dumpMaps(it.key, it.value)
+            CacheManager.initialize(it.key)
+
+            ObjectProvider(null).run()
+            OverlayProvider(null).run()
+            UnderlayProvider(null).run()
+            AreaProvider(null).run()
+            TextureProvider(null).run()
+            SpriteProvider(null).run()
+
+
+            val dumper = MapImageGenerator(map)
+
+            dumper.objects = Application.objects().associateBy { it.id }
+            dumper.overlays = Application.overlays().associateBy { it.id }
+            dumper.underlays = Application.underlays().associateBy { it.id }
+            if(!revisionIsOrBefore(142)) {
+                dumper.areas = Application.areas().associateBy { it.id }
+            }
+
+            dumper.textures = Application.textures().associateBy { it.id }
+            dumper.sprites = Application.sprites().associateBy { it.id }
+
+            val timer = measureTimeMillis {
+                for (level in 0 until 4) {
+                    dumper.draw(File("E:\\RSPS\\OsrsQuery\\OsrsQuery\\tiles\\rev-${it.key}//","map-${level}.png"),level)
+                }
+            }
+            println("Map Images Written in ${TimeUtils.millsToFormat(timer)}")
         }
         File("./key.json",Gson().toJson(updatedTilesPerRev))
 

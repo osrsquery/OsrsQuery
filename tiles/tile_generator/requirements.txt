@@ -1,0 +1,8 @@
+scikit-image
+imutils
+opencv-python
+pixelmatch
+numpy
+pyvip
+requests
+beautifulsoup4

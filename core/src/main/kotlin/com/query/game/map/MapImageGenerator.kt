@@ -30,7 +30,7 @@ class MapImageGenerator(
 
     private val flags: MutableList<Int> = ArrayList()
 
-    var regionLoader: RegionLoader = RegionLoader(builder.region)
+    var regionLoader: RegionLoader = RegionLoader()
     var objects: Map<Int, ObjectDefinition> = Application.objects().associateBy { it.id }
     var overlays: Map<Int, OverlayDefinition> = Application.overlays().associateBy { it.id }
     var underlays: Map<Int, UnderlayDefinition> = Application.underlays().associateBy { it.id }

@@ -51,7 +51,7 @@ object WorldMapDumper {
     private suspend fun processRegionAsync(dumper: MapImageGenerator, build: Int, progressBar: ProgressBar, it: TileInfo): Unit = coroutineScope {
         (0 until 4).map { level ->
             async(Dispatchers.Default) {
-                val file = File("tiles/rev-${build}/${level}/10/${it.x}/${it.y}.png")
+                val file = File("tiles/rev-${build}/${level}/${it.region}.png")
                 dumper.draw(file, level)
                 progressBar.step()
             }

@@ -9,10 +9,10 @@ val DEFAULT_REGION = Region(-1)
 
 class RegionLoader(val region : Int = -1) {
 
-    var lowestX: Region = Region(region)
-    var lowestY: Region = Region(region)
-    var highestX: Region = Region(region)
-    var highestY: Region = Region(region)
+    var lowestX: Region = DEFAULT_REGION
+    var lowestY: Region = DEFAULT_REGION
+    var highestX: Region = DEFAULT_REGION
+    var highestY: Region = DEFAULT_REGION
 
 
     private val regions: MutableMap<Int, Region> = HashMap()
