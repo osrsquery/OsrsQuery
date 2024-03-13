@@ -56,17 +56,21 @@ object CacheManager {
         return caches
     }
 
-    fun initialize(revision : Int = -1) {
+    fun initialize(revision : Int = 220) {
+
         var updateAvailable = true
         loadProperties()
 
-        Application.revision = revision
+        Application.revision = 220
+
+
 
         val time = measureTimeMillis {
-            //logger.info { "Looking for cache Updates" }
+            System.out.println("Rev: ${Application.revision}")
+            logger.info { "Looking for cache Updates" }
 
             val caches = Gson().fromJson(URL(CACHE_DOWNLOAD_LOCATION).readText(), Array<CacheInfo>::class.java)
-            val cacheInfo = if(revision == -1) getLatest(caches) else findRevision(revision,caches)
+            val cacheInfo = if(Application.revision == -1) getLatest(caches) else findRevision(Application.revision,caches)
 
             if (gameWorld != 0) {
                 if(gameType == GameType.OLDSCHOOL) {
@@ -87,7 +91,7 @@ object CacheManager {
         }
 
         val message = if(updateAvailable) "Cache Downloaded in ${TimeUtils.millsToFormat(time)}" else "Cache is Latest"
-        //logger.info { message }
+        logger.info { message }
         loadCache()
 
     }

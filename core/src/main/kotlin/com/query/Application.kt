@@ -30,7 +30,7 @@ object Application {
     /**
      * What Revision the user wants to dump.
      */
-    var revision : Int = -1
+    var revision : Int = 220
 
     /**
      * What Game Type you wish to dump.
@@ -72,7 +72,7 @@ object Application {
     private fun initialize() {
         val time = measureTimeMillis {
 
-            CacheManager.initialize()
+            CacheManager.initialize(revision)
 
             //Latch is necessary.
             val latch = CountDownLatch(18)
@@ -121,7 +121,7 @@ object Application {
                     SpriteDumper().init()
                     MapSceneDumper().init()
                     OverlayImages().init()
-                    Textures.init()
+                    //Textures.init()
                     Dump317.init()
 
                     //ModelOrganization.init()
