@@ -7,4 +7,6 @@ abstract class Definition(@Transient open val id: Int = -1) {
     abstract fun encode(dos: DataOutputStream)
 
 
+
+
 }

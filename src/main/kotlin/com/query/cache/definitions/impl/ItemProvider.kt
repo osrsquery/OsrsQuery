@@ -18,6 +18,7 @@ import java.util.concurrent.CountDownLatch
 data class ItemDefinition(
     override val id: Int = 0,
     var name: String = "null",
+    var description: String = "null",
     var resizeX: Int = 128,
     var resizeY: Int = 128,
     var resizeZ: Int = 128,
@@ -82,6 +83,12 @@ data class ItemDefinition(
         if (!name.equals("null", ignoreCase = true)) {
             dos.writeByte(2)
             dos.writeString(name)
+        }
+
+
+        if (!description.equals("null", ignoreCase = true)) {
+            dos.writeByte(3)
+            dos.writeString(description)
         }
 
         if (zoom2d != 2000) {
@@ -355,6 +362,7 @@ class ItemProvider(val latch: CountDownLatch?) : Loader, Runnable {
         do when (val opcode: Int = buffer.uByte) {
             1 -> definition.inventoryModel = buffer.uShort
             2 -> definition.name = buffer.rsString
+            3 -> definition.description = buffer.rsString
             4 -> definition.zoom2d = buffer.uShort
             5 -> definition.xan2d = buffer.uShort
             6 -> definition.yan2d = buffer.uShort

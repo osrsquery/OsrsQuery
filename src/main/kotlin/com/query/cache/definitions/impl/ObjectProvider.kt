@@ -32,6 +32,7 @@ data class ObjectDefinition(
     var ambientSoundIds: IntArray? = null,
     var offsetX: Int = 0,
     var nonFlatShading: Boolean = false,
+    var delayAnimationUpdate : Boolean = false,
     var wallOrDoor: Int = -1,
     var animationId: Int = -1,
     var varbitId: Int = -1,
@@ -460,6 +461,7 @@ class ObjectProvider(val latch: CountDownLatch?) : Loader, Runnable {
             81 -> definition.clipType = (buffer.uByte) * 256
             60,82 -> definition.mapAreaId = buffer.uShort
             89 -> definition.randomizeAnimStart = true
+            90 -> definition.delayAnimationUpdate = true
             92 -> {
                 var varbitId: Int = buffer.uShort
                 if (varbitId == 65535) {

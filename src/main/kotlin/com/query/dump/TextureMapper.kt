@@ -56,9 +56,12 @@ object Textures {
         texturesToModels().forEach {
             val textureMapped = getOrCreate(it.key.toInt())
 
+
             try {
+                println(it.key.toInt())
                 textureMapped.spriteID = textures()[it.key.toInt()].fileIds[0]
             }catch (e: Exception) {
+                println(it.key.toInt())
                 textureMapped.spriteID = -1
             }
 
@@ -150,10 +153,26 @@ object Textures {
         return textureToModel
     }
 
+
+    fun dumpFishingSpotNpcs() {
+        val textures = texturesToModels()[17]
+        val listIds = emptyList<Int>().toMutableList()
+        npcs().filter { npc ->
+            npc.name.contains("fishing spot", ignoreCase = true) && textures != null &&
+                    npc.models!!.any { modelId -> textures.contains(modelId) }
+        }.forEach {
+            println(it.name)
+            listIds.add(it.id)
+        }
+        println(listIds.joinToString(separator = ", "))
+    }
+
 }
 
 fun main() {
     Application.revision = 220
     CacheManager.initialize()
-    Textures.init()
+    NpcProvider(null).run()
+    TextureProvider(null).run()
+    Textures.dumpFishingSpotNpcs()
 }

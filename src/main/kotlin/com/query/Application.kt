@@ -74,7 +74,7 @@ object Application {
             CacheManager.initialize()
 
             //Latch is necessary.
-            val latch = CountDownLatch(18)
+            val latch = CountDownLatch(16)
 
             writeData = when(type) {
                 TaskType.TYPES, TaskType.ALL, TaskType.DUMP317 -> true
@@ -87,8 +87,6 @@ object Application {
                 EnumProvider(latch),
                 HealthBarProvider(latch),
                 InvProvider(latch),
-                MusicProvider(latch),
-                JingleProvider(latch),
                 ItemProvider(latch),
                 KitProvider(latch),
                 NpcProvider(latch),
