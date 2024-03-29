@@ -15,6 +15,7 @@ import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 import java.util.zip.GZIPOutputStream
 
+
 fun Klaxon.toPrettyJsonString(value: Any): String {
     val builder = StringBuilder(Klaxon().toJsonString(value))
     return (Parser().parse(builder) as JsonBase).toJsonString(true)
@@ -68,6 +69,27 @@ fun gzip(content: String): ByteArray {
     val bos = ByteArrayOutputStream()
     GZIPOutputStream(bos).bufferedWriter().use { it.write(content) }
     return bos.toByteArray()
+}
+
+@Throws(IOException::class)
+fun gzip(bytes: ByteArray?): ByteArray {
+    /* create the streams */
+    val `is`: InputStream = ByteArrayInputStream(bytes)
+    `is`.use { `is` ->
+        val bout = ByteArrayOutputStream()
+        val os: OutputStream = GZIPOutputStream(bout)
+        os.use { os ->
+            /* copy data between the streams */
+            val buf = ByteArray(99999999)
+            var len = 0
+            while ((`is`.read(buf, 0, buf.size).also { len = it }) != -1) {
+                os.write(buf, 0, len)
+            }
+        }
+
+        /* return the compressed bytes */
+        return bout.toByteArray()
+    }
 }
 
 fun LocalDateTime.toEchochUTC() : Long {

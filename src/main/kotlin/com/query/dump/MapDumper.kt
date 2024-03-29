@@ -3,7 +3,7 @@ package com.query.dump
 import com.query.Constants
 import com.query.cache.CacheManager
 import com.query.cache.XteaLoader
-import com.query.game.map.region.RegionLoader
+import com.query.game.map.region.RegionLoader.Companion.MAX_REGION
 import com.query.utils.*
 import mu.KotlinLogging
 import java.io.FileOutputStream
@@ -15,88 +15,86 @@ private val logger = KotlinLogging.logger {}
 object MapDumper {
 
     fun init() {
-        val mapProgress = progress("Dumping Maps", RegionLoader.MAX_REGION)
-
-        val missingKeys = listOf<Int>().toMutableList()
-        val failed = listOf<Int>().toMutableList()
-
-        val raf = RandomAccessFile(FileUtil.getFile("dump317/","map_index").toPath().toString(), "rw")
         val mapArchive = Constants.library.index(5)
+        val mapProgress = progress("Dumping Maps", MAX_REGION)
+        val failed : MutableList<Int> = emptyArray<Int>().toMutableList()
 
-        var total = 0
-        raf.seek(2L)
+        RandomAccessFile(FileUtil.getFile("dump317/","map_index").path, "rw").use { raf ->
+            logger.info { "Generating map_index..." }
 
-        for (xLoc in 0..255) {
-            for (yLoc in 0..255) {
-                val regionID = xLoc shl 8 or yLoc
+            var total = 0
+            raf.seek(2L)
 
-                val x = mapArchive.archiveId("m${xLoc}_${yLoc}")
-                val y = mapArchive.archiveId("l${xLoc}_${yLoc}")
+            var end: Int
 
-                if (x != -1 && y != -1) {
-                    raf.writeShort(regionID)
-                    raf.writeShort(x)
-                    raf.writeShort(y)
-                    total++
+            var mapCount = 0
+            var landCount = 0
+
+            for (end in 0 until 256) {
+                for (i in 0 until 256) {
+                    val var17 = end shl 8 or i
+                    val x = mapArchive.archiveId( "m$end$i")
+                    val y = mapArchive.archiveId( "l$end$i")
+
+                    if (x != -1 && y != -1) {
+                        raf.writeShort(var17.toInt())
+                        raf.writeShort(x)
+                        raf.writeShort(y)
+                        total++
+                    }
                 }
             }
-        }
+
+            end = raf.filePointer.toInt()
+            raf.seek(0L)
+            raf.writeShort(total)
+            raf.seek(end.toLong())
+
+            for (i in 0 until MAX_REGION) {
+                val keys = XteaLoader.getKeys(i)
+                val x = i shr 8 and 255
+                val y = i and 255
+                val map = mapArchive.archiveId( "m" + x + "_" + y)
+                val land = mapArchive.archiveId("l" + x + "_" + y)
 
 
-        raf.seek(0L)
-        raf.writeShort(total)
-        raf.seek(raf.filePointer)
-        raf.close()
+                if (map != -1) {
+                    try {
+                        val data = Constants.library.data(5, "m" + x + "_" + y)
 
-        var mapCount = 0
-        var landCount = 0
+                        FileOutputStream(FileUtil.getFile("dump317/index4/", "${map}.gz")).use { fos ->
+                            fos.write(gzip(data))
+                        }
 
-        for (regionID in 0 until RegionLoader.MAX_REGION) {
-            val x = regionID shr 8
-            val y = regionID and 0xFF
-
-            val map = mapArchive.archiveId("m${x}_${y}")
-            val land = mapArchive.archiveId("l${x}_${y}")
-
-            if (map != -1) {
-                try {
-                    val objects = Constants.library.data(5, "m${x}_${y}")
-                    gzip(FileUtil.getFile("dump317/index4/", "${map}.gz"), objects!!)
-                    mapCount++
-                } catch (ex: Exception) {
-                    failed.add(regionID)
-                    println(String.format("Failed to decrypt map: %d", map))
+                        mapCount++
+                    } catch (ex: Exception) {
+                        failed.add(map)
+                    }
                 }
-            }
-            if (land != -1) {
-                try {
-                    XteaLoader.getKeys(regionID).whenNonNull {
-                        val objects = Constants.library.data(5, "l${x}_${y}",this)
-                        gzip(FileUtil.getFile("dump317/index4/", "${land}.gz"), objects!!)
-                    }.whenNull { missingKeys.add(regionID) }
 
-                    landCount++
-                } catch (ex: Exception) {
-                    println(String.format("Failed to decrypt landscape: %d", land))
+                if (land != -1) {
+                    try {
+                        val data = Constants.library.data(5, "l" + x + "_" + y,keys)
+
+                        FileOutputStream(FileUtil.getFile("dump317/index4/", "${land}.gz")).use { fos ->
+                            fos.write(gzip(data))
+                        }
+
+                        landCount++
+                    } catch (ex: Exception) {
+                        failed.add(map)
+                    }
                 }
+
+                mapProgress.step()
             }
-            mapProgress.step()
+            mapProgress.close()
+
+            val totalCount = mapCount + landCount
+
+            logger.info { "Dumped $mapCount map count $landCount land count $totalCount total count"}
+            logger.info { "Missing Xteas: $failed"}
         }
-
-        mapProgress.close()
-
-        val totalCount = mapCount + landCount
-
-        if (missingKeys.isNotEmpty()) {
-            logger.info("Missing Keys ({}) : {}", missingKeys.size, missingKeys)
-        }
-
-        if (failed.isNotEmpty()) {
-            logger.info("Failed to decrypt ({}) : {}", failed.size, failed)
-        }
-
-        logger.info("Dumped {} map count {} land count {} total count", mapCount, landCount, totalCount)
-
     }
 
 }
