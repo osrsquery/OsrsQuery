@@ -33,8 +33,8 @@ object MapDumper {
             for (end in 0 until 256) {
                 for (i in 0 until 256) {
                     val var17 = end shl 8 or i
-                    val x = mapArchive.archiveId( "m$end$i")
-                    val y = mapArchive.archiveId( "l$end$i")
+                    val x = mapArchive.archiveId( "m" + end + "_" + i)
+                    val y = mapArchive.archiveId( "l" + end + "_" + i)
 
                     if (x != -1 && y != -1) {
                         raf.writeShort(var17.toInt())
