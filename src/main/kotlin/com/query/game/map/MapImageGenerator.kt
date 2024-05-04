@@ -196,7 +196,10 @@ class MapImageGenerator(
                     if (plane == 0 || !it.isLinkedBelow(plane, x, y) && !it.isVisibleBelow(plane, x, y)) {
                         val overlayId = it.getOverlayId(plane, x, y) - 1
                         if (overlayId > -1) {
-                            val rgb = getOverlayColor(overlayId)
+                            var rgb = getOverlayColor(overlayId)
+                            if (overlayId == 0) {
+                                rgb = Color.decode("#ff00ff").rgb
+                            }
                             drawMapSquare(
                                 image,
                                 drawX,
@@ -210,7 +213,10 @@ class MapImageGenerator(
                     if (plane < 3 && (it.isLinkedBelow(plane + 1, x, y) || it.isVisibleBelow(plane + 1, x, y))) {
                         val overlayAboveId = it.getOverlayId(plane + 1, x, y) - 1
                         if (overlayAboveId > -1) {
-                            val rgb = getOverlayColor(overlayAboveId)
+                            var rgb = getOverlayColor(overlayAboveId)
+                            if (overlayAboveId == 0) {
+                                rgb = Color.decode("#ff00ff").rgb
+                            }
                             drawMapSquare(
                                 image,
                                 drawX,
@@ -464,7 +470,7 @@ class MapImageGenerator(
 
             if (builder.labelRegions) {
                 graphics.color = Color.WHITE
-                val str = baseX.toString() + "," + baseY + " (" + it.regionX + "," + it.regionY + ")"
+                val str = baseX.toString() + "," + baseY + " (" + it.regionX + "," + it.regionY + ") : Region: " + it.regionID
                 graphics.drawString(str, drawBaseX * builder.scale + 1, drawBaseY * builder.scale + graphics.fontMetrics.height)
             }
             if (builder.outlineRegions) {
