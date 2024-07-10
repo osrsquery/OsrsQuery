@@ -57,6 +57,8 @@ data class NpcDefinition(
     var crawlBackSequence : Int = -1,
     var crawlRightSequence : Int = -1,
     var crawlLeftSequence : Int = -1,
+    var height: Int = -1,
+    var stats: IntArray = intArrayOf(1, 1, 1, 1, 1, 1),
     var params : MutableMap<Int,String> = mutableMapOf()
 ): Definition() {
 
@@ -121,6 +123,13 @@ data class NpcDefinition(
                 }
                 dos.writeByte(30 + i)
                 dos.writeString(actions[i]!!)
+            }
+        }
+
+        if (stats.any { it != 0 }) {
+            for (i in stats.indices) {
+                dos.writeByte(74 + i)
+                dos.writeShort(stats[i])
             }
         }
 
@@ -257,6 +266,11 @@ data class NpcDefinition(
             dos.writeShort(crawlLeftSequence)
         }
 
+        if (height != -1) {
+            dos.writeByte(124)
+            dos.writeShort(height)
+        }
+
         if (params != mutableMapOf<Int, String>()) {
             dos.writeByte(249)
             dos.writeParams(params)
@@ -346,6 +360,7 @@ class NpcProvider(val latch: CountDownLatch?) : Loader, Runnable {
                     definition.chatheadModels!![it] = buffer.uShort
                 }
             }
+            in 74..79 -> definition.stats[opcode - 74] = buffer.uShort
             93 -> definition.isMinimapVisible = false
             95 -> definition.combatLevel = buffer.uShort
             97 -> definition.widthScale = buffer.uShort
@@ -449,6 +464,7 @@ class NpcProvider(val latch: CountDownLatch?) : Loader, Runnable {
             }
             122 -> definition.lowPriorityFollowerOps = true
             123 -> definition.isFollower = true
+            124 -> definition.height = buffer.uShort
             249 -> buffer.readParams()
             0 -> break
             else -> logger.warn { "Unhandled npc definition opcode with id: ${opcode}." }
